@@ -17,6 +17,11 @@ namespace SirHolomap
         private int m_column;
         private float m_columnY;
 
+        private const float FooterScale = 0.52f;
+        private const float FooterLine = 18;
+        private readonly System.Collections.Generic.List<string> m_footerLines = new System.Collections.Generic.List<string>();
+        private float m_footerTop;
+
         public Panel(MapScreen map)
         {
             m_map = map;
@@ -39,6 +44,8 @@ namespace SirHolomap
             m_y = y;
             m_bottom = bottom;
             m_column = 0;
+            m_footerLines.Clear();
+            m_footerTop = bottom - 50 * S;
             Gfx.Rect(x, y, w, bottom - y, Style.Background);
             Gfx.Rect(x, y, w, 2 * S, Style.Accent);
             Gfx.Frame(x, y, w, bottom - y, 1, Gfx.Alpha(Style.AccentDim, 0.7f));
@@ -123,7 +130,7 @@ namespace SirHolomap
         public void Line(string key, string value, Color color, bool wrap)
         {
             CloseColumns();
-            if (m_y > m_bottom - 60 * S)
+            if (m_y > m_footerTop - 10 * S)
                 return;
             const float scale = 0.6f;
             var keyWidth = 120 * S;
@@ -271,7 +278,7 @@ namespace SirHolomap
         {
             Section(title + (total > 0 ? "  (" + total + ")" : ""));
             m_listTop = m_y;
-            m_listBottom = m_bottom - 58 * S;
+            m_listBottom = m_footerTop - 8 * S;
             m_row = 0;
             m_rowsShown = Math.Max(1, (int)((m_listBottom - m_listTop) / RowHeight));
             m_map.SetListArea(new RectangleF(m_x, m_listTop, m_w, Math.Max(0, m_listBottom - m_listTop)), total, m_rowsShown);
@@ -304,20 +311,20 @@ namespace SirHolomap
             Gfx.Text(text, m_x + 14 * S, m_listTop + 4 * S, 0.58f, Style.Dim);
         }
 
-        public void Footer(string help)
+        // The help at the bottom of the menu, wrapped on as many lines as it
+        // needs. Laid out first, so that the list above stops before it and
+        // its last line never leaves the frame.
+        public void PrepareFooter(string help)
         {
-            var y = m_bottom - 50 * S;
-            Gfx.Rect(m_x + 14 * S, y, m_w - 28 * S, 1, Gfx.Alpha(Style.AccentDim, 0.8f));
-            var words = help.Split(new[] { "   " }, StringSplitOptions.RemoveEmptyEntries);
+            m_footerLines.Clear();
+            var words = (help ?? "").Split(new[] { "   " }, StringSplitOptions.RemoveEmptyEntries);
             var line = "";
-            var lineY = y + 6 * S;
             foreach (var word in words)
             {
                 var attempt = line.Length == 0 ? word : line + "   " + word;
-                if (Gfx.Measure(attempt, 0.52f).X > m_w - 28 * S && line.Length > 0)
+                if (Gfx.Measure(attempt, FooterScale).X > m_w - 28 * S && line.Length > 0)
                 {
-                    Gfx.Text(line, m_x + 14 * S, lineY, 0.52f, Style.Dim);
-                    lineY += 18 * S;
+                    m_footerLines.Add(Gfx.Fit(line, FooterScale, m_w - 28 * S));
                     line = word;
                 }
                 else
@@ -325,7 +332,20 @@ namespace SirHolomap
                     line = attempt;
                 }
             }
-            Gfx.Text(line, m_x + 14 * S, lineY, 0.52f, Style.Dim);
+            if (line.Length > 0)
+                m_footerLines.Add(Gfx.Fit(line, FooterScale, m_w - 28 * S));
+            m_footerTop = m_bottom - (14 + FooterLine * m_footerLines.Count) * S;
+        }
+
+        public void Footer()
+        {
+            Gfx.Rect(m_x + 14 * S, m_footerTop, m_w - 28 * S, 1, Gfx.Alpha(Style.AccentDim, 0.8f));
+            var lineY = m_footerTop + 6 * S;
+            foreach (var line in m_footerLines)
+            {
+                Gfx.Text(line, m_x + 14 * S, lineY, FooterScale, Style.Dim);
+                lineY += FooterLine * S;
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ namespace SirHolomap.Tests
     // The pictures handed to the game's renderer: the renderer reads exactly
     // what the size announces (every mipmap level included), from the array
     // it was given, later and on its own thread.
-    public class BodyTextureTests
+    public class GlobeTextureTests
     {
         // What the renderer reads (MyGeneratedTextureManager.Reset): from the
         // start of the array, level after level, width x height x 4 bytes,
@@ -42,7 +42,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void UploadedPixelsMatchDeclaredSize()
+        public void UploadedImageMatchesDeclaredSize()
         {
             // Every size the map uses: the white square, the marker shapes,
             // the sun, the globes, the galaxy, the globe seen through the map's
@@ -84,7 +84,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void UploadedPixelsAreNeverMutatedAfterUpload()
+        public void UploadedImageIsNotModifiedAfterSend()
         {
             var ledger = new TextureLedger();
             var straight = Images.ShapeImage(Images.Shape.Disc);
@@ -135,6 +135,42 @@ namespace SirHolomap.Tests
             var centre = (128 * 256 + 128) * 4;
             Assert.Equal(255, sent[centre + 3]);
             Assert.True(sent[centre] > 100);
+        }
+
+        // The galaxy lies on the star field of the map: the picture is
+        // transparent wherever the galaxy is dark, all along its edges, so
+        // that no square shows around it when it is zoomed out.
+        [Fact]
+        public void GalaxyHasNoSquareAroundIt()
+        {
+            const int size = 128;
+            var sent = TexturePixels.Prepare(size, size, Images.GalaxyImage(size));
+            AssertNoSquare(sent);
+            for (var i = 0; i < size; i++)
+            {
+                Assert.Equal(0, sent[(0 * size + i) * 4 + 3]);
+                Assert.Equal(0, sent[((size - 1) * size + i) * 4 + 3]);
+                Assert.Equal(0, sent[(i * size + 0) * 4 + 3]);
+                Assert.Equal(0, sent[(i * size + size - 1) * 4 + 3]);
+            }
+            // The bright bulge stays bright.
+            var centre = (size / 2 * size + size / 2) * 4;
+            Assert.True(sent[centre + 3] > 200);
+
+            // The sky tile: stars on a transparent ground.
+            var stars = TexturePixels.Prepare(256, 256, Images.StarFieldImage(256, 1));
+            AssertNoSquare(stars);
+            var clear = 0;
+            var lit = 0;
+            for (var i = 3; i < 256 * 256 * 4; i += 4)
+            {
+                if (stars[i] == 0)
+                    clear++;
+                else
+                    lit++;
+            }
+            Assert.True(clear > lit * 4, clear + " clear, " + lit + " lit");
+            Assert.True(lit > 100, lit + " lit");
         }
 
         private static void AssertNoSquare(byte[] pixels)

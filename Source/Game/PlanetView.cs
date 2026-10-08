@@ -36,6 +36,12 @@ namespace SirHolomap
         private readonly List<Marker> m_visible = new List<Marker>();
         private readonly List<Vector2> m_visibleAt = new List<Vector2>();
 
+        // The other bodies in sight (a moon, a neighbour planet): a double
+        // click glides the globe over to them.
+        private readonly List<Body> m_others = new List<Body>();
+        private readonly List<Vector2> m_othersAt = new List<Vector2>();
+        private readonly List<float> m_othersRadius = new List<float>();
+
         public PlanetView(MapScreen map) : base(map)
         {
         }
@@ -126,6 +132,32 @@ namespace SirHolomap
         }
 
         private const double MaxTilt = 1.35;
+
+        // Another body seen from this globe: the view glides over to it and
+        // stays a planet view, the whole new globe in sight, turned the way
+        // the camera came from. The wheel out then leaves it as it would
+        // leave any globe.
+        private void GlideTo(Body body)
+        {
+            if (body == null || body.Planet == null || body.Planet.Closed)
+                return;
+            var from = Camera.TargetEye;
+            var up = Camera.TargetUp;
+            Body = body;
+            m_ladder.Configure(body.Radius, ZoomRung.Planet);
+            m_grid = null;
+            m_gridId = 0;
+            m_tilt = 0;
+            var offset = from - body.Centre;
+            m_direction = offset.LengthSquared() > 1 ? Vector3D.Normalize(offset) : World.DirectionToSun;
+            m_up = Vector3D.Reject(up, m_direction);
+            if (m_up.LengthSquared() < 1e-8)
+                m_up = Vector3D.CalculatePerpendicularVector(m_direction);
+            m_up.Normalize();
+            m_altitude = Math.Min(body.Radius * 1.25, MapScales.HighestAltitude(body.Radius));
+            Aim();
+            Map.Glide();
+        }
 
         private static double LockedAltitude(Marker grid)
         {
@@ -321,6 +353,7 @@ namespace SirHolomap
         {
             if (Body == null)
                 return;
+            DrawOtherBodies();
             if (!RenderHooks.Active)
                 DrawOwnGlobe();
             m_visible.Clear();
@@ -396,6 +429,56 @@ namespace SirHolomap
             OrreryView.DrawGlobe(Map, Body, at, r, false, false);
         }
 
+        // The other bodies in sight, named under their disc. The game draws
+        // them when it draws the scene; otherwise their small painted globe
+        // stands in.
+        private void DrawOtherBodies()
+        {
+            m_others.Clear();
+            m_othersAt.Clear();
+            m_othersRadius.Clear();
+            var s = Gfx.Scale;
+            var area = Map.MapArea;
+            foreach (var body in World.Bodies)
+            {
+                if (body.Id == Body.Id)
+                    continue;
+                Vector2 at;
+                double depth;
+                if (!Camera.Project(body.Centre, out at, out depth) || Hidden(body.Centre))
+                    continue;
+                var r = (float)(body.Radius * Camera.PixelsPerMetre(depth));
+                if (r > Gfx.Height * 2)
+                    continue;
+                if (at.X + r < area.X || at.Y + r < area.Y || at.X - r > area.Right || at.Y - r > area.Bottom)
+                    continue;
+                var hovered = Same(Map.Hovered, body);
+                var selected = Same(Map.Selected, body);
+                var shown = Math.Max(r, 3 * s);
+                if (!RenderHooks.Active)
+                {
+                    OrreryView.DrawGlobe(Map, body, at, shown, hovered, selected);
+                }
+                else if (hovered || selected)
+                {
+                    Gfx.Sprite(GameTextures.Shape(Images.Shape.Ring), at, shown * 2.4f + 10 * s,
+                        Gfx.Alpha(selected ? Style.Selection : Style.Accent, 0.9f));
+                }
+                Gfx.Text(body.Name, at.X, at.Y + shown + 6 * s, 0.66f,
+                    selected ? Style.Selection : Gfx.Alpha(Style.Text, hovered ? 1f : 0.85f),
+                    VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP);
+                m_others.Add(body);
+                m_othersAt.Add(at);
+                m_othersRadius.Add(Math.Max(shown, 12 * s));
+            }
+        }
+
+        private static bool Same(object item, Body body)
+        {
+            var other = item as Body;
+            return other != null && other.Id == body.Id;
+        }
+
         // Which way the player looks, as a small arrow.
         private void DrawHeading(Vector2 at)
         {
@@ -423,14 +506,35 @@ namespace SirHolomap
                     bestDistance = d;
                 }
             }
+            if (best != null)
+                return best;
+            // Markers first; then the other bodies in sight.
+            var closest = double.MaxValue;
+            for (var i = 0; i < m_others.Count; i++)
+            {
+                var d = (m_othersAt[i] - mouse).Length();
+                if (d < m_othersRadius[i] && d / m_othersRadius[i] < closest)
+                {
+                    best = m_others[i];
+                    closest = d / m_othersRadius[i];
+                }
+            }
             return best;
         }
 
         // A double click goes down to what is under the cursor: a grid in
         // range is fastened, the camera then turns around it; a remembered
-        // one is only centred, as there is nothing to draw there.
+        // one is only centred, as there is nothing to draw there; another
+        // body takes the place of the globe.
         public override void DoubleClick(object target)
         {
+            var other = target as Body;
+            if (other != null)
+            {
+                if (Body == null || other.Id != Body.Id)
+                    GlideTo(other);
+                return;
+            }
             var marker = target as Marker;
             if (marker == null)
                 return;

@@ -161,6 +161,13 @@ namespace SirHolomap
             m_clicks.Cancel();
         }
 
+        // A view that moves its camera far by itself (another globe, for
+        // instance) glides there as softly as a change of view.
+        public void Glide()
+        {
+            StartTransition();
+        }
+
         // grid: a grid to keep in the middle of the globe, the camera turning
         // around it.
         public void GoPlanet(Body body, bool fromSystem, bool continuous, Marker grid)
@@ -639,7 +646,8 @@ namespace SirHolomap
             Gfx.Rect(0, TopBarHeight - 2 * s, w, 2 * s, Gfx.Alpha(Style.Accent, 0.8f));
             Gfx.Text(Texts.Title, 24 * s, TopBarHeight / 2, 0.95f, Style.Accent, MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER);
 
-            var labels = new[] { "A  " + Texts.ModePlanet, "B  " + Texts.ModeLocal, "C  " + Texts.ModeSystem };
+            // The views are named, never lettered.
+            var labels = new[] { Texts.ModePlanet, Texts.ModeLocal, Texts.ModeSystem };
             var helps = new[] { Texts.ModePlanetHelp, Texts.ModeLocalHelp, Texts.ModeSystemHelp };
             var modes = new[] { MapMode.Planet, MapMode.Local, MapMode.System };
             var bw = 210 * s;
@@ -658,7 +666,7 @@ namespace SirHolomap
                 var on = Mode == mode;
                 Gfx.Rect(x, y, bw, bh, on ? Gfx.Alpha(Style.Accent, 0.32f) : (hover ? Style.RowHover : Style.Row));
                 Gfx.Frame(x, y, bw, bh, on ? 2 : 1, on ? Style.Accent : Style.AccentDim);
-                Gfx.Text(labels[i], x + bw / 2, y + bh / 2, 0.75f, disabled ? Style.Dim : (on ? Color.White : Style.Text),
+                Gfx.Text(Gfx.Fit(labels[i], 0.75f, bw - 16 * s), x + bw / 2, y + bh / 2, 0.75f, disabled ? Style.Dim : (on ? Color.White : Style.Text),
                     MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER);
             }
 
@@ -672,6 +680,7 @@ namespace SirHolomap
             var top = TopBarHeight + 12 * s;
             var bottom = Gfx.Height - 14 * s;
             m_panel.Begin(PanelLeft, top, PanelWidth, bottom);
+            m_panel.PrepareFooter(view.Help);
             m_panel.Title(view.Title, view.Subtitle);
 
             if (Mode == MapMode.System)
@@ -701,7 +710,7 @@ namespace SirHolomap
             view.Filters(m_panel);
 
             view.List(m_panel);
-            m_panel.Footer(view.Help);
+            m_panel.Footer();
         }
 
         private void DrawStatus(MapView view)

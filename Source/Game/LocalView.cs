@@ -466,6 +466,9 @@ namespace SirHolomap
         public override void DrawMap()
         {
             var focus = Camera.Focus;
+            PrepareOccluders(focus);
+            if (!RenderHooks.Active)
+                DrawPaintedBodies();
             DrawPlane(focus, Camera.Distance);
             DrawSyncRange();
             DrawBodies();
@@ -495,13 +498,13 @@ namespace SirHolomap
                 var marker = m_visible[i];
                 if (m_anchor == LocalAnchor.Grid && marker.Id == m_gridId)
                     continue;
-                Vector2 a, b;
                 var foot = Foot(marker.Position);
-                if (!Camera.ProjectSegment(marker.Position, foot, out a, out b))
-                    continue;
                 var color = Gfx.Alpha(Style.MarkerColor(marker), marker.Live ? 0.75f : 0.4f);
-                Gfx.Line(a, b, 1.5f * s, color);
-                Gfx.Sprite(GameTextures.Shape(Images.Shape.Hexagon), b, 14 * s, color);
+                Segment(marker.Position, foot, 1.5f * s, color);
+                Vector2 b;
+                double depth;
+                if (!Occluded(foot) && Camera.Project(foot, out b, out depth))
+                    Gfx.Sprite(GameTextures.Shape(Images.Shape.Hexagon), b, 14 * s, color);
             }
 
             var crowded = m_visible.Count > 30;
@@ -573,12 +576,182 @@ namespace SirHolomap
                             continue;
                         var p0 = Normal * height + across * fixedValue + along * (centreAlong + t0);
                         var p1 = Normal * height + across * fixedValue + along * (centreAlong + t1);
-                        Vector2 sa, sb;
-                        if (Camera.ProjectSegment(p0, p1, out sa, out sb))
-                            Gfx.Line(sa, sb, 1.2f * s, Gfx.Alpha(Style.Grid, alpha * fade * fade));
+                        Segment(p0, p1, 1.2f * s, Gfx.Alpha(Style.Grid, alpha * fade * fade));
                     }
                 }
             }
+        }
+
+        // The planets and moons hide the plane: the game draws them in the
+        // scene, the plane is drawn over the scene, so every piece of a line
+        // that passes inside a body, or behind it as seen from the camera,
+        // is left out. Bodies are spheres of their mean radius; the plane
+        // runs through the point the view is centred on, which therefore
+        // always stays in sight, even in a valley below the mean radius.
+        private struct Occluder
+        {
+            public Vector3D Centre;
+            public double Radius;
+            // Its disc on screen, to skip the lines far from it; Wide when
+            // the body is too close to the camera to bound it that way.
+            public Vector2 At;
+            public float ScreenRadius;
+            public bool Wide;
+        }
+
+        private readonly List<Occluder> m_occluders = new List<Occluder>();
+
+        private void PrepareOccluders(Vector3D focus)
+        {
+            m_occluders.Clear();
+            var eye = Camera.Position;
+            foreach (var body in World.Bodies)
+            {
+                var radius = body.Radius;
+                var focusDistance = Vector3D.Distance(focus, body.Centre);
+                if (focusDistance > radius * 0.5 && focusDistance < radius * 1.002)
+                    radius = focusDistance * 0.998;
+                var toBody = body.Centre - eye;
+                var distance = toBody.Length();
+                // A camera low in a valley, below the mean radius: the body
+                // still hides what lies beyond its curve.
+                radius = Math.Min(radius, distance * 0.995);
+                if (radius <= 1)
+                    continue;
+                var occluder = new Occluder { Centre = body.Centre, Radius = radius };
+                // The body covers the directions within an angle of the one
+                // to its centre; on screen, at most this far from where its
+                // centre lands, stretched as it goes off the middle.
+                var spread = Math.Asin(MathHelper.Clamp(radius / distance, 0, 1));
+                var off = Math.Acos(MathHelper.Clamp(Vector3D.Dot(toBody / distance, Camera.Forward), -1, 1));
+                Vector2 at;
+                double projected;
+                if (off + spread < 1.45 && Camera.Project(body.Centre, out at, out projected))
+                {
+                    var pixels = Gfx.Height * 0.5 / Camera.TanHalfFov;
+                    var outward = Math.Tan(off + spread) - Math.Tan(off);
+                    var inward = Math.Tan(off) - Math.Tan(Math.Max(off - spread, -1.45));
+                    var across = Math.Tan(spread) / Math.Max(Math.Cos(off), 0.1);
+                    occluder.At = at;
+                    occluder.ScreenRadius = (float)(Math.Max(outward, Math.Max(inward, across)) * pixels) + 4;
+                }
+                else
+                {
+                    occluder.Wide = true;
+                }
+                m_occluders.Add(occluder);
+            }
+        }
+
+        // Inside a body, or behind it from the camera.
+        private bool Occluded(Vector3D point)
+        {
+            var eye = Camera.Position;
+            for (var i = 0; i < m_occluders.Count; i++)
+            {
+                var o = m_occluders[i];
+                var r2 = o.Radius * o.Radius;
+                if (Vector3D.DistanceSquared(point, o.Centre) < r2)
+                    return true;
+                var ray = point - eye;
+                var length2 = ray.LengthSquared();
+                if (length2 < 1e-9)
+                    continue;
+                var t = MathHelper.Clamp(Vector3D.Dot(o.Centre - eye, ray) / length2, 0, 1);
+                if (Vector3D.DistanceSquared(eye + ray * t, o.Centre) < r2)
+                    return true;
+            }
+            return false;
+        }
+
+        // Might a body hide part of this piece? Only then is it cut up.
+        private bool NearOccluder(Vector3D a, Vector3D b)
+        {
+            if (m_occluders.Count == 0)
+                return false;
+            Vector2 sa, sb;
+            var projected = Camera.ProjectSegment(a, b, out sa, out sb);
+            for (var i = 0; i < m_occluders.Count; i++)
+            {
+                var o = m_occluders[i];
+                if (o.Wide || !projected)
+                    return true;
+                if (DistanceToSegment(o.At, sa, sb) < o.ScreenRadius)
+                    return true;
+                // A piece that runs inside the body is cut, wherever it shows.
+                if (SegmentInside(a, b, o))
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool SegmentInside(Vector3D a, Vector3D b, Occluder o)
+        {
+            var ab = b - a;
+            var length2 = ab.LengthSquared();
+            var t = length2 > 1e-9 ? MathHelper.Clamp(Vector3D.Dot(o.Centre - a, ab) / length2, 0, 1) : 0;
+            return Vector3D.DistanceSquared(a + ab * t, o.Centre) < o.Radius * o.Radius;
+        }
+
+        private static float DistanceToSegment(Vector2 p, Vector2 a, Vector2 b)
+        {
+            var ab = b - a;
+            var length2 = ab.LengthSquared();
+            var t = length2 > 1e-6f ? MathHelper.Clamp(Vector2.Dot(p - a, ab) / length2, 0, 1) : 0;
+            return (a + ab * t - p).Length();
+        }
+
+        // A line of the map in the world, with what the bodies hide left
+        // out: the edge of a body cuts it cleanly.
+        private void Segment(Vector3D a, Vector3D b, float thickness, Color color)
+        {
+            if (!NearOccluder(a, b))
+            {
+                DrawPiece(a, b, thickness, color);
+                return;
+            }
+            const int samples = 24;
+            var previous = !Occluded(a);
+            var previousT = 0.0;
+            var start = previous ? 0.0 : -1.0;
+            for (var i = 1; i <= samples; i++)
+            {
+                var t = (double)i / samples;
+                var visible = !Occluded(a + (b - a) * t);
+                if (visible != previous)
+                {
+                    var edge = Edge(a, b, previousT, t, previous);
+                    if (previous)
+                        DrawPiece(a + (b - a) * start, a + (b - a) * edge, thickness, color);
+                    else
+                        start = edge;
+                }
+                previous = visible;
+                previousT = t;
+            }
+            if (previous && start >= 0)
+                DrawPiece(a + (b - a) * start, b, thickness, color);
+        }
+
+        // Where between two samples the line goes in or out of sight.
+        private double Edge(Vector3D a, Vector3D b, double t0, double t1, bool visibleAtStart)
+        {
+            for (var i = 0; i < 10; i++)
+            {
+                var middle = (t0 + t1) / 2;
+                if (!Occluded(a + (b - a) * middle) == visibleAtStart)
+                    t0 = middle;
+                else
+                    t1 = middle;
+            }
+            return visibleAtStart ? t0 : t1;
+        }
+
+        private void DrawPiece(Vector3D a, Vector3D b, float thickness, Color color)
+        {
+            Vector2 sa, sb;
+            if (Camera.ProjectSegment(a, b, out sa, out sb))
+                Gfx.Line(sa, sb, thickness, color);
         }
 
         // Where the game stops sending: beyond, the map shows memories.
@@ -602,9 +775,27 @@ namespace SirHolomap
                 var a1 = 2 * Math.PI * (i + 1) / segments;
                 var p0 = centre + (Reference * Math.Cos(a0) + side * Math.Sin(a0)) * radius;
                 var p1 = centre + (Reference * Math.Cos(a1) + side * Math.Sin(a1)) * radius;
-                Vector2 sa, sb;
-                if (Camera.ProjectSegment(p0, p1, out sa, out sb))
-                    Gfx.Line(sa, sb, 1.5f * s, color);
+                Segment(p0, p1, 1.5f * s, color);
+            }
+        }
+
+        // When the game does not draw the scene from the map's camera, the
+        // bodies are painted by the map, at their true size, under the plane
+        // they hide.
+        private void DrawPaintedBodies()
+        {
+            var order = new List<Body>(World.Bodies);
+            order.Sort((a, b) => Vector3D.DistanceSquared(b.Centre, Camera.Position).CompareTo(Vector3D.DistanceSquared(a.Centre, Camera.Position)));
+            foreach (var body in order)
+            {
+                Vector2 at;
+                double depth;
+                if (!Camera.Project(body.Centre, out at, out depth))
+                    continue;
+                var radius = (float)(body.Radius * Camera.PixelsPerMetre(depth));
+                if (radius > Gfx.Height * 2)
+                    continue;
+                OrreryView.DrawGlobe(Map, body, at, Math.Max(radius, 2 * Gfx.Scale), false, false);
             }
         }
 

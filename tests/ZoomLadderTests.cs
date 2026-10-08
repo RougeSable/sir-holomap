@@ -9,7 +9,7 @@ namespace SirHolomap.Tests
     public class ZoomLadderTests
     {
         [Fact]
-        public void EachWheelNotchMultipliesDistance()
+        public void EachNotchMultipliesDistance()
         {
             // Every notch multiplies the distance by the same factor, at every
             // scale.
@@ -70,8 +70,16 @@ namespace SirHolomap.Tests
             return notches;
         }
 
+        // Both switches, A to B and B to C, depend on the scale only and keep
+        // a gap between the way up and the way down.
         [Fact]
-        public void PlanetToLocalSwitchHasHysteresis()
+        public void SwitchesDependOnScaleWithHysteresis()
+        {
+            PlanetToLocalSwitchHasHysteresis();
+            LocalToSystemSwitchHasHysteresis();
+        }
+
+        private static void PlanetToLocalSwitchHasHysteresis()
         {
             const double radius = 60000;
             var ladder = new ZoomLadder(radius, ZoomRung.Planet);
@@ -136,8 +144,7 @@ namespace SirHolomap.Tests
             return 1;
         }
 
-        [Fact]
-        public void LocalToSystemSwitchHasHysteresis()
+        private static void LocalToSystemSwitchHasHysteresis()
         {
             var ladder = new ZoomLadder(0, ZoomRung.Local);
             var change = ladder.SystemSwitch;
@@ -168,7 +175,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void LeavingPlanetKeepsTheWayToSystem()
+        public void LeavingPlanetCentreKeepsSystemThreshold()
         {
             // B centred on a planet, just past the way out of A: moving the
             // camera off the planet's centre drops the way down to A but

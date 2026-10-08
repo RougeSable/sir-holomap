@@ -158,6 +158,7 @@ namespace SirHolomap
             var s = Gfx.Scale;
             var area = Map.MapArea;
             var size = Size;
+            DrawSky();
             if (GameTextures.GalaxyReady())
                 Gfx.Sprite(GameTextures.Galaxy, Centre.X, Centre.Y, size, size, Color.White);
             else
@@ -237,6 +238,39 @@ namespace SirHolomap
                 : Texts.AllServers;
             Gfx.Rect(area.X + 16 * s, area.Y + 14 * s, Gfx.Measure(notice, 0.62f).X + 20 * s, 28 * s, new Color(0, 0, 0, 170));
             Gfx.Text(notice, area.X + 26 * s, area.Y + 18 * s, 0.62f, Settings.GalaxyFilterActive ? Style.Selection : Style.Dim);
+        }
+
+        // The night sky the galaxy lies on: black, filled with stars to the
+        // edges of the view however far the galaxy is zoomed out. Two layers
+        // of the same tile at two sizes, drifting a little with the map so
+        // that the sky has depth; the galaxy picture fades into it.
+        private void DrawSky()
+        {
+            var s = Gfx.Scale;
+            var top = Map.TopBarHeight;
+            Gfx.Rect(0, top, Gfx.Width, Gfx.Height - top, Color.Black);
+            var drift = (float)Math.Log(m_zoom);
+            StarLayer(GameTextures.StarsSize * 0.75f * s, m_offset * 0.08f, new Vector2(37, 11) * drift, 0.55f);
+            StarLayer(GameTextures.StarsSize * 1.1f * s, m_offset * 0.2f, new Vector2(-23, 29) * drift, 0.9f);
+        }
+
+        private static void StarLayer(float tile, Vector2 shift, Vector2 drift, float alpha)
+        {
+            var top = MapScreen.Current != null ? MapScreen.Current.TopBarHeight : 0;
+            var startX = Wrap(shift.X + drift.X, tile) - tile;
+            var startY = top + Wrap(shift.Y + drift.Y, tile) - tile;
+            var color = Gfx.Alpha(Color.White, alpha);
+            for (var y = startY; y < Gfx.Height; y += tile)
+            {
+                for (var x = startX; x < Gfx.Width; x += tile)
+                    Gfx.Sprite(GameTextures.Stars, x + tile / 2, y + tile / 2, tile, tile, color);
+            }
+        }
+
+        private static float Wrap(float value, float period)
+        {
+            var r = value % period;
+            return r < 0 ? r + period : r;
         }
 
         private void Here(Vector2 at)

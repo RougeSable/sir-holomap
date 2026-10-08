@@ -123,7 +123,11 @@ namespace SirHolomap
 
         // The galaxy behind the servers: a warm bulge, a blue disc, spiral
         // arms with dust lanes and scattered stars, after the same shape the
-        // servers are placed on.
+        // servers are placed on. Its light is its only substance: where the
+        // galaxy is dark the picture is transparent, fading out well before
+        // its edges, so that it lies on the star field of the map without a
+        // square around it. Over black it looks exactly as an opaque picture
+        // would: the colour is kept in linear light once premultiplied.
         public static byte[] GalaxyImage(int size)
         {
             var data = new byte[size * size * 4];
@@ -150,9 +154,10 @@ namespace SirHolomap
                     var green = (0.14 * disc + 0.55 * armLight) * dust + 0.86 * bulge;
                     var blue = (0.24 * disc + 0.95 * armLight) * dust + 0.55 * bulge;
 
-                    // Stars: rare bright pixels, denser in the arms.
+                    // Stars: rare bright pixels, denser in the arms; the
+                    // rest of the sky is the map's own star field.
                     var h = Hash(px * 7349 + py * 1931);
-                    var starChance = 0.0025 + 0.02 * arm * disc;
+                    var starChance = (0.0025 + 0.02 * arm) * disc * 3;
                     if (h < starChance)
                     {
                         var star = 0.6 + 0.4 * Hash(px * 13 + py * 9973);
@@ -161,14 +166,90 @@ namespace SirHolomap
                         blue += star * 1.05;
                     }
 
+                    var lr = SrgbToLinear(ToneMap(red));
+                    var lg = SrgbToLinear(ToneMap(green));
+                    var lb = SrgbToLinear(ToneMap(blue));
+                    var edge = Smooth(Clamp01((0.98 - r) / 0.12));
+                    // Opaque where the galaxy is bright, so that the sky
+                    // behind does not show through its bulge; never less than
+                    // its light, so that the colour is exact.
+                    var light = Math.Max(lr, Math.Max(lg, lb));
+                    var alpha = Math.Min(1, 2.5 * Math.Sqrt(light)) * edge;
                     var i = (py * size + px) * 4;
-                    data[i] = ToByte(ToneMap(red));
-                    data[i + 1] = ToByte(ToneMap(green));
-                    data[i + 2] = ToByte(ToneMap(blue));
-                    data[i + 3] = 255;
+                    if (alpha < 1.0 / 512)
+                        continue;
+                    var keep = edge / alpha;
+                    data[i] = ToByte(LinearToSrgb(lr * keep));
+                    data[i + 1] = ToByte(LinearToSrgb(lg * keep));
+                    data[i + 2] = ToByte(LinearToSrgb(lb * keep));
+                    data[i + 3] = ToByte(alpha);
                 }
             }
             return data;
+        }
+
+        // A tile of the night sky behind the galaxy: scattered stars of
+        // every brightness, a few tinted, on a transparent ground. The tile
+        // wraps: stars near an edge show again on the other side.
+        public static byte[] StarFieldImage(int size, int seed)
+        {
+            var data = new byte[size * size * 4];
+            var count = size * size / 380;
+            for (var n = 0; n < count; n++)
+            {
+                var cx = Hash(seed * 7919 + n * 31 + 1) * size;
+                var cy = Hash(seed * 104729 + n * 17 + 2) * size;
+                var brightness = Math.Pow(Hash(seed * 13 + n * 101 + 3), 3) * 0.85 + 0.15;
+                var radius = 0.55 + 0.9 * Math.Pow(Hash(seed * 53 + n * 7 + 4), 4);
+                var tint = Hash(seed * 3 + n * 211 + 5);
+                double tr = 1, tg = 1, tb = 1;
+                if (tint < 0.15)
+                {
+                    tr = 0.75;
+                    tg = 0.85;
+                }
+                else if (tint > 0.9)
+                {
+                    tb = 0.7;
+                    tg = 0.9;
+                }
+                var reach = (int)Math.Ceiling(radius + 1.5);
+                for (var dy = -reach; dy <= reach; dy++)
+                {
+                    for (var dx = -reach; dx <= reach; dx++)
+                    {
+                        var px = (int)Math.Floor(cx) + dx;
+                        var py = (int)Math.Floor(cy) + dy;
+                        var ox = px + 0.5 - cx;
+                        var oy = py + 0.5 - cy;
+                        var d = Math.Sqrt(ox * ox + oy * oy);
+                        var light = brightness * Clamp01(1 - (d - radius * 0.5) / (radius + 0.6));
+                        if (light <= 0)
+                            continue;
+                        px = ((px % size) + size) % size;
+                        py = ((py % size) + size) % size;
+                        var i = (py * size + px) * 4;
+                        var a = Math.Max(data[i + 3] / 255.0, light);
+                        data[i] = ToByte(tr);
+                        data[i + 1] = ToByte(tg);
+                        data[i + 2] = ToByte(tb);
+                        data[i + 3] = ToByte(a);
+                    }
+                }
+            }
+            return data;
+        }
+
+        private static double SrgbToLinear(double c)
+        {
+            c = Clamp01(c);
+            return c <= 0.04045 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
+        }
+
+        private static double LinearToSrgb(double l)
+        {
+            l = Clamp01(l);
+            return l <= 0.0031308 ? l * 12.92 : 1.055 * Math.Pow(l, 1 / 2.4) - 0.055;
         }
 
         private static Tuple<double, double> Rotate(double x, double y, double angle)

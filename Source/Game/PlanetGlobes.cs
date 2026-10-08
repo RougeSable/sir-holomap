@@ -58,6 +58,7 @@ namespace SirHolomap
             public readonly float[] Colors = new float[Columns * Rows * 3];
             public readonly float[] Heights = new float[Columns * Rows];
             public string Texture;
+            public bool Failed;
         }
 
         private readonly Dictionary<long, Job> m_jobs = new Dictionary<long, Job>();
@@ -126,9 +127,11 @@ namespace SirHolomap
             {
                 if (m_viewTask.Status == TaskStatus.RanToCompletion && m_viewTask.Result != null)
                 {
-                    GameTextures.Replace(ViewTexture, ViewWidth, ViewHeight, m_viewTask.Result);
-                    m_viewShown = m_viewPainting;
-                    m_viewAny = true;
+                    if (GameTextures.Send(ViewTexture, ViewWidth, ViewHeight, m_viewTask.Result))
+                    {
+                        m_viewShown = m_viewPainting;
+                        m_viewAny = true;
+                    }
                 }
                 m_viewTask = null;
             }
@@ -174,7 +177,7 @@ namespace SirHolomap
             var budget = SamplesPerFrame;
             foreach (var job in m_jobs.Values)
             {
-                if (job.Texture != null || job.Body.Planet == null || job.Body.Planet.Closed)
+                if (job.Texture != null || job.Failed || job.Body.Planet == null || job.Body.Planet.Closed)
                     continue;
                 while (budget-- > 0 && job.Next < Columns * Rows)
                     Sample(job, job.Next++);
@@ -252,8 +255,10 @@ namespace SirHolomap
             // Seen from the side the sun lights, at the start.
             var image = Images.GlobeImage(ImageSize, Columns, Rows, job.Colors, job.Heights, job.Body.Radius, 0.3, atmosphere);
             var name = "SirHolomapGlobe" + (job.Body.Id < 0 ? "n" + (-job.Body.Id) : job.Body.Id.ToString());
-            GameTextures.Create(name, ImageSize, ImageSize, image);
-            job.Texture = name;
+            if (GameTextures.Send(name, ImageSize, ImageSize, image))
+                job.Texture = name;
+            else
+                job.Failed = true;
         }
     }
 }

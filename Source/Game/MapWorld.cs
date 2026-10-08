@@ -75,10 +75,8 @@ namespace SirHolomap
         private readonly List<IMyPlayer> m_players = new List<IMyPlayer>();
         private readonly Dictionary<long, Marker> m_markerCache = new Dictionary<long, Marker>();
         private readonly List<IMyGps> m_gps = new List<IMyGps>();
-        private readonly Dictionary<long, Body> m_bodyCache = new Dictionary<long, Body>();
+        private readonly Registry<Body> m_bodyCache = new Registry<Body>(id => new Body { Id = id });
         private readonly List<MyPlanet> m_planets = new List<MyPlanet>();
-        private readonly HashSet<long> m_bodiesSeen = new HashSet<long>();
-        private readonly List<long> m_bodiesGone = new List<long>();
         private DateTime m_lastBodies = DateTime.MinValue;
         private DateTime m_lastGps = DateTime.MinValue;
         private DateTime m_lastSave = DateTime.UtcNow;
@@ -352,16 +350,11 @@ namespace SirHolomap
             m_planets.Sort((a, b) => a.EntityId.CompareTo(b.EntityId));
 
             Bodies.Clear();
-            m_bodiesSeen.Clear();
+            m_bodyCache.BeginRefresh();
             var names = new Dictionary<string, int>();
             foreach (var planet in m_planets)
             {
-                Body body;
-                if (!m_bodyCache.TryGetValue(planet.EntityId, out body))
-                {
-                    body = new Body { Id = planet.EntityId };
-                    m_bodyCache[planet.EntityId] = body;
-                }
+                var body = m_bodyCache.Keep(planet.EntityId);
                 body.Planet = planet;
                 body.Centre = planet.PositionComp.GetPosition();
                 body.Radius = planet.AverageRadius;
@@ -378,19 +371,11 @@ namespace SirHolomap
                 names[name] = count + 1;
                 body.Name = count == 0 ? name : name + " " + (count + 1);
                 Bodies.Add(body);
-                m_bodiesSeen.Add(planet.EntityId);
             }
             m_planets.Clear();
 
             // Planets gone from the world are forgotten.
-            m_bodiesGone.Clear();
-            foreach (var id in m_bodyCache.Keys)
-            {
-                if (!m_bodiesSeen.Contains(id))
-                    m_bodiesGone.Add(id);
-            }
-            foreach (var id in m_bodiesGone)
-                m_bodyCache.Remove(id);
+            m_bodyCache.EndRefresh();
 
             // Moons follow their planet, the same way the flat view lists them.
             var infos = new List<BodyInfo>();
@@ -467,6 +452,13 @@ namespace SirHolomap
                     return body;
             }
             return null;
+        }
+
+        // A body the map holds on to (selected, hovered, dived into), as it
+        // is now: the same object while the planet exists, null once gone.
+        public Body Follow(Body body)
+        {
+            return m_bodyCache.Follow(body, b => b.Id);
         }
 
         // The planet whose gravity holds the player, if any.

@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SirHolomap.Tests
 {
-    public class MapMemoryTests
+    public class MemoryTests
     {
         private const double SyncRadius = 3000;
         private static readonly DateTime T0 = new DateTime(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc);
@@ -46,7 +46,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void KeepsLastKnownPositionWhenOutOfSync()
+        public void KeepsLastKnownPositionOutOfRange()
         {
             var memory = new MapMemory("steam://1.2.3.4:27016");
             var basePosition = new Vec3(100, 0, 0);
@@ -66,7 +66,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void UpdatesOnReturn()
+        public void UpdatesWhenSeenAgain()
         {
             var memory = new MapMemory("steam://1.2.3.4:27016");
             var ship = Base(new Vec3(100, 0, 0));

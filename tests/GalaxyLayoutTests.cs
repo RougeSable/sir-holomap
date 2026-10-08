@@ -3,10 +3,10 @@ using Xunit;
 
 namespace SirHolomap.Tests
 {
-    public class GalaxyPlacementTests
+    public class GalaxyLayoutTests
     {
         [Fact]
-        public void SameAddressSamePosition()
+        public void SameServerAlwaysSamePlace()
         {
             var a = GalaxyPlacement.PositionOf("steam://85.10.200.17:27016");
             var b = GalaxyPlacement.PositionOf("85.10.200.17:27016");
@@ -22,7 +22,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void DifferentAddressesNeverSamePosition()
+        public void TwoServersNeverSamePlace()
         {
             var seen = new Dictionary<string, string>();
 
@@ -47,7 +47,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void OverlappingIconsAreClustered()
+        public void CloseIconsAreClustered()
         {
             var icons = new List<ScreenIcon>
             {

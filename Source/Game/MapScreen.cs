@@ -485,6 +485,10 @@ namespace SirHolomap
                 controlled.MoveAndRotate(Vector3.Zero, Vector2.Zero, 0f);
 
             World.Refresh();
+            // A selected body stays selected when the bodies are read again.
+            var selectedBody = Selected as Body;
+            if (selectedBody != null)
+                Selected = World.Follow(selectedBody);
             Globes.Work();
             if (Mode == MapMode.System && Tab == SystemTab.Galaxy)
                 Servers.Update(World, Settings);

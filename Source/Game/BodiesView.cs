@@ -110,8 +110,9 @@ namespace SirHolomap
             var middle = area.Y + area.Height * 0.38f;
 
             // Faint stars behind.
-            Gfx.Sprite(GameTextures.Galaxy, area.X + area.Width * 0.7f, area.Y + area.Height * 0.5f, area.Height * 1.6f, area.Height * 1.6f,
-                new Color(255, 255, 255, 28));
+            if (GameTextures.GalaxyReady())
+                Gfx.Sprite(GameTextures.Galaxy, area.X + area.Width * 0.7f, area.Y + area.Height * 0.5f, area.Height * 1.6f, area.Height * 1.6f,
+                    new Color(255, 255, 255, 28));
 
             // The sun, half out of the left edge.
             var sunSize = area.Height * 1.1f;

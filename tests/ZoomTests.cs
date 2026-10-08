@@ -6,7 +6,7 @@ namespace SirHolomap.Tests
     public class ZoomTests
     {
         [Fact]
-        public void ScrollIsLogarithmic()
+        public void EachWheelNotchMultipliesDistance()
         {
             // Every notch multiplies the distance by the same factor, at every
             // scale.
@@ -39,7 +39,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void SwitchBetweenNeighbourhoodAndSystemHasHysteresis()
+        public void SwitchBetweenBAndCHasHysteresis()
         {
             var change = MapScales.NeighbourhoodToSystem(0);
             Assert.True(change.DownBelow < change.UpAbove);

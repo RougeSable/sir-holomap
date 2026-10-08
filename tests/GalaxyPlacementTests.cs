@@ -3,7 +3,7 @@ using Xunit;
 
 namespace SirHolomap.Tests
 {
-    public class GalaxyLayoutTests
+    public class GalaxyPlacementTests
     {
         [Fact]
         public void SameServerAlwaysSamePlace()
@@ -47,7 +47,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void CloseIconsAreClustered()
+        public void CloseIconsAreGrouped()
         {
             var icons = new List<ScreenIcon>
             {

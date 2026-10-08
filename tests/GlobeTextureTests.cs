@@ -41,8 +41,16 @@ namespace SirHolomap.Tests
             return total;
         }
 
+        // An image of a body sent to the game has exactly the size it
+        // announces, and is never changed once sent.
         [Fact]
-        public void UploadedImageMatchesDeclaredSize()
+        public void SentImageMatchesAnnouncedSizeAndIsNeverModified()
+        {
+            SentImageMatchesAnnouncedSize();
+            SentImageIsNeverModified();
+        }
+
+        private static void SentImageMatchesAnnouncedSize()
         {
             // Every size the map uses: the white square, the marker shapes,
             // the sun, the globes, the galaxy, the globe seen through the map's
@@ -83,8 +91,7 @@ namespace SirHolomap.Tests
             Assert.Equal(TexturePixels.DeclaredLength(128, 128), TexturePixels.Prepare(128, 128, Images.SunImage(128)).Length);
         }
 
-        [Fact]
-        public void UploadedImageIsNotModifiedAfterSend()
+        private static void SentImageIsNeverModified()
         {
             var ledger = new TextureLedger();
             var straight = Images.ShapeImage(Images.Shape.Disc);

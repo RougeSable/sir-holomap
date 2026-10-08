@@ -29,7 +29,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void EveryKeyExistsInEveryGameLanguage()
+        public void EveryTextExistsInEveryGameLanguage()
         {
             var keys = TextKeys();
             Assert.True(keys.Count > 100, keys.Count + " texts");

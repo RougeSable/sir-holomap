@@ -20,8 +20,16 @@ namespace SirHolomap.Tests
             }
         }
 
+        // The preferred filter of the galaxy and the two block thresholds
+        // are kept between game launches, for every server.
         [Fact]
-        public void GalaxyFiltersSurviveRestart()
+        public void GalaxyFiltersAndBlockThresholdsSurviveRestart()
+        {
+            GalaxyFiltersSurviveRestart();
+            BlockThresholdsSurviveRestart();
+        }
+
+        private static void GalaxyFiltersSurviveRestart()
         {
             InFolder(directory =>
             {
@@ -54,8 +62,7 @@ namespace SirHolomap.Tests
             });
         }
 
-        [Fact]
-        public void BlockThresholdsSurviveRestart()
+        private static void BlockThresholdsSurviveRestart()
         {
             InFolder(directory =>
             {

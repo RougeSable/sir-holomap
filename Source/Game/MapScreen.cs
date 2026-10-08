@@ -50,6 +50,9 @@ namespace SirHolomap
         private double m_lastInput;
         private double m_transitionUntil;
         private bool m_hudWasMinimal;
+        private bool m_lastUses3D = true;
+        private double m_fadeUntil;
+        private const double FadeSeconds = 0.45;
         private bool m_closed;
 
         private Vector2 m_lastMouse;
@@ -138,16 +141,10 @@ namespace SirHolomap
                         return PlanetMode;
                     case MapMode.Local:
                         return LocalMode;
+                    case MapMode.Galaxy:
+                        return GalaxyMode;
                     default:
-                        switch (Tab)
-                        {
-                            case SystemTab.Bodies:
-                                return BodiesMode;
-                            case SystemTab.Galaxy:
-                                return GalaxyMode;
-                            default:
-                                return OrreryMode;
-                        }
+                        return Tab == SystemTab.Bodies ? (MapView)BodiesMode : OrreryMode;
                 }
             }
         }
@@ -192,11 +189,22 @@ namespace SirHolomap
 
         public void GoSystem(SystemTab tab, bool continuous)
         {
+            var fromGalaxy = Mode == MapMode.Galaxy;
             var from3D = View.Uses3D;
             Tab = tab;
             Mode = MapMode.System;
             if (tab == SystemTab.Orrery)
-                OrreryMode.Enter(continuous && from3D);
+                OrreryMode.Enter(continuous && from3D, continuous && fromGalaxy);
+            StartTransition();
+        }
+
+        // fromSystem: the wheel went out of the system; the galaxy then opens
+        // on the place of this server and draws back to show it whole.
+        public void GoGalaxy(bool fromSystem)
+        {
+            GalaxyMode.Enter(fromSystem, Tab);
+            Mode = MapMode.Galaxy;
+            Selected = null;
             StartTransition();
         }
 
@@ -233,6 +241,9 @@ namespace SirHolomap
                         GoLocal(LocalAnchor.Body, gravity, null, false, false);
                     else
                         GoLocal(LocalAnchor.Player, null, null, false, false);
+                    break;
+                case MapMode.Galaxy:
+                    GoGalaxy(false);
                     break;
                 default:
                     GoSystem(Tab, false);
@@ -324,8 +335,14 @@ namespace SirHolomap
             else
                 m_middleOnMap = false;
 
+            // A right click on the map lets go of a fastened grid, and of the
+            // selection.
             if (input.IsNewRightMousePressed() && OverMap(mouse))
+            {
+                m_clicks.Cancel();
+                View.LetGo();
                 Selected = null;
+            }
 
             var wheel = input.DeltaMouseScrollWheelValue();
             if (wheel != 0)
@@ -506,6 +523,14 @@ namespace SirHolomap
                 return;
             }
 
+            // The player died with the map open: the map steps aside for the
+            // game's respawn screen. Opened again, it starts over the player.
+            if (PlayerIsGone())
+            {
+                CloseScreen();
+                return;
+            }
+
             // The character and the ship stay as they are.
             var controlled = MyAPIGateway.Session.ControlledObject;
             if (controlled != null)
@@ -516,12 +541,26 @@ namespace SirHolomap
             var selectedBody = Selected as Body;
             if (selectedBody != null)
                 Selected = World.Follow(selectedBody);
-            if (Mode == MapMode.System && Tab == SystemTab.Galaxy)
+            if (Mode == MapMode.Galaxy)
                 Servers.Update(World, Settings);
+            else if (Selected is GalaxyServer || Selected is IconCluster)
+                Selected = null;
 
+            // A single click selects; beside everything, it lets go of a
+            // fastened grid and of the selection.
             object clicked;
             if (m_clicks.Poll(Time, out clicked) == ClickKind.Single)
-                Selected = ReferenceEquals(clicked, Nothing) ? null : clicked;
+            {
+                if (ReferenceEquals(clicked, Nothing))
+                {
+                    View.LetGo();
+                    Selected = null;
+                }
+                else
+                {
+                    Selected = clicked;
+                }
+            }
 
             Camera.SetLens(RenderHooks.LastFov, Gfx.Width / Gfx.Height);
             Camera.HalfLife = Time < m_transitionUntil ? MapCamera.TransitionHalfLife : MapCamera.QuickHalfLife;
@@ -534,6 +573,13 @@ namespace SirHolomap
                 RenderHooks.Jump = true;
 
             var view = View;
+            // Between a view drawn by the game and a flat one, the map fades
+            // in from the dark instead of cutting.
+            if (view.Uses3D != m_lastUses3D)
+            {
+                m_lastUses3D = view.Uses3D;
+                m_fadeUntil = Time + FadeSeconds;
+            }
             RenderHooks.Active = view.Uses3D && RenderHooks.CameraAvailable;
             RenderHooks.View = Camera.View;
             RenderHooks.Position = Camera.Position;
@@ -548,6 +594,18 @@ namespace SirHolomap
                 m_plugin.SaveSettings();
             }
             m_lastTime = Time;
+        }
+
+        // No character, or a dead one: the game is about to show its respawn
+        // screen.
+        public static bool PlayerIsGone()
+        {
+            var session = MyAPIGateway.Session;
+            var player = session != null ? session.Player : null;
+            if (player == null)
+                return true;
+            var character = player.Character;
+            return character == null || character.IsDead || character.MarkedForClose;
         }
 
         public override bool CloseScreen(bool isUnloading = false)
@@ -630,6 +688,12 @@ namespace SirHolomap
             Hovered = OverMap(mouse) && !m_dragging ? view.Pick(mouse) : null;
             view.DrawMap();
 
+            if (Time < m_fadeUntil)
+            {
+                var fade = (float)MathHelper.Clamp((m_fadeUntil - Time) / FadeSeconds, 0, 1);
+                Gfx.Rect(0, TopBarHeight, Gfx.Width, Gfx.Height - TopBarHeight, Gfx.Alpha(Style.Space, fade * fade));
+            }
+
             DrawTopBar();
             DrawPanel(view);
             DrawStatus(view);
@@ -647,15 +711,18 @@ namespace SirHolomap
             Gfx.Text(Texts.Title, 24 * s, TopBarHeight / 2, 0.95f, Style.Accent, MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER);
 
             // The views are named, never lettered.
-            var labels = new[] { Texts.ModePlanet, Texts.ModeLocal, Texts.ModeSystem };
-            var helps = new[] { Texts.ModePlanetHelp, Texts.ModeLocalHelp, Texts.ModeSystemHelp };
-            var modes = new[] { MapMode.Planet, MapMode.Local, MapMode.System };
-            var bw = 210 * s;
-            var bh = 38 * s;
+            var labels = new[] { Texts.ModePlanet, Texts.ModeLocal, Texts.ModeSystem, Texts.ModeGalaxy };
+            var helps = new[] { Texts.ModePlanetHelp, Texts.ModeLocalHelp, Texts.ModeSystemHelp, Texts.TabGalaxyHelp };
+            var modes = new[] { MapMode.Planet, MapMode.Local, MapMode.System, MapMode.Galaxy };
+            var count = modes.Length;
             var gap = 10 * s;
-            var x0 = (PanelLeft - (bw * 3 + gap * 2)) / 2;
+            var titleRoom = Gfx.Measure(Texts.Title, 0.95f).X + 48 * s;
+            var bw = Math.Min(200 * s, (PanelLeft - 2 * titleRoom - gap * (count - 1)) / count);
+            bw = Math.Max(bw, 120 * s);
+            var bh = 38 * s;
+            var x0 = Math.Max(titleRoom, (PanelLeft - (bw * count + gap * (count - 1))) / 2);
             var noPlanet = World.Bodies.Count == 0;
-            for (var i = 0; i < 3; i++)
+            for (var i = 0; i < count; i++)
             {
                 var x = x0 + i * (bw + gap);
                 var y = (TopBarHeight - bh) / 2;
@@ -685,8 +752,8 @@ namespace SirHolomap
 
             if (Mode == MapMode.System)
             {
-                m_panel.Tabs(new[] { Texts.TabBodies, Texts.TabOrrery, Texts.TabGalaxy },
-                    new[] { Texts.TabBodiesHelp, Texts.TabOrreryHelp, Texts.TabGalaxyHelp },
+                m_panel.Tabs(new[] { Texts.TabBodies, Texts.TabOrrery },
+                    new[] { Texts.TabBodiesHelp, Texts.TabOrreryHelp },
                     (int)Tab, i => GoSystem((SystemTab)i, false));
             }
 

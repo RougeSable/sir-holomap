@@ -5,18 +5,22 @@ using VRageMath;
 
 namespace SirHolomap
 {
+    // The four views, named on the buttons at the top: the planet (A), the
+    // neighbourhood (B), the system (C) and the galaxy (D).
     public enum MapMode
     {
         Planet,
         Local,
         System,
+        Galaxy,
     }
 
+    // The two tabs of the system: the planets laid flat (2D) and the system
+    // in 3D.
     public enum SystemTab
     {
         Bodies,
         Orrery,
-        Galaxy,
     }
 
     // One view of the map. Every view answers the same gestures the same way:
@@ -95,6 +99,12 @@ namespace SirHolomap
 
         // Selecting from the list on the right: the view shows it.
         public virtual void Focus(object target)
+        {
+        }
+
+        // A click beside the selection, or a right click: a view fastened
+        // to a grid lets go of it and comes back to its usual self.
+        public virtual void LetGo()
         {
         }
 

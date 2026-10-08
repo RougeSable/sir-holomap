@@ -1,6 +1,0 @@
-bin/
-obj/
-.vs/
-*.user
-Directory.Build.props
-TestResults/

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Pulsar sheet of Sir Holomap: it carries the name Pulsar shows in its plugin
+  list (FriendlyName). Pulsar does not read it from this repository: the
+  studio copies it to the Sirius catalog at every release, with the published
+  commit in Commit. SourceDirectories limits the compilation to the Source
+  folder, without the tests.
+-->
+<PluginData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="GitHubPlugin">
+  <FriendlyName>Sir Holomap</FriendlyName>
+  <Author>RougeSable</Author>
+  <Tooltip>In-game map on M: the real planet globe, your neighbourhood in space, the solar system and the galaxy of servers, with a memory of what you have seen.</Tooltip>
+  <Description>Sir Holomap adds a full screen map to Space Engineers, opened and closed with M (when a block is in hand, M keeps the game's symmetry). Planet: the planet you are on, drawn by the game's own renderer from orbit, with you, your grids and the bases in place; the mouse wheel zooms down to the ground. Local space: your neighbourhood in space, seen from above a virtual plane, every grid linked to the plane by its altitude line, the planets hiding the plane behind them; double click a grid to fly the camera around it. System: the whole system, planets and moons laid flat (2D) and the system in 3D with true distances. Galaxy: every server you know has a fixed place in the galaxy. The map remembers everything that entered your synchronisation range: live markers are sharp, memories are greyed with the time you saw them. The memory stays on your machine, one per server. A double click on a server of the galaxy joins it after a confirmation that names it, with a box for its password when it asks for one. The map speaks the language set in the game. Nothing goes through the server, and nothing on the map moves your character.</Description>
+  <Commit>0000000000000000000000000000000000000000</Commit>
+  <SourceDirectories>
+    <Directory>Source</Directory>
+  </SourceDirectories>
+</PluginData>

@@ -11,19 +11,28 @@ namespace SirHolomap
     // camera comes down; out far enough, the view leaves the globe for the
     // neighbourhood (B), or back to the system (C) when it was opened from
     // there.
+    //
+    // The camera looks at a point: the ground under it, or a grid the camera
+    // is fastened to (a double click on a grid, here or in B). Fastened, the
+    // left drag turns around the grid as in B; the wheel zooms the same way
+    // in both cases, and the tilt fades out as the camera rises, so that
+    // far out it looks straight down on the globe.
     internal sealed class PlanetView : MapView
     {
         public Body Body;
         public bool ReturnToSystem;
         private SystemTab m_returnTab;
 
-        // Where the camera is, seen from the centre of the planet, and which
-        // way is up on screen.
+        // The ground point looked at, seen from the centre of the planet, and
+        // which way is up on screen.
         private Vector3D m_direction = Vector3D.Up;
         private Vector3D m_up = Vector3D.Forward;
         private double m_altitude = 100000;
-        private double m_surface;
-        private ScaleSwitch m_leave = MapScales.PlanetToNeighbourhood(60000);
+        private double m_tilt;
+        private double m_focusRadius;
+        private Marker m_grid;
+        private long m_gridId;
+        private readonly ZoomLadder m_ladder = new ZoomLadder(60000, ZoomRung.Planet);
         private readonly List<Marker> m_visible = new List<Marker>();
         private readonly List<Vector2> m_visibleAt = new List<Vector2>();
 
@@ -31,19 +40,30 @@ namespace SirHolomap
         {
         }
 
+        public Marker LockedGrid
+        {
+            get { return m_grid; }
+        }
+
         public override string Title
         {
-            get { return Body != null ? Body.Name : Texts.KindPlanet; }
+            get { return m_grid != null ? m_grid.Name : (Body != null ? Body.Name : Texts.KindPlanet); }
         }
 
         public override string Subtitle
         {
-            get { return Texts.ModePlanet.Substring(3) + "  -  " + Texts.Altitude.ToLowerInvariant() + " " + Distance(m_altitude); }
+            get
+            {
+                var text = Texts.Altitude + " " + Distance(m_altitude);
+                if (m_grid != null)
+                    return (Body != null ? Body.Name : Texts.ModePlanet) + "  -  " + Texts.LockedSubtitle + "  -  " + text;
+                return Texts.ModePlanet + "  -  " + text;
+            }
         }
 
         public override string Help
         {
-            get { return Texts.HelpPlanet; }
+            get { return m_grid != null ? Texts.HelpPlanetLocked : Texts.HelpPlanet; }
         }
 
         public override double NeededFar
@@ -51,20 +71,42 @@ namespace SirHolomap
             get { return Camera.Distance + (Body != null ? Body.MaxRadius * 2.5 : 100000); }
         }
 
-        public void Enter(Body body, bool fromSystem, bool continuous)
+        // grid: a grid to keep in the middle, the camera turning around it.
+        public void Enter(Body body, bool fromSystem, bool continuous, Marker grid)
         {
             Body = body;
             ReturnToSystem = fromSystem;
             m_returnTab = Map.Tab;
-            m_leave = MapScales.PlanetToNeighbourhood(body.Radius);
-            m_leave.Reset(false);
+            m_ladder.Configure(body.Radius, ZoomRung.Planet);
+            m_grid = grid;
+            m_gridId = grid != null ? grid.Id : 0;
+            m_tilt = 0;
 
             if (continuous)
             {
-                var offset = Camera.Position - body.Centre;
-                m_direction = Vector3D.Normalize(offset);
-                m_up = Camera.Up;
-                m_altitude = Math.Max(MapScales.LowestAltitude, offset.Length() - SurfaceRadius(m_direction));
+                // From where the camera is going, never from where it still
+                // glides: entering from B never lands beyond the way back.
+                var forward = Camera.TargetForward;
+                var up = Camera.TargetUp;
+                var eye = Camera.TargetEye;
+                if (grid != null)
+                {
+                    var n = Vector3D.Normalize(grid.Position - body.Centre);
+                    m_direction = n;
+                    var offset = -forward;
+                    m_tilt = Math.Acos(MathHelper.Clamp(Vector3D.Dot(offset, n), -1, 1));
+                    m_tilt = MathHelper.Clamp(m_tilt, 0, MaxTilt);
+                    m_up = up;
+                    m_altitude = Camera.TargetDistance;
+                }
+                else
+                {
+                    var offset = eye - body.Centre;
+                    m_direction = Vector3D.Normalize(offset);
+                    m_up = up;
+                    var distance = m_ladder.Entry(ZoomRung.Planet, offset.Length());
+                    m_altitude = Math.Max(MapScales.LowestAltitude, distance - SurfaceRadius(m_direction));
+                }
             }
             else
             {
@@ -72,15 +114,22 @@ namespace SirHolomap
                 var from = onIt ? World.PlayerPosition : Camera.Position;
                 if ((from - body.Centre).LengthSquared() < 1)
                     from = body.Centre + World.DirectionToSun * body.Radius;
-                m_direction = Vector3D.Normalize(from - body.Centre);
+                m_direction = Vector3D.Normalize((grid != null ? grid.Position : from) - body.Centre);
                 m_up = onIt ? World.PlayerForward : Camera.Up;
-                m_altitude = body.Radius * 1.25;
+                m_altitude = grid != null ? LockedAltitude(grid) : body.Radius * 1.25;
             }
             m_up = Vector3D.Reject(m_up, m_direction);
             if (m_up.LengthSquared() < 1e-8)
                 m_up = Vector3D.CalculatePerpendicularVector(m_direction);
             m_up.Normalize();
             Aim();
+        }
+
+        private const double MaxTilt = 1.35;
+
+        private static double LockedAltitude(Marker grid)
+        {
+            return Math.Max(grid.Radius * 2.4, 40);
         }
 
         private double SurfaceRadius(Vector3D direction)
@@ -99,10 +148,52 @@ namespace SirHolomap
             }
         }
 
-        private void Aim()
+        private Marker FindGrid()
         {
-            m_surface = SurfaceRadius(m_direction);
-            Camera.SetTarget(Body.Centre, -m_direction, m_up, m_surface + m_altitude);
+            foreach (var marker in World.Markers)
+            {
+                if (marker.Id == m_gridId)
+                    return marker;
+            }
+            return m_grid;
+        }
+
+        // The tilt fades out as the camera rises: from high up, the globe is
+        // seen from straight above.
+        private double EffectiveTilt
+        {
+            get
+            {
+                var fade = MathHelper.Clamp(1 - m_altitude / Math.Max(Body.Radius * 0.5, 1), 0, 1);
+                return m_tilt * fade;
+            }
+        }
+
+        // Where the camera goes, and its distance to the centre of the planet.
+        private double Aim()
+        {
+            Vector3D focus;
+            if (m_grid != null)
+            {
+                focus = m_grid.Position;
+                m_direction = Vector3D.Normalize(focus - Body.Centre);
+                m_focusRadius = (focus - Body.Centre).Length();
+            }
+            else
+            {
+                m_focusRadius = SurfaceRadius(m_direction);
+                focus = Body.Centre + m_direction * m_focusRadius;
+            }
+            m_up = Vector3D.Reject(m_up, m_direction);
+            if (m_up.LengthSquared() < 1e-8)
+                m_up = Vector3D.CalculatePerpendicularVector(m_direction);
+            m_up.Normalize();
+
+            var tilt = EffectiveTilt;
+            var offset = m_direction * Math.Cos(tilt) - m_up * Math.Sin(tilt);
+            var screenUp = m_direction * Math.Sin(tilt) + m_up * Math.Cos(tilt);
+            Camera.SetTarget(focus, -offset, screenUp, m_altitude);
+            return (focus + offset * m_altitude - Body.Centre).Length();
         }
 
         public override void Update(double dt)
@@ -112,14 +203,21 @@ namespace SirHolomap
                 Map.GoLocal(LocalAnchor.Player, null, null, false, false);
                 return;
             }
-            var fresh = World.FindBody(Body.Id);
+            var fresh = World.Follow(Body);
             if (fresh != null)
                 Body = fresh;
-            Aim();
+            if (m_grid != null)
+            {
+                m_grid = FindGrid();
+                if (m_grid != null)
+                    m_altitude = Math.Max(m_altitude, m_grid.Radius * 1.1 + MapScales.ClosestToGrid);
+            }
+            var distance = Aim();
 
             // Zoomed out past the globe: the neighbourhood, or the system the
             // dive started from.
-            if (m_leave.Update(m_surface + m_altitude) && m_leave.IsUp)
+            var before = m_ladder.Rung;
+            if (m_ladder.Update(distance) != before && m_ladder.Rung != ZoomRung.Planet)
             {
                 if (ReturnToSystem)
                     Map.GoSystem(m_returnTab, true);
@@ -130,12 +228,25 @@ namespace SirHolomap
 
         public override void Wheel(double notches, bool ctrl)
         {
-            var highest = Body.Radius * (MapScales.PlanetLeaveRadii + 0.6);
-            m_altitude = MathHelper.Clamp(ZoomSteps.Apply(m_altitude, notches), MapScales.LowestAltitude, highest);
+            var lowest = m_grid != null ? m_grid.Radius * 1.1 + MapScales.ClosestToGrid : MapScales.LowestAltitude;
+            m_altitude = MathHelper.Clamp(ZoomSteps.Apply(m_altitude, notches), lowest, MapScales.HighestAltitude(Body.Radius));
         }
 
-        // Dragging the ground: the point under the cursor follows it.
+        // Left drag: around the fastened grid, as in B; otherwise the ground
+        // follows the cursor.
         public override void Rotate(Vector2 delta)
+        {
+            if (m_grid != null)
+            {
+                var turn = QuaternionD.CreateFromAxisAngle(m_direction, -delta.X * 0.006);
+                m_up = Vector3D.Transform(m_up, turn);
+                m_tilt = MathHelper.Clamp(m_tilt + delta.Y * 0.005, 0, MaxTilt);
+                return;
+            }
+            Drag(delta);
+        }
+
+        private void Drag(Vector2 delta)
         {
             var radiansPerPixel = 2 * m_altitude * Camera.TanHalfFov / Gfx.Height / Math.Max(Body.Radius, 1);
             radiansPerPixel = Math.Min(radiansPerPixel, 0.01);
@@ -144,19 +255,33 @@ namespace SirHolomap
             m_up = Vector3D.Normalize(Vector3D.Reject(m_up, m_direction));
         }
 
+        // Middle drag or WASD move over the ground, letting go of a grid.
         public override void Pan(Vector2 delta)
         {
-            Rotate(delta);
+            Release();
+            Drag(delta);
         }
 
         public override void Move(Vector2 keys, double dt)
         {
+            Release();
             var pixels = 900 * dt;
-            Rotate(new Vector2(-keys.X, keys.Y) * (float)pixels);
+            Drag(new Vector2(-keys.X, keys.Y) * (float)pixels);
+        }
+
+        private void Release()
+        {
+            if (m_grid == null)
+                return;
+            m_altitude = Math.Max(m_altitude + (m_focusRadius - SurfaceRadius(m_direction)), MapScales.LowestAltitude);
+            m_grid = null;
+            m_gridId = 0;
+            m_tilt = 0;
         }
 
         public override void Recentre()
         {
+            Release();
             if (Body != null && Body.Contains(World.PlayerPosition, 3))
             {
                 m_direction = Vector3D.Normalize(World.PlayerPosition - Body.Centre);
@@ -225,6 +350,17 @@ namespace SirHolomap
                     var order = marker.IsSelf ? 2 : (marker.Kind == ContactKind.Station ? 0 : 1);
                     if (order != pass)
                         continue;
+                    if (m_grid != null && marker.Id == m_gridId && RenderHooks.Active)
+                    {
+                        // Fastened: the game draws the grid, thin corners
+                        // around it.
+                        var size = (float)(marker.Radius * 2 * Camera.PixelsPerMetre(Math.Max(Camera.Distance, 1)));
+                        if (size > 40 * Gfx.Scale)
+                        {
+                            Gfx.Brackets(m_visibleAt[i], size, size, Math.Max(1.5f, 2 * Gfx.Scale), Gfx.Alpha(Style.Selection, 0.8f));
+                            continue;
+                        }
+                    }
                     var label = labelAll <= 20 && marker.IsGrid && marker.Live;
                     MarkerPainter.Paint(Map, marker, m_visibleAt[i], label, null, m_visible.Count <= 80);
                     if (marker.IsSelf)
@@ -290,12 +426,22 @@ namespace SirHolomap
             return best;
         }
 
-        // A double click goes down to what is under the cursor.
+        // A double click goes down to what is under the cursor: a grid in
+        // range is fastened, the camera then turns around it; a remembered
+        // one is only centred, as there is nothing to draw there.
         public override void DoubleClick(object target)
         {
             var marker = target as Marker;
             if (marker == null)
                 return;
+            if (marker.IsGrid && marker.Live)
+            {
+                m_grid = marker;
+                m_gridId = marker.Id;
+                m_tilt = 0.6;
+                m_altitude = LockedAltitude(marker);
+                return;
+            }
             Focus(marker);
             m_altitude = Math.Max(MapScales.LowestAltitude * 4, marker.Radius * 6 + 120);
         }
@@ -304,6 +450,10 @@ namespace SirHolomap
         {
             var marker = target as Marker;
             if (marker == null || Body == null)
+                return;
+            if (m_grid != null && m_grid.Id != marker.Id)
+                Release();
+            if (m_grid != null)
                 return;
             m_direction = Vector3D.Normalize(marker.Position - Body.Centre);
             m_up = Vector3D.Reject(m_up, m_direction);

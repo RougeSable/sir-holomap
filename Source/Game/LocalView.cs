@@ -9,15 +9,22 @@ namespace SirHolomap
         Player,
         Body,
         Free,
+        // The camera fastened to a grid the game sends now: it fills the
+        // screen in 3D and the camera turns around it.
         Grid,
+        // Centred on a grid known from memory only: the game has nothing to
+        // draw there, so the view shows its marker at its last known place.
+        Memory,
     }
 
     // B: the neighbourhood, seen from above a virtual plane laid through the
     // centre of the view, over the sky of the world. Every grid hangs over
     // the plane by a line that tells its height; grids move as they move in
-    // the game. A double click on a grid fastens the camera to it, close
-    // enough for the grid to fill the screen; the wheel out lets go and comes
-    // back over the player.
+    // the game. A double click on a grid in range fastens the camera to it,
+    // close enough for the grid to fill the screen; on a remembered grid it
+    // centres the view on its marker. The wheel out lets go: over the planet
+    // the grid stands on (A, the grid still in the middle), or back over the
+    // player.
     internal sealed class LocalView : MapView
     {
         // The plane is the same everywhere in the system: the world's
@@ -33,9 +40,10 @@ namespace SirHolomap
         private double m_yaw;
         private double m_pitch = 0.9;
         private double m_distance = 4000;
+        private double m_memoryStart = 300;
         private bool m_returnToSystem;
         private SystemTab m_returnTab;
-        private ScaleSwitch m_toSystem = MapScales.NeighbourhoodToSystem(0);
+        private readonly ZoomLadder m_ladder = new ZoomLadder(0, ZoomRung.Local);
         private Vector3D m_focus;
 
         private readonly List<Marker> m_visible = new List<Marker>();
@@ -50,15 +58,26 @@ namespace SirHolomap
             get { return m_anchor; }
         }
 
+        // The grid the camera is fastened to, if any.
+        public Marker LockedGrid
+        {
+            get { return m_anchor == LocalAnchor.Grid ? m_grid : null; }
+        }
+
+        public bool ReturnsToSystem
+        {
+            get { return m_returnToSystem; }
+        }
+
         public override string Title
         {
             get
             {
-                if (m_anchor == LocalAnchor.Grid && m_grid != null)
+                if ((m_anchor == LocalAnchor.Grid || m_anchor == LocalAnchor.Memory) && m_grid != null)
                     return m_grid.Name;
                 if (m_anchor == LocalAnchor.Body && m_body != null)
                     return m_body.Name;
-                return Texts.ModeLocal.Substring(3);
+                return Texts.ModeLocal;
             }
         }
 
@@ -66,16 +85,18 @@ namespace SirHolomap
         {
             get
             {
-                var text = Texts.Distance.ToLowerInvariant() + " " + Distance(m_distance);
+                var text = Texts.Distance + " " + Distance(m_distance);
                 if (m_anchor == LocalAnchor.Grid)
-                    return Texts.HelpLocked.Split(new[] { "   " }, StringSplitOptions.None)[0] + "  -  " + text;
+                    return Texts.LockedSubtitle + "  -  " + text;
+                if (m_anchor == LocalAnchor.Memory)
+                    return Texts.OutOfRange + "  -  " + text;
                 return text;
             }
         }
 
         public override string Help
         {
-            get { return m_anchor == LocalAnchor.Grid ? Texts.HelpLocked : Texts.HelpLocal; }
+            get { return m_anchor == LocalAnchor.Grid || m_anchor == LocalAnchor.Memory ? Texts.HelpLocked : Texts.HelpLocal; }
         }
 
         public override double NeededFar
@@ -83,8 +104,16 @@ namespace SirHolomap
             get { return m_distance * 4 + 60000 + (m_body != null ? m_body.MaxRadius * 2 : 0); }
         }
 
+        private void Configure(ZoomRung rung)
+        {
+            m_ladder.Configure(m_anchor == LocalAnchor.Body && m_body != null ? m_body.Radius : 0, rung);
+        }
+
         public void Enter(LocalAnchor anchor, Body body, Marker grid, bool fromSystem, bool continuous)
         {
+            // Nothing to fly around on a remembered grid: centred on it.
+            if (anchor == LocalAnchor.Grid && grid != null && !grid.Live)
+                anchor = LocalAnchor.Memory;
             m_anchor = anchor;
             m_body = body;
             m_grid = grid;
@@ -94,18 +123,22 @@ namespace SirHolomap
                 m_returnToSystem = true;
                 m_returnTab = Map.Tab;
             }
-            else if (anchor != LocalAnchor.Grid)
+            else if (anchor != LocalAnchor.Grid && anchor != LocalAnchor.Memory)
             {
                 m_returnToSystem = false;
             }
-            m_toSystem = MapScales.NeighbourhoodToSystem(anchor == LocalAnchor.Body && body != null ? body.Radius : 0);
+            Configure(ZoomRung.Local);
 
             if (continuous)
             {
+                // From the camera as it is going to be, never from where it
+                // still glides: the view starts inside the gap of the switch
+                // it just crossed.
                 FromCamera();
-                m_distance = Camera.TargetDistance;
                 if (anchor == LocalAnchor.Free)
                     m_free = Camera.TargetFocus;
+                var eye = Camera.TargetEye;
+                m_distance = m_ladder.Entry(ZoomRung.Local, Math.Max(Vector3D.Distance(eye, AnchorPoint()), 2));
             }
             else
             {
@@ -119,11 +152,15 @@ namespace SirHolomap
                 switch (anchor)
                 {
                     case LocalAnchor.Body:
-                        m_distance = body != null ? body.Radius * (MapScales.PlanetLeaveRadii + 0.3) : 100000;
+                        m_distance = m_ladder.Entry(ZoomRung.Local, body != null ? body.Radius * (MapScales.PlanetLeaveRadii + 0.3) : 100000);
                         break;
                     case LocalAnchor.Grid:
-                        m_distance = Math.Max(grid != null ? grid.Radius * 2.4 : 50, 12);
+                        m_distance = LockDistance(grid);
                         m_pitch = 0.5;
+                        break;
+                    case LocalAnchor.Memory:
+                        m_distance = MemoryDistance(grid);
+                        m_memoryStart = m_distance;
                         break;
                     default:
                         var sync = World.SyncRadius < double.MaxValue ? World.SyncRadius : 5000;
@@ -131,8 +168,19 @@ namespace SirHolomap
                         break;
                 }
             }
-            m_toSystem.Reset(m_distance > m_toSystem.UpAbove);
+            if (anchor == LocalAnchor.Memory)
+                m_memoryStart = Math.Max(m_distance, 50);
             m_focus = AnchorPoint();
+        }
+
+        private static double LockDistance(Marker grid)
+        {
+            return Math.Max(grid != null ? grid.Radius * 1.9 : 50, 12);
+        }
+
+        private static double MemoryDistance(Marker grid)
+        {
+            return MathHelper.Clamp(grid != null ? grid.Radius * 10 : 300, 150, 3000);
         }
 
         private static Vector3D Side
@@ -142,7 +190,7 @@ namespace SirHolomap
 
         private void FromCamera()
         {
-            var offset = -Camera.Forward;
+            var offset = -Camera.TargetForward;
             m_pitch = MathHelper.Clamp(Math.Asin(MathHelper.Clamp(Vector3D.Dot(offset, Normal), -1, 1)), 0.1, 1.5);
             var flat = Vector3D.Reject(offset, Normal);
             if (flat.LengthSquared() > 1e-8)
@@ -161,6 +209,7 @@ namespace SirHolomap
                 case LocalAnchor.Free:
                     return m_free;
                 case LocalAnchor.Grid:
+                case LocalAnchor.Memory:
                     m_grid = FindGrid();
                     return m_grid != null ? m_grid.Position : m_focus;
                 default:
@@ -204,9 +253,28 @@ namespace SirHolomap
             {
                 var radius = m_grid != null ? Math.Max(m_grid.Radius, 3) : 20;
                 m_distance = Math.Max(m_distance, radius * 1.1 + MapScales.ClosestToGrid);
-                // Out far enough: let go, back over the player (or the system
-                // the dive came from).
+                // Out far enough: let go.
                 if (m_distance > Math.Max(radius * 9, 400))
+                {
+                    LetGo();
+                    return;
+                }
+                // The grid left the range of the game: its memory stays.
+                if (m_grid != null && !m_grid.Live)
+                {
+                    m_anchor = LocalAnchor.Memory;
+                    m_memoryStart = Math.Max(m_distance, 50);
+                }
+            }
+            else if (m_anchor == LocalAnchor.Memory)
+            {
+                // A remembered grid seen again: the camera fastens to it.
+                if (m_grid != null && m_grid.Live)
+                {
+                    m_anchor = LocalAnchor.Grid;
+                    m_distance = Math.Min(m_distance, LockDistance(m_grid) * 2);
+                }
+                else if (m_distance > m_memoryStart * 5)
                 {
                     if (m_returnToSystem)
                     {
@@ -214,23 +282,66 @@ namespace SirHolomap
                         Map.GoSystem(m_returnTab, true);
                         return;
                     }
-                    m_anchor = LocalAnchor.Player;
-                    m_toSystem = MapScales.NeighbourhoodToSystem(0);
-                    m_toSystem.Reset(false);
-                    Map.Selected = m_grid;
-                    m_focus = AnchorPoint();
+                    BackToPlayer();
+                    return;
                 }
             }
-            else if (m_anchor == LocalAnchor.Body && m_body != null && m_distance < m_body.Radius * MapScales.PlanetReturnRadii)
+            else
             {
-                Map.GoPlanet(m_body, m_returnToSystem, true);
-                return;
+                Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
+                var before = m_ladder.Rung;
+                var rung = m_ladder.Update(m_distance);
+                if (rung != before)
+                {
+                    if (rung == ZoomRung.Planet && m_body != null)
+                    {
+                        Map.GoPlanet(m_body, m_returnToSystem, true, null);
+                        return;
+                    }
+                    if (rung == ZoomRung.System)
+                    {
+                        Map.GoSystem(m_returnToSystem ? m_returnTab : SystemTab.Orrery, true);
+                        return;
+                    }
+                }
             }
 
             Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
+        }
 
-            if (m_anchor != LocalAnchor.Grid && m_toSystem.Update(m_distance) && m_toSystem.IsUp)
-                Map.GoSystem(m_returnToSystem ? m_returnTab : SystemTab.Orrery, true);
+        // The wheel out of a fastened grid: back to the system the dive came
+        // from, else over the planet the grid stands on (the grid still in
+        // the middle), else over the player.
+        private void LetGo()
+        {
+            var grid = m_grid;
+            if (m_returnToSystem)
+            {
+                m_returnToSystem = false;
+                Map.GoSystem(m_returnTab, true);
+                return;
+            }
+            var planet = grid != null ? World.BodyAt(grid.Position, 1.6) : null;
+            if (planet != null)
+            {
+                Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
+                Map.GoPlanet(planet, false, true, grid);
+                return;
+            }
+            BackToPlayer();
+        }
+
+        private void BackToPlayer()
+        {
+            var grid = m_grid;
+            m_anchor = LocalAnchor.Player;
+            m_returnToSystem = false;
+            Configure(ZoomRung.Local);
+            var sync = World.SyncRadius < double.MaxValue ? World.SyncRadius : 5000;
+            m_distance = m_ladder.Entry(ZoomRung.Local, Math.Max(m_distance, MathHelper.Clamp(sync * 0.6, 800, 15000)));
+            Map.Selected = grid;
+            m_focus = AnchorPoint();
+            Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
         }
 
         public override void Wheel(double notches, bool ctrl)
@@ -255,8 +366,7 @@ namespace SirHolomap
             var metresPerPixel = 1 / Camera.PixelsPerMetre(m_distance);
             var right = Vector3D.Normalize(Vector3D.Reject(Camera.Right, Normal));
             var ahead = Vector3D.Cross(Normal, right);
-            m_free = m_focus - right * (delta.X * metresPerPixel) + ahead * (delta.Y * metresPerPixel);
-            m_anchor = LocalAnchor.Free;
+            SetFree(m_focus - right * (delta.X * metresPerPixel) + ahead * (delta.Y * metresPerPixel));
         }
 
         public override void Move(Vector2 keys, double dt)
@@ -265,26 +375,49 @@ namespace SirHolomap
                 return;
             var right = Vector3D.Normalize(Vector3D.Reject(Camera.Right, Normal));
             var ahead = Vector3D.Cross(Normal, right);
-            m_free = m_focus + (right * keys.X + ahead * keys.Y) * (m_distance * 0.9 * dt);
+            SetFree(m_focus + (right * keys.X + ahead * keys.Y) * (m_distance * 0.9 * dt));
+        }
+
+        private void SetFree(Vector3D point)
+        {
+            if (m_anchor == LocalAnchor.Body || m_anchor == LocalAnchor.Memory)
+            {
+                // Away from the planet's centre: no globe to go down to, but
+                // the way up to the system keeps its scale, so moving the
+                // camera never jumps to C by itself.
+                m_ladder.LeavePlanet();
+                m_distance = m_ladder.Entry(ZoomRung.Local, m_distance);
+            }
+            m_free = point;
             m_anchor = LocalAnchor.Free;
         }
 
         public override void Recentre()
         {
             m_anchor = LocalAnchor.Player;
-            m_toSystem = MapScales.NeighbourhoodToSystem(0);
-            m_toSystem.Reset(m_distance > m_toSystem.UpAbove);
+            m_returnToSystem = false;
+            m_ladder.LeavePlanet();
+            m_distance = m_ladder.Entry(ZoomRung.Local, m_distance);
         }
 
         public void Lock(Marker grid)
         {
             if (grid == null)
                 return;
-            m_anchor = LocalAnchor.Grid;
             m_grid = grid;
             m_gridId = grid.Id;
-            m_distance = Math.Max(grid.Radius * 2.4, 12);
-            m_pitch = 0.45;
+            if (grid.Live)
+            {
+                m_anchor = LocalAnchor.Grid;
+                m_distance = LockDistance(grid);
+                m_pitch = 0.45;
+            }
+            else
+            {
+                m_anchor = LocalAnchor.Memory;
+                m_distance = MemoryDistance(grid);
+                m_memoryStart = m_distance;
+            }
         }
 
         public override void DoubleClick(object target)
@@ -292,10 +425,9 @@ namespace SirHolomap
             var marker = target as Marker;
             if (marker != null)
             {
-                if (marker.IsGps)
+                if (marker.IsGps || marker.IsSelf)
                 {
-                    m_free = marker.Position;
-                    m_anchor = LocalAnchor.Free;
+                    SetFree(marker.Position);
                     return;
                 }
                 Lock(marker);
@@ -303,7 +435,7 @@ namespace SirHolomap
             }
             var body = target as Body;
             if (body != null)
-                Map.GoPlanet(body, m_returnToSystem, false);
+                Map.GoPlanet(body, m_returnToSystem, false, null);
         }
 
         public override void Focus(object target)
@@ -378,9 +510,15 @@ namespace SirHolomap
                 var marker = m_visible[i];
                 if (m_anchor == LocalAnchor.Grid && marker.Id == m_gridId)
                 {
-                    // The grid fills the screen: only its brackets.
-                    Gfx.Sprite(GameTextures.Shape(Images.Shape.Brackets), m_visibleAt[i],
-                        (float)(marker.Radius * 2.2 * Camera.PixelsPerMetre(Camera.Distance)), Gfx.Alpha(Style.Selection, 0.35f));
+                    // The grid fills the screen, drawn by the game: only thin
+                    // corners around it, the size of the grid on screen.
+                    Vector2 at;
+                    double depth;
+                    if (Camera.Project(marker.Position, out at, out depth))
+                    {
+                        var size = (float)(marker.Radius * 2 * Camera.PixelsPerMetre(depth));
+                        Gfx.Brackets(at, size, size, Math.Max(1.5f, 2 * s), Gfx.Alpha(Style.Selection, 0.8f));
+                    }
                     continue;
                 }
                 var extra = marker.IsSelf ? null : Distance(Vector3D.Distance(marker.Position, World.PlayerPosition));
@@ -499,7 +637,7 @@ namespace SirHolomap
                 else
                     remembered++;
             }
-            panel.Heading(Texts.ModeLocal.Substring(3), null);
+            panel.Heading(Texts.ModeLocal, null);
             panel.Line(Texts.Live, live.ToString(), Style.Live);
             panel.Line(Texts.ShowMemories, remembered.ToString(), Style.Memory);
             if (World.SyncRadius < double.MaxValue)

@@ -28,7 +28,7 @@ namespace SirHolomap
 
         public override string Title
         {
-            get { return Texts.ModeSystem.Substring(3); }
+            get { return Texts.ModeSystem; }
         }
 
         public override string Subtitle
@@ -68,14 +68,14 @@ namespace SirHolomap
                 return;
             var body = Pick(Gfx.Mouse) as Body;
             if (body != null)
-                Map.GoPlanet(body, true, false);
+                Map.GoPlanet(body, true, false, null);
         }
 
         public override void DoubleClick(object target)
         {
             var body = target as Body;
             if (body != null)
-                Map.GoPlanet(body, true, false);
+                Map.GoPlanet(body, true, false, null);
         }
 
         public override object Pick(Vector2 mouse)
@@ -187,7 +187,7 @@ namespace SirHolomap
                 else
                     planets++;
             }
-            panel.Line(Texts.KindPlanet + "s", planets.ToString());
+            panel.Line(Texts.Planets, planets.ToString());
             panel.Line(Texts.Moons, moons.ToString());
         }
 

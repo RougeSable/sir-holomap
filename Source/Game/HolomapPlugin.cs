@@ -40,8 +40,9 @@ namespace SirHolomap
         private int m_scanCounter;
         private int m_coexistenceCounter;
         private bool m_stopped;
-        // Notices waiting for a world to be shown in, oldest first.
-        private readonly List<string> m_pendingNotices = new List<string>();
+        // Notices waiting for a world to be shown in, oldest first. Written
+        // when shown, in the language the game is set to by then.
+        private readonly List<Func<string>> m_pendingNotices = new List<Func<string>>();
         private DateTime m_lastFault = DateTime.MinValue;
 
         internal static HolomapPlugin Instance { get; private set; }
@@ -75,7 +76,7 @@ namespace SirHolomap
                 RenderHooks.CameraAvailable = false;
                 RenderHooks.LightAvailable = false;
                 Log("could not hook the render camera: " + e);
-                m_pendingNotices.Add(Texts.CameraHookFailed);
+                m_pendingNotices.Add(() => Texts.CameraHookFailed);
             }
             Log("loaded; camera " + (RenderHooks.CameraAvailable ? "hooked" : "not hooked") + ", " + m_world.History.Count + " servers in history");
         }
@@ -90,7 +91,7 @@ namespace SirHolomap
             var light = RenderHooks.LightMethod;
             if (camera == null)
             {
-                m_pendingNotices.Add(Texts.CameraHookFailed);
+                m_pendingNotices.Add(() => Texts.CameraHookFailed);
                 Log(RenderHooks.CameraStep + " not found");
             }
             else
@@ -98,7 +99,8 @@ namespace SirHolomap
                 var others = RenderHooks.OtherOwners(camera, Id);
                 if (others.Count > 0)
                 {
-                    m_pendingNotices.Add(string.Format(Texts.CameraStepTaken, string.Join(", ", others.ToArray())));
+                    var cameraOwners = string.Join(", ", others.ToArray());
+                    m_pendingNotices.Add(() => string.Format(Texts.CameraStepTaken, cameraOwners));
                     Log(RenderHooks.CameraStep + " is already patched by " + string.Join(", ", others.ToArray()) + ": stepping aside");
                 }
                 else
@@ -110,7 +112,7 @@ namespace SirHolomap
 
             if (light == null)
             {
-                m_pendingNotices.Add(Texts.LightHookFailed);
+                m_pendingNotices.Add(() => Texts.LightHookFailed);
                 Log(RenderHooks.LightStep + " not found: the globe keeps the game's light");
                 return;
             }
@@ -118,7 +120,7 @@ namespace SirHolomap
             if (lightOthers.Count > 0)
             {
                 var names = string.Join(", ", lightOthers.ToArray());
-                m_pendingNotices.Add(string.Format(Texts.LightStepTaken, names));
+                m_pendingNotices.Add(() => string.Format(Texts.LightStepTaken, names));
                 Log(RenderHooks.LightStep + " is already patched by " + names + ": stepping aside, the globe keeps the game's light");
                 return;
             }
@@ -161,7 +163,11 @@ namespace SirHolomap
                 return;
             try
             {
+                FollowLanguage();
+                var wasInWorld = m_world.InWorld;
                 m_world.Track();
+                if (wasInWorld != m_world.InWorld)
+                    m_globes.Clear();
                 ServerJoiner.Update(m_world.InWorld);
                 if (!m_world.InWorld)
                 {
@@ -173,7 +179,7 @@ namespace SirHolomap
                 if (m_pendingNotices.Count > 0 && MyAPIGateway.Utilities != null)
                 {
                     foreach (var notice in m_pendingNotices)
-                        Notify(notice);
+                        Notify(notice());
                     m_pendingNotices.Clear();
                 }
 
@@ -182,7 +188,12 @@ namespace SirHolomap
                     m_scanCounter = 0;
                     m_world.Scan();
                     m_world.SaveIfDue();
+                    m_globes.Prepare(m_world.Bodies);
                 }
+
+                // The globes are painted from the moment the world is joined,
+                // so that they are ready when the map opens.
+                m_globes.Work(MapScreen.Current != null);
 
                 if (++m_coexistenceCounter >= CoexistenceInterval)
                 {
@@ -200,6 +211,21 @@ namespace SirHolomap
             catch (Exception e)
             {
                 Fault("update", e);
+            }
+        }
+
+        // The plugin speaks the language set in the game's options.
+        private static void FollowLanguage()
+        {
+            try
+            {
+                var config = Sandbox.MySandboxGame.Config;
+                if (config != null)
+                    Localization.Current = Localization.FromGame((int)config.Language);
+            }
+            catch (Exception)
+            {
+                Localization.Current = GameLanguage.English;
             }
         }
 

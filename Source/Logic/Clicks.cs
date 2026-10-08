@@ -81,20 +81,20 @@ namespace SirHolomap
             if (span < TimeSpan.Zero)
                 span = TimeSpan.Zero;
             if (span.TotalSeconds < 45)
-                return "a few seconds";
+                return Texts.AgoFewSeconds;
             if (span.TotalMinutes < 1.5)
-                return "1 min";
+                return string.Format(Texts.AgoMinutes, 1);
             if (span.TotalMinutes < 60)
-                return ((int)Math.Round(span.TotalMinutes)) + " min";
+                return string.Format(Texts.AgoMinutes, (int)Math.Round(span.TotalMinutes));
             if (span.TotalHours < 1.5)
-                return "1 h";
+                return string.Format(Texts.AgoHours, 1);
             if (span.TotalHours < 36)
-                return ((int)Math.Round(span.TotalHours)) + " h";
+                return string.Format(Texts.AgoHours, (int)Math.Round(span.TotalHours));
             if (span.TotalDays < 60)
-                return ((int)Math.Round(span.TotalDays)) + " days";
+                return string.Format(Texts.AgoDays, (int)Math.Round(span.TotalDays));
             if (span.TotalDays < 730)
-                return ((int)Math.Round(span.TotalDays / 30.4)) + " months";
-            return ((int)Math.Round(span.TotalDays / 365.25)) + " years";
+                return string.Format(Texts.AgoMonths, (int)Math.Round(span.TotalDays / 30.4));
+            return string.Format(Texts.AgoYears, (int)Math.Round(span.TotalDays / 365.25));
         }
     }
 }

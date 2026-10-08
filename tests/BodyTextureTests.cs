@@ -6,7 +6,7 @@ namespace SirHolomap.Tests
     // The pictures handed to the game's renderer: the renderer reads exactly
     // what the size announces (every mipmap level included), from the array
     // it was given, later and on its own thread.
-    public class GlobeTextureTests
+    public class BodyTextureTests
     {
         // What the renderer reads (MyGeneratedTextureManager.Reset): from the
         // start of the array, level after level, width x height x 4 bytes,
@@ -42,7 +42,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void PixelBufferMatchesDeclaredSize()
+        public void UploadedPixelsMatchDeclaredSize()
         {
             // Every size the map uses: the white square, the marker shapes,
             // the sun, the globes, the galaxy, the globe seen through the map's
@@ -84,7 +84,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void SentBufferIsNeverReused()
+        public void UploadedPixelsAreNeverMutatedAfterUpload()
         {
             var ledger = new TextureLedger();
             var straight = Images.ShapeImage(Images.Shape.Disc);

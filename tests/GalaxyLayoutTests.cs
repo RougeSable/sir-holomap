@@ -6,7 +6,7 @@ namespace SirHolomap.Tests
     public class GalaxyLayoutTests
     {
         [Fact]
-        public void SameServerAlwaysSamePlace()
+        public void SameServerAlwaysGetsSamePosition()
         {
             var a = GalaxyPlacement.PositionOf("steam://85.10.200.17:27016");
             var b = GalaxyPlacement.PositionOf("85.10.200.17:27016");
@@ -22,7 +22,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void TwoServersNeverSamePlace()
+        public void DifferentServersNeverShareExactPosition()
         {
             var seen = new Dictionary<string, string>();
 

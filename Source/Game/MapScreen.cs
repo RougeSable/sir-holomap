@@ -116,7 +116,7 @@ namespace SirHolomap
             // the neighbourhood.
             var planet = World.PlanetUnderPlayer();
             if (planet != null)
-                GoPlanet(planet, false, false);
+                GoPlanet(planet, false, false, null);
             else
                 GoLocal(LocalAnchor.Player, null, null, false, false);
             Camera.Snap();
@@ -161,13 +161,17 @@ namespace SirHolomap
             m_clicks.Cancel();
         }
 
-        public void GoPlanet(Body body, bool fromSystem, bool continuous)
+        // grid: a grid to keep in the middle of the globe, the camera turning
+        // around it.
+        public void GoPlanet(Body body, bool fromSystem, bool continuous, Marker grid)
         {
             if (body == null)
                 return;
-            PlanetMode.Enter(body, fromSystem, continuous);
+            PlanetMode.Enter(body, fromSystem, continuous, grid);
             Mode = MapMode.Planet;
-            if (!continuous)
+            if (grid != null)
+                Selected = grid;
+            else if (!continuous)
                 Selected = null;
             StartTransition();
         }
@@ -197,10 +201,26 @@ namespace SirHolomap
             switch (mode)
             {
                 case MapMode.Planet:
+                    // A grid fastened in B near a planet stays in the middle
+                    // of the globe.
+                    var locked = Mode == MapMode.Local ? LocalMode.LockedGrid : null;
+                    var lockedBody = locked != null ? World.BodyAt(locked.Position, 1.6) : null;
+                    if (lockedBody != null)
+                    {
+                        GoPlanet(lockedBody, false, true, locked);
+                        break;
+                    }
                     var body = World.PlanetUnderPlayer() ?? PlanetMode.Body ?? World.NearestBody(World.PlayerPosition);
-                    GoPlanet(body, false, false);
+                    GoPlanet(body, false, false, null);
                     break;
                 case MapMode.Local:
+                    var fastened = Mode == MapMode.Planet ? PlanetMode.LockedGrid : null;
+                    if (fastened != null && fastened.Live)
+                    {
+                        GoLocal(LocalAnchor.Grid, null, fastened, false, false);
+                        Selected = fastened;
+                        break;
+                    }
                     var gravity = World.PlanetUnderPlayer();
                     if (gravity != null)
                         GoLocal(LocalAnchor.Body, gravity, null, false, false);
@@ -489,7 +509,6 @@ namespace SirHolomap
             var selectedBody = Selected as Body;
             if (selectedBody != null)
                 Selected = World.Follow(selectedBody);
-            Globes.Work();
             if (Mode == MapMode.System && Tab == SystemTab.Galaxy)
                 Servers.Update(World, Settings);
 
@@ -620,7 +639,7 @@ namespace SirHolomap
             Gfx.Rect(0, TopBarHeight - 2 * s, w, 2 * s, Gfx.Alpha(Style.Accent, 0.8f));
             Gfx.Text(Texts.Title, 24 * s, TopBarHeight / 2, 0.95f, Style.Accent, MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER);
 
-            var labels = new[] { Texts.ModePlanet, Texts.ModeLocal, Texts.ModeSystem };
+            var labels = new[] { "A  " + Texts.ModePlanet, "B  " + Texts.ModeLocal, "C  " + Texts.ModeSystem };
             var helps = new[] { Texts.ModePlanetHelp, Texts.ModeLocalHelp, Texts.ModeSystemHelp };
             var modes = new[] { MapMode.Planet, MapMode.Local, MapMode.System };
             var bw = 210 * s;

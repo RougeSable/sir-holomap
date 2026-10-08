@@ -11,14 +11,31 @@ namespace SirHolomap
     // The small globes of the system view, painted from the real planet: its
     // relief, read from the planet's own shape, and the colour the game gives
     // each terrain material when seen from far away. Any planet works,
-    // modded ones included: nothing is prepared in advance. The sampling is
-    // spread over frames so that the game never stalls.
+    // modded ones included: nothing is prepared in advance.
+    //
+    // They are painted as soon as a world is joined, map open or not, a few
+    // milliseconds per frame so that the game never stalls: a coarse globe
+    // first, ready within a few frames, then the full one. By the time the
+    // player opens the system view the bodies are painted, never grey discs.
+    // The picture itself is composed off the game thread.
     internal sealed class PlanetGlobes
     {
         public const int Columns = 96;
         public const int Rows = 48;
         public const int ImageSize = 256;
-        private const int SamplesPerFrame = 160;
+
+        // Every fourth sample in each direction makes the coarse globe.
+        private const int CoarseStep = 4;
+
+        // Time given to the sampling per frame, in milliseconds.
+        private const double BudgetClosed = 1.5;
+        private const double BudgetOpen = 5.0;
+
+        // A single sample slower than this rests the sampling while the map
+        // is closed, for this many frames.
+        private const double SlowSample = 1.0;
+        private const int RestFrames = 30;
+        private int m_rest;
 
         private delegate MyVoxelMaterialDefinition MaterialAtPosition(ref Vector3 storagePosition, float lodSize);
 
@@ -57,14 +74,48 @@ namespace SirHolomap
             public int Next;
             public readonly float[] Colors = new float[Columns * Rows * 3];
             public readonly float[] Heights = new float[Columns * Rows];
+            public readonly bool[] Done = new bool[Columns * Rows];
             public string Texture;
+            public bool Coarse;
+            public bool Full;
             public bool Failed;
+            public Task<byte[]> Painting;
+            public bool PaintingFull;
         }
 
+        // The order samples are taken in: the coarse lattice first.
+        private static readonly int[] Order = BuildOrder();
+
+        private static int[] BuildOrder()
+        {
+            var order = new List<int>(Columns * Rows);
+            for (var row = CoarseStep / 2; row < Rows; row += CoarseStep)
+            {
+                for (var column = CoarseStep / 2; column < Columns; column += CoarseStep)
+                    order.Add(row * Columns + column);
+            }
+            var coarse = new HashSet<int>(order);
+            for (var i = 0; i < Columns * Rows; i++)
+            {
+                if (!coarse.Contains(i))
+                    order.Add(i);
+            }
+            return order.ToArray();
+        }
+
+        private static readonly int CoarseCount = ((Rows - CoarseStep / 2 + CoarseStep - 1) / CoarseStep)
+            * ((Columns - CoarseStep / 2 + CoarseStep - 1) / CoarseStep);
+
         private readonly Dictionary<long, Job> m_jobs = new Dictionary<long, Job>();
+        private readonly System.Diagnostics.Stopwatch m_watch = new System.Diagnostics.Stopwatch();
 
         // The texture of a body's globe, or null while it is being painted.
         public string TextureOf(Body body)
+        {
+            return JobOf(body).Texture;
+        }
+
+        private Job JobOf(Body body)
         {
             Job job;
             if (!m_jobs.TryGetValue(body.Id, out job))
@@ -73,7 +124,14 @@ namespace SirHolomap
                 m_jobs[body.Id] = job;
             }
             job.Body = body;
-            return job.Texture;
+            return job;
+        }
+
+        // Every body of the world gets its globe started, nearest first.
+        public void Prepare(IList<Body> bodies)
+        {
+            foreach (var body in bodies)
+                JobOf(body);
         }
 
         public void Clear()
@@ -122,6 +180,8 @@ namespace SirHolomap
             if (body == null || TextureOf(body) == null || body.Planet == null || body.Planet.Closed)
                 return null;
             var job = m_jobs[body.Id];
+            if (!job.Full)
+                return null;
 
             if (m_viewTask != null && m_viewTask.IsCompleted)
             {
@@ -171,20 +231,52 @@ namespace SirHolomap
             return new Vec3(v.X, v.Y, v.Z);
         }
 
-        // A little work every frame, for the globes still unpainted.
-        public void Work()
+        // A little work every frame, for the globes still unpainted: the
+        // coarse globes of every body first, then the full ones.
+        public void Work(bool mapOpen)
         {
-            var budget = SamplesPerFrame;
             foreach (var job in m_jobs.Values)
+                Collect(job);
+
+            // A sample that took long (the ground of a far planet not loaded
+            // yet) rests the sampling a few frames while the map is closed:
+            // the game never stutters for a globe nobody looks at.
+            if (m_rest > 0 && !mapOpen)
             {
-                if (job.Texture != null || job.Failed || job.Body.Planet == null || job.Body.Planet.Closed)
-                    continue;
-                while (budget-- > 0 && job.Next < Columns * Rows)
-                    Sample(job, job.Next++);
-                if (job.Next >= Columns * Rows)
-                    Finish(job);
-                if (budget <= 0)
-                    return;
+                m_rest--;
+                return;
+            }
+            m_rest = 0;
+
+            var budget = mapOpen ? BudgetOpen : BudgetClosed;
+            m_watch.Restart();
+            for (var pass = 0; pass < 2; pass++)
+            {
+                foreach (var job in m_jobs.Values)
+                {
+                    if (job.Failed || job.Full || job.Painting != null || job.Body.Planet == null || job.Body.Planet.Closed)
+                        continue;
+                    var goal = pass == 0 ? CoarseCount : Columns * Rows;
+                    if (pass == 0 && job.Coarse)
+                        continue;
+                    while (job.Next < goal)
+                    {
+                        var before = m_watch.Elapsed.TotalMilliseconds;
+                        Sample(job, Order[job.Next]);
+                        job.Next++;
+                        var now = m_watch.Elapsed.TotalMilliseconds;
+                        if (now - before > SlowSample)
+                            m_rest = RestFrames;
+                        if (now > budget || m_rest > 0)
+                            return;
+                    }
+                    if (job.Next >= Columns * Rows)
+                        Paint(job, true);
+                    else if (!job.Coarse && job.Next >= CoarseCount)
+                        Paint(job, false);
+                    if (m_watch.Elapsed.TotalMilliseconds > budget)
+                        return;
+                }
             }
         }
 
@@ -223,6 +315,7 @@ namespace SirHolomap
             job.Colors[index * 3 + 1] = g;
             job.Colors[index * 3 + 2] = b;
             job.Heights[index] = (float)height;
+            job.Done[index] = true;
         }
 
         // The colour of a terrain seen from orbit: the game's own far colour of
@@ -246,19 +339,75 @@ namespace SirHolomap
             }
         }
 
-        private static void Finish(Job job)
+        // The picture is composed off the game thread, from a copy of the
+        // samples: the coarse one fills every cell from its nearest sample.
+        private static void Paint(Job job, bool full)
         {
-            float[] atmosphere = null;
-            if (job.Body.HasAtmosphere)
-                atmosphere = new[] { 0.55f, 0.75f, 1.0f };
-
+            var colors = (float[])job.Colors.Clone();
+            var heights = (float[])job.Heights.Clone();
+            if (!full)
+                FillFromCoarse(colors, heights, job.Done);
+            var radius = job.Body.Radius;
+            var atmosphere = job.Body.HasAtmosphere ? new[] { 0.55f, 0.75f, 1.0f } : null;
+            job.PaintingFull = full;
+            if (!full)
+                job.Coarse = true;
             // Seen from the side the sun lights, at the start.
-            var image = Images.GlobeImage(ImageSize, Columns, Rows, job.Colors, job.Heights, job.Body.Radius, 0.3, atmosphere);
-            var name = "SirHolomapGlobe" + (job.Body.Id < 0 ? "n" + (-job.Body.Id) : job.Body.Id.ToString());
-            if (GameTextures.Send(name, ImageSize, ImageSize, image))
-                job.Texture = name;
-            else
+            job.Painting = Task.Run(() => Images.GlobeImage(ImageSize, Columns, Rows, colors, heights, radius, 0.3, atmosphere));
+        }
+
+        private static void Collect(Job job)
+        {
+            var painting = job.Painting;
+            if (painting == null || !painting.IsCompleted)
+                return;
+            job.Painting = null;
+            if (painting.Status != TaskStatus.RanToCompletion || painting.Result == null)
+            {
                 job.Failed = true;
+                return;
+            }
+            var name = "SirHolomapGlobe" + (job.Body.Id < 0 ? "n" + (-job.Body.Id) : job.Body.Id.ToString());
+            if (GameTextures.Send(name, ImageSize, ImageSize, painting.Result))
+            {
+                job.Texture = name;
+                if (job.PaintingFull)
+                    job.Full = true;
+            }
+            else
+            {
+                job.Failed = true;
+            }
+        }
+
+        private static void FillFromCoarse(float[] colors, float[] heights, bool[] done)
+        {
+            for (var row = 0; row < Rows; row++)
+            {
+                for (var column = 0; column < Columns; column++)
+                {
+                    var index = row * Columns + column;
+                    if (done[index])
+                        continue;
+                    var r = Nearest(row, Rows);
+                    var c = Nearest(column, Columns);
+                    var from = r * Columns + c;
+                    colors[index * 3] = colors[from * 3];
+                    colors[index * 3 + 1] = colors[from * 3 + 1];
+                    colors[index * 3 + 2] = colors[from * 3 + 2];
+                    heights[index] = heights[from];
+                }
+            }
+        }
+
+        private static int Nearest(int value, int count)
+        {
+            var first = CoarseStep / 2;
+            var step = (int)Math.Round((value - first) / (double)CoarseStep);
+            var nearest = first + step * CoarseStep;
+            while (nearest >= count)
+                nearest -= CoarseStep;
+            return Math.Max(first, nearest);
         }
     }
 }

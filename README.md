@@ -28,18 +28,29 @@ gestures:
   renderer from orbit: its real relief and colours, for any planet, modded
   ones included. You, your grids and the bases are in place, ships move as
   they move. Wheel in: the ground comes closer and the game sharpens the
-  relief down to a few dozen metres. Wheel out: the neighbourhood.
+  relief down to a few dozen metres. Wheel out: the neighbourhood. A double
+  click on a grid in range fastens the camera to it: the left drag then
+  turns around the grid, the wheel still zooms over the globe.
 - **B, local space.** Your neighbourhood seen from above a virtual plane, over
   the sky of the world. Each grid hangs over the plane by a line telling its
   height. The menu lists the grids in view; a click highlights one. A double
-  click fastens the camera to a grid, which then fills the screen; the wheel
-  out comes back over you.
+  click on a grid in range fastens the camera to it, and the game draws it
+  filling the screen; on a remembered grid, the view centres on its marker
+  and its info says it is out of range. The wheel out lets go: over the
+  planet the grid stands on (view A, the grid still in the middle, also with
+  the A button), or back over you.
 - **C, system.** Three tabs: the planets and their moons laid flat by
   distance to the centre of the world; the system in 3D with true distances
   and enlarged bodies, the sun marked on the edge of the screen in its true
   direction; and the galaxy, where every server has a fixed place computed
   from its address. A dive from C (double click on a body or a grid) comes
-  straight back to C when you zoom out.
+  straight back to C when you zoom out. The globes of the bodies are painted
+  from the real planets as soon as you join a world, a coarse picture within
+  a few frames, then the full one, so they are ready when the map opens.
+
+The switches between A, B and C depend on the scale only, with a gap
+between the way out and the way back, so the views never take turns when
+the wheel stops on a limit.
 
 ## Memory
 
@@ -55,12 +66,21 @@ thresholds of A and of B and C, the galaxy filters, what to show) are kept in
 
 ## Joining another server
 
-A double click on a server of the galaxy asks first, naming the server. The
-server is then asked whether it answers, has room, needs no password and runs
-this version of the game; only then does the game leave the current server.
-On any of these failures you stay where you are. Should the other server still
-refuse once the current one is left, the game is back at its main menu and the
-map offers to return to the server you just left.
+A double click on a server of the galaxy first asks the server whether it
+answers, has room and runs this version of the game; on any of these failures
+you stay where you are, with a message telling why. Then a confirmation names
+the server; when the server asks for a password, it holds a box to type it.
+The password is handed to the game's own join when it asks for it, and is not
+kept. Only then does the game leave the current server. Should the other
+server still refuse once the current one is left (a wrong password, for
+instance), the game is back at its main menu and the map offers to return to
+the server you just left.
+
+## Languages
+
+The map speaks the language set in the game's options, for every language
+the game offers; a text missing in a language shows in English. The texts are
+in `Source/Logic/Texts.cs` (English) and `Source/Logic/Translations.*.cs`.
 
 ## Living with other plugins
 

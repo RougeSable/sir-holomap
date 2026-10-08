@@ -46,6 +46,23 @@ namespace SirHolomap
             }
         }
 
+        // Where the camera is going: the views hand over from these, never from
+        // where it still glides.
+        public Vector3D TargetForward
+        {
+            get { return Vector3D.Normalize(Vector3D.Transform(Vector3D.Forward, TargetRotation)); }
+        }
+
+        public Vector3D TargetUp
+        {
+            get { return Vector3D.Normalize(Vector3D.Transform(Vector3D.Up, TargetRotation)); }
+        }
+
+        public Vector3D TargetEye
+        {
+            get { return TargetFocus - TargetForward * TargetDistance; }
+        }
+
         public void Snap()
         {
             Focus = TargetFocus;
@@ -126,21 +143,44 @@ namespace SirHolomap
             return Gfx.Height * 0.5 / (Math.Max(depth, 1e-3) * TanHalfFov);
         }
 
-        // A segment, cut where it passes behind the camera.
+        // A segment, cut to what the camera sees (a little wider than the
+        // screen): a line that passes beside or behind the camera keeps the
+        // piece in view, whole and continuous, instead of vanishing or being
+        // thrown far off screen. That keeps the plane of B unbroken however
+        // the map is turned.
         public bool ProjectSegment(Vector3D a, Vector3D b, out Vector2 sa, out Vector2 sb)
         {
-            var near = Distance * 1e-3 + 0.05;
-            var da = Vector3D.Dot(a - Position, Forward);
-            var db = Vector3D.Dot(b - Position, Forward);
             sa = sb = Vector2.Zero;
-            if (da < near && db < near)
+            var ra = a - Position;
+            var rb = b - Position;
+            double ax = Vector3D.Dot(ra, Right), ay = Vector3D.Dot(ra, Up), az = Vector3D.Dot(ra, Forward);
+            double bx = Vector3D.Dot(rb, Right), by = Vector3D.Dot(rb, Up), bz = Vector3D.Dot(rb, Forward);
+            var near = Distance * 1e-3 + 0.05;
+            var tx = TanHalfFov * Aspect * 1.25;
+            var ty = TanHalfFov * 1.25;
+            double t0 = 0, t1 = 1;
+            if (!Clip(az - near, bz - near, ref t0, ref t1)
+                || !Clip(tx * az - ax, tx * bz - bx, ref t0, ref t1)
+                || !Clip(tx * az + ax, tx * bz + bx, ref t0, ref t1)
+                || !Clip(ty * az - ay, ty * bz - by, ref t0, ref t1)
+                || !Clip(ty * az + ay, ty * bz + by, ref t0, ref t1))
                 return false;
-            if (da < near)
-                a = a + (b - a) * ((near - da) / (db - da));
-            else if (db < near)
-                b = b + (a - b) * ((near - db) / (da - db));
-            double d;
-            return Project(a, out sa, out d) && Project(b, out sb, out d);
+            sa = ToScreen(ax + (bx - ax) * t0, ay + (by - ay) * t0, az + (bz - az) * t0);
+            sb = ToScreen(ax + (bx - ax) * t1, ay + (by - ay) * t1, az + (bz - az) * t1);
+            return Gfx.IsFinite(sa) && Gfx.IsFinite(sb);
+        }
+
+        // Keeps the part of [t0, t1] where a linear function, fa at 0 and fb
+        // at 1, is not negative.
+        private static bool Clip(double fa, double fb, ref double t0, ref double t1)
+        {
+            if (fa < 0 && fb < 0)
+                return false;
+            if (fa < 0)
+                t0 = Math.Max(t0, fa / (fa - fb));
+            else if (fb < 0)
+                t1 = Math.Min(t1, fa / (fa - fb));
+            return t0 <= t1;
         }
 
         // The point under a pixel, on the plane through a point with a normal.

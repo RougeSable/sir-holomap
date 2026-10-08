@@ -91,6 +91,37 @@ namespace SirHolomap
             MyRenderProxy.DrawSpriteExt(texture, ref dest, null, color, ref direction, ref origin, true, true);
         }
 
+        // Selection corners around a box, drawn as thin lines at any size: a
+        // texture stretched over a large grid would turn into wide blurred
+        // bars. The arms stay short, the box keeps its shape.
+        public static void Brackets(Vector2 centre, float width, float height, float thickness, Color color)
+        {
+            if (!IsFinite(centre))
+                return;
+            var limit = Height * 1.5f;
+            width = Math.Min(Math.Max(width, 8), limit);
+            height = Math.Min(Math.Max(height, 8), limit);
+            var arm = Math.Min(Math.Min(width, height) * 0.25f, 36 * Scale);
+            arm = Math.Max(arm, 4 * Scale);
+            var left = centre.X - width / 2;
+            var right = centre.X + width / 2;
+            var top = centre.Y - height / 2;
+            var bottom = centre.Y + height / 2;
+            Rect(left, top, arm, thickness, color);
+            Rect(left, top, thickness, arm, color);
+            Rect(right - arm, top, arm, thickness, color);
+            Rect(right - thickness, top, thickness, arm, color);
+            Rect(left, bottom - thickness, arm, thickness, color);
+            Rect(left, bottom - arm, thickness, arm, color);
+            Rect(right - arm, bottom - thickness, arm, thickness, color);
+            Rect(right - thickness, bottom - arm, thickness, arm, color);
+        }
+
+        public static void Brackets(Vector2 centre, float size, Color color)
+        {
+            Brackets(centre, size, size, Math.Max(1.5f, 2 * Scale), color);
+        }
+
         public static void DashedLine(Vector2 a, Vector2 b, float thickness, float dash, Color color)
         {
             var delta = b - a;

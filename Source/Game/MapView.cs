@@ -221,13 +221,15 @@ namespace SirHolomap
             }
             if (!marker.IsGps)
                 panel.Line(Texts.Seen, SeenText(marker), marker.Live ? Style.Live : Style.Memory);
+            if (!marker.IsGps && !marker.IsSelf)
+                panel.Line(Texts.Range, marker.Live ? Texts.InRange : Texts.OutOfRange, marker.Live ? Style.Live : Style.Memory);
             panel.Line(Texts.Position, ((Vector3I)marker.Position).ToString());
         }
 
         // The info of a planet or a moon: the same lines in every view.
         public void BodyInfo(Panel panel, Body body)
         {
-            panel.Heading(body.Name, body.IsMoon ? Texts.KindMoon + " of " + body.Parent.Name : Texts.KindPlanet);
+            panel.Heading(body.Name, body.IsMoon ? string.Format(Texts.MoonOf, body.Parent.Name) : Texts.KindPlanet);
             var planet = body.Planet;
             var generator = planet != null ? planet.Generator : null;
             if (!string.IsNullOrEmpty(body.Type))
@@ -267,15 +269,15 @@ namespace SirHolomap
             switch (level)
             {
                 case "ExtremeFreeze":
-                    return "extreme cold";
+                    return Texts.TempExtremeCold;
                 case "Freeze":
-                    return "cold";
+                    return Texts.TempCold;
                 case "Cozy":
-                    return "temperate";
+                    return Texts.TempTemperate;
                 case "Hot":
-                    return "hot";
+                    return Texts.TempHot;
                 case "ExtremeHot":
-                    return "extreme heat";
+                    return Texts.TempExtremeHeat;
                 default:
                     return level;
             }
@@ -430,7 +432,7 @@ namespace SirHolomap
             if (selected)
             {
                 var pulse = 1 + 0.08f * (float)Math.Sin(map.Time * 6);
-                Gfx.Sprite(GameTextures.Shape(Images.Shape.Brackets), at, Math.Max(size * 2.6f, 26 * s) * pulse, Style.Selection);
+                Gfx.Brackets(at, Math.Max(size * 2.6f, 26 * s) * pulse, Style.Selection);
             }
 
             if (label || hovered || selected || marker.IsSelf)

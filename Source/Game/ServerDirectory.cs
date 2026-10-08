@@ -212,16 +212,20 @@ namespace SirHolomap
         }
     }
 
-    // Joining another server from the galaxy. The double click asks first,
-    // naming the server; then the server is asked whether it answers, has
-    // room, needs no password and runs this version of the game. Only then
-    // does the game leave the current server. On any failure the player
-    // stays where they are, and is told why.
+    // Joining another server from the galaxy. The double click first asks
+    // the server whether it answers, has room and runs this version of the
+    // game; then a confirmation names it, with a box for the password when
+    // the server asks for one. Only then does the game leave the current
+    // server. On any failure the player stays where they are, and is told
+    // why. The password typed is handed to the game when its own join asks
+    // for it, and forgotten at once.
     internal static class ServerJoiner
     {
         private static GalaxyServer s_pending;
         private static bool s_pendingReturn;
         private static DateTime s_deadline;
+        private static string s_password;
+        private static DateTime s_passwordUntil;
         private static readonly WayBack s_wayBack = new WayBack();
         private static readonly EventHandler<MyGameServerItem> Responded = OnResponded;
         private static readonly EventHandler Failed = OnFailed;
@@ -251,20 +255,7 @@ namespace SirHolomap
                 Show(string.Format(Texts.JoinNoAddress, name), Texts.JoinFailedCaption);
                 return;
             }
-
-            var box = MyGuiSandbox.CreateMessageBox(
-                styleEnum: MyMessageBoxStyleEnum.Info,
-                buttonType: MyMessageBoxButtonsType.YES_NO,
-                messageText: new StringBuilder(string.Format(Texts.JoinQuestion, name, server.ConnectionString)),
-                messageCaption: new StringBuilder(Texts.JoinCaption),
-                callback: result =>
-                {
-                    if (result == MyGuiScreenMessageBox.ResultEnum.YES)
-                        Check(server);
-                },
-                focusedResult: MyGuiScreenMessageBox.ResultEnum.NO,
-                canHideOthers: false);
-            MyGuiSandbox.AddScreen(box);
+            Check(server);
         }
 
         // returning: going back to the server just left, from the main menu.
@@ -282,12 +273,21 @@ namespace SirHolomap
         }
 
         // Called every update, in a world or not: a server that never answers
-        // is offline, and a join that failed after leaving offers the way
-        // back.
+        // is offline, a password typed in the confirmation goes to the game's
+        // own password prompt, and a join that failed after leaving offers
+        // the way back.
         public static void Update(bool inWorld)
         {
             if (s_pending != null && DateTime.UtcNow > s_deadline)
                 Fail(s_pendingReturn ? Texts.ReturnOffline : Texts.JoinOffline);
+
+            if (s_password != null)
+            {
+                if (DateTime.UtcNow > s_passwordUntil)
+                    s_password = null;
+                else if (GameServices.AnswerPasswordPrompt(s_password))
+                    s_password = null;
+            }
 
             if (!s_wayBack.Armed)
                 return;
@@ -339,11 +339,6 @@ namespace SirHolomap
                 Show(string.Format(Texts.JoinFull, name, item.Players, item.MaxPlayers), Texts.JoinFailedCaption);
                 return;
             }
-            if (item.Password)
-            {
-                Show(string.Format(Texts.JoinPassword, name), Texts.JoinFailedCaption);
-                return;
-            }
             if (item.ServerVersion != 0 && item.ServerVersion != (int)MyFinalBuildConstants.APP_VERSION)
             {
                 Show(string.Format(Texts.JoinVersion, name), Texts.JoinFailedCaption);
@@ -361,6 +356,24 @@ namespace SirHolomap
                 return;
             }
 
+            // The confirmation, naming the server.
+            var lines = new List<string>();
+            lines.Add(string.Format(Texts.JoinQuestion, name));
+            lines.Add("");
+            lines.Add(Texts.Address + ": " + item.ConnectionString);
+            if (item.MaxPlayers > 0)
+                lines.Add(Texts.Players + ": " + item.Players + " / " + item.MaxPlayers);
+            if (item.Ping > 0)
+                lines.Add(Texts.Ping + ": " + item.Ping + " ms");
+            var needsPassword = item.Password || (server.Item != null && server.Item.Password);
+            if (needsPassword)
+                lines.Add(Texts.JoinPasswordNeeded);
+            var question = string.Join(Environment.NewLine, lines.ToArray());
+            MyGuiSandbox.AddScreen(new JoinDialog(question, needsPassword, password => Leave(item, name, password)));
+        }
+
+        private static void Leave(MyGameServerItem item, string name, string password)
+        {
             HolomapPlugin.Log("leaving for " + item.ConnectionString);
             MySandboxGame.Static.Invoke(() =>
             {
@@ -371,11 +384,14 @@ namespace SirHolomap
                     s_wayBack.Leave(here.ConnectionString, here.Name, name, DateTime.UtcNow);
                 else
                     s_wayBack.Disarm();
+                s_password = string.IsNullOrEmpty(password) ? null : password;
+                s_passwordUntil = DateTime.UtcNow.AddMinutes(3);
                 if (plugin != null)
                     plugin.BeforeLeaving();
                 if (!GameServices.Join(item))
                 {
                     s_wayBack.Disarm();
+                    s_password = null;
                     Show(string.Format(Texts.JoinNoAddress, name), Texts.JoinFailedCaption);
                 }
             }, "SirHolomapJoin");
@@ -384,7 +400,7 @@ namespace SirHolomap
         private static void OnFailed(object sender, EventArgs e)
         {
             if (s_pending != null)
-                Fail(Texts.JoinOffline);
+                Fail(s_pendingReturn ? Texts.ReturnOffline : Texts.JoinOffline);
         }
 
         private static void Fail(string format)
@@ -412,6 +428,7 @@ namespace SirHolomap
             GameServices.StopPing(Responded, Failed);
             s_pending = null;
             s_pendingReturn = false;
+            s_password = null;
             s_wayBack.Disarm();
         }
     }

@@ -21,7 +21,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void GalaxyFiltersSurviveRestart()
+        public void GalaxyFiltersSurviveReload()
         {
             InFolder(directory =>
             {
@@ -55,7 +55,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void BlockThresholdsSurviveRestart()
+        public void BlockThresholdsSurviveReload()
         {
             InFolder(directory =>
             {

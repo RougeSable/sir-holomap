@@ -219,7 +219,7 @@ namespace SirHolomap
                     Gfx.Sprite(GameTextures.Shape(Images.Shape.Glow), at, 40 * s, Gfx.Alpha(selected ? Style.Selection : color, 0.5f));
                 Gfx.Sprite(GameTextures.Shape(Images.Shape.Diamond), at, (server.IsCurrent || server.Favorite || server.Visited ? 13 : 9) * s, color);
                 if (selected)
-                    Gfx.Sprite(GameTextures.Shape(Images.Shape.Brackets), at, 30 * s, Style.Selection);
+                    Gfx.Brackets(at, 30 * s, Style.Selection);
 
                 var label = server.IsCurrent || server.Favorite || server.Visited || selected || hover || singles <= 60;
                 if (label)

@@ -291,6 +291,45 @@ namespace SirHolomap
             }
         }
 
+        // The game's own join asks for the password of a protected server in
+        // a screen of its own (MyGuiScreenServerPassword). When the player
+        // already typed it in the map's confirmation, it is handed to that
+        // screen the way its connect button does, and the screen closes.
+        // True once answered; false while the screen is not there (or cannot
+        // be reached: the game's screen then simply stays for the player).
+        public static bool AnswerPasswordPrompt(string password)
+        {
+            try
+            {
+                var screens = ScreenList();
+                if (screens == null)
+                    return false;
+                foreach (var screen in screens)
+                {
+                    if (screen == null || screen.GetType().Name != "MyGuiScreenServerPassword")
+                        continue;
+                    var field = screen.GetType().GetField("m_connectAction", Instance);
+                    var connect = field != null ? field.GetValue(screen) as Action<string> : null;
+                    if (connect == null)
+                    {
+                        HolomapPlugin.Log("the game's password screen could not be answered: the player types it there");
+                        return true;
+                    }
+                    var gui = screen as MyGuiScreenBase;
+                    if (gui != null)
+                        gui.CloseScreen();
+                    connect(password);
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                HolomapPlugin.Log("password not handed to the game: " + e.Message);
+                return true;
+            }
+            return false;
+        }
+
         private static FieldInfo s_screens;
         private static bool s_screensLooked;
 

@@ -18,7 +18,7 @@ namespace SirHolomap
         private double m_yaw;
         private double m_pitch = 0.75;
         private double m_distance = 2e6;
-        private ScaleSwitch m_toLocal = MapScales.NeighbourhoodToSystem(0);
+        private readonly ZoomLadder m_ladder = new ZoomLadder(0, ZoomRung.System);
         private int m_lastMarkers;
 
         private readonly List<object> m_items = new List<object>();
@@ -31,12 +31,12 @@ namespace SirHolomap
 
         public override string Title
         {
-            get { return Texts.ModeSystem.Substring(3); }
+            get { return Texts.ModeSystem; }
         }
 
         public override string Subtitle
         {
-            get { return (m_zone != null ? m_zone.Name + "  -  " : "") + Texts.Distance.ToLowerInvariant() + " " + Distance(m_distance); }
+            get { return (m_zone != null ? m_zone.Name + "  -  " : "") + Texts.Distance + " " + Distance(m_distance); }
         }
 
         public override string Help
@@ -77,10 +77,10 @@ namespace SirHolomap
         public void Enter(bool continuous)
         {
             FindZone();
-            m_toLocal = MapScales.NeighbourhoodToSystem(m_zone != null ? m_zone.Radius : 0);
+            m_ladder.Configure(m_zone != null ? m_zone.Radius : 0, ZoomRung.System);
             if (continuous)
             {
-                var offset = -Camera.Forward;
+                var offset = -Camera.TargetForward;
                 m_pitch = MathHelper.Clamp(Math.Asin(MathHelper.Clamp(Vector3D.Dot(offset, LocalView.Normal), -1, 1)), 0.1, 1.5);
                 var flat = Vector3D.Reject(offset, LocalView.Normal);
                 if (flat.LengthSquared() > 1e-8)
@@ -88,15 +88,14 @@ namespace SirHolomap
                     flat.Normalize();
                     m_yaw = Math.Atan2(Vector3D.Dot(flat, Vector3D.Cross(LocalView.Normal, Vector3D.Forward)), Vector3D.Dot(flat, Vector3D.Forward));
                 }
-                m_distance = Math.Max(Camera.TargetDistance, m_toLocal.UpAbove * 1.05);
+                m_distance = m_ladder.Entry(ZoomRung.System, Vector3D.Distance(Camera.TargetEye, m_focus));
             }
             else
             {
                 m_pitch = 0.75;
                 var extent = Math.Max(Extent(), 200000);
-                m_distance = extent * 1.6;
+                m_distance = m_ladder.Entry(ZoomRung.System, extent * 1.6);
             }
-            m_toLocal.Reset(true);
         }
 
         private Vector3D Offset
@@ -125,7 +124,8 @@ namespace SirHolomap
         {
             Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
             // Zoomed in far enough: the neighbourhood of the zone.
-            if (m_toLocal.Update(m_distance) && !m_toLocal.IsUp)
+            var before = m_ladder.Rung;
+            if (m_ladder.Update(m_distance) != before && m_ladder.Rung != ZoomRung.System)
             {
                 if (m_zone != null)
                     Map.GoLocal(LocalAnchor.Body, m_zone, null, false, true);
@@ -189,14 +189,17 @@ namespace SirHolomap
             var body = target as Body;
             if (body != null)
             {
-                Map.GoPlanet(body, true, false);
+                Map.GoPlanet(body, true, false, null);
                 return;
             }
             var marker = target as Marker;
             if (marker == null)
                 return;
             if (marker.IsGrid || marker.Kind == ContactKind.Character)
-                Map.GoLocal(LocalAnchor.Grid, null, marker, true, false);
+            {
+                Map.GoLocal(marker.Live ? LocalAnchor.Grid : LocalAnchor.Memory, null, marker, true, false);
+                Map.Selected = marker;
+            }
         }
 
         public override object Pick(Vector2 mouse)
@@ -373,7 +376,7 @@ namespace SirHolomap
 
         public override void DefaultInfo(Panel panel)
         {
-            panel.Heading(Texts.ModeSystem.Substring(3), m_zone != null ? m_zone.Name : null);
+            panel.Heading(Texts.ModeSystem, m_zone != null ? m_zone.Name : null);
             var planets = 0;
             var moons = 0;
             foreach (var body in World.Bodies)
@@ -383,12 +386,12 @@ namespace SirHolomap
                 else
                     planets++;
             }
-            panel.Line(Texts.KindPlanet + "s", planets.ToString());
+            panel.Line(Texts.Planets, planets.ToString());
             panel.Line(Texts.Moons, moons.ToString());
             var near = World.NearestBody(World.PlayerPosition);
             if (near != null)
                 panel.Line(near.Name, Distance(Math.Max(0, Vector3D.Distance(near.Centre, World.PlayerPosition) - near.Radius)));
-            panel.Line(Texts.Distance + " (" + Texts.ModeSystem.Substring(3).ToLowerInvariant() + ")", Distance(Extent()));
+            panel.Line(Texts.SystemSize, Distance(Extent()));
         }
 
         public override void Filters(Panel panel)

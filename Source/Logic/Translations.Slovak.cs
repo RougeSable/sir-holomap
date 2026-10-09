@@ -17,7 +17,7 @@ namespace SirHolomap
                 { "ModeSystemHelp", "Celá sústava: plan\u00e9ty, sústava v 3D a galaxia." },
                 { "ModePlanetUnavailable", "\u017diadna plan\u00e9ta nabl\u00edzku: vyber jednu v zobrazen\u00ed S\u00fastava." },
                 { "TabBodies", "Sústava 2D" },
-                { "TabOrrery", "Sústava 3D" },
+                { "TabOrrery", "Orbity" },
                 { "TabGalaxy", "Galaxia" },
                 { "TabBodiesHelp", "Plan\u00e9ty a ich mesiace vedľa seba, podľa vzdialenosti od stredu sveta." },
                 { "TabOrreryHelp", "Sústava v 3D: skutočn\u00e9 vzdialenosti, telesá zväčšen\u00e9, aby zostali čitateľn\u00e9." },

@@ -74,6 +74,9 @@ namespace SirHolomap
             m_y += 4 * S;
         }
 
+        private const float TabTextScale = 0.66f;
+        private const float TabTextFloor = 0.5f;
+
         public void Tabs(string[] names, string[] helps, int current, Action<int> pick)
         {
             CloseColumns();
@@ -89,7 +92,10 @@ namespace SirHolomap
                 var on = i == current;
                 Gfx.Rect(x, m_y, width, height, on ? Gfx.Alpha(Style.Accent, 0.35f) : (hover ? Style.RowHover : Style.Row));
                 Gfx.Frame(x, m_y, width, height, 1, on ? Style.Accent : Gfx.Alpha(Style.AccentDim, 0.8f));
-                Gfx.Text(names[i], x + width / 2, m_y + height / 2, 0.66f, on ? Color.White : Style.Text,
+                // The name shrinks to fit its button, whatever the language.
+                var room = width - 10 * S;
+                var scale = TextFit.Scale(Gfx.Measure(names[i], TabTextScale).X, TabTextScale, room, TabTextFloor);
+                Gfx.Text(Gfx.Fit(names[i], scale, room), x + width / 2, m_y + height / 2, scale, on ? Color.White : Style.Text,
                     MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER);
             }
             m_y += height + 10 * S;

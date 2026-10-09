@@ -171,6 +171,7 @@ namespace SirHolomap
             public bool SampleFailureLogged;
             public Task<byte[]> Painting;
             public bool PaintingFull;
+            public GlobeIdentity Identity;
         }
 
         // The order samples are taken in: the coarse lattice first.
@@ -197,6 +198,7 @@ namespace SirHolomap
             * ((Columns - CoarseStep / 2 + CoarseStep - 1) / CoarseStep);
 
         private readonly Dictionary<long, Job> m_jobs = new Dictionary<long, Job>();
+        private readonly Dictionary<long, Job> m_kept = new Dictionary<long, Job>();
         private readonly TerrainColors m_terrain = new TerrainColors();
         private readonly System.Diagnostics.Stopwatch m_watch = new System.Diagnostics.Stopwatch();
 
@@ -211,10 +213,30 @@ namespace SirHolomap
             Job job;
             if (!m_jobs.TryGetValue(body.Id, out job))
             {
-                job = new Job { Body = body };
+                job = Kept(body) ?? new Job { Body = body };
                 m_jobs[body.Id] = job;
             }
             job.Body = body;
+            return job;
+        }
+
+        private static GlobeIdentity IdentityOf(Body body)
+        {
+            return new GlobeIdentity(body.Id, body.Type, body.Radius, new Vec3(body.Centre.X, body.Centre.Y, body.Centre.Z));
+        }
+
+        // A globe painted before the player left the world, still right for
+        // this body: shown again at once, its texture never left the game.
+        private Job Kept(Body body)
+        {
+            Job job;
+            if (!m_kept.TryGetValue(body.Id, out job))
+                return null;
+            m_kept.Remove(body.Id);
+            if (!job.Identity.Matches(IdentityOf(body)))
+                return null;
+            job.Body = body;
+            job.Materials = null;
             return job;
         }
 
@@ -225,8 +247,20 @@ namespace SirHolomap
                 JobOf(body);
         }
 
+        // Leaving or joining a world: the globes being painted start again,
+        // but the finished ones are kept, to be shown at once if the player
+        // joins the same world back.
         public void Clear()
         {
+            foreach (var pair in m_jobs)
+            {
+                var job = pair.Value;
+                if (job.Full && job.Texture != null && !job.Failed && job.Painting == null)
+                {
+                    job.Materials = null;
+                    m_kept[pair.Key] = job;
+                }
+            }
             m_jobs.Clear();
             m_terrain.Clear();
         }
@@ -443,6 +477,7 @@ namespace SirHolomap
             var radius = job.Body.Radius;
             var atmosphere = job.Body.HasAtmosphere ? new[] { 0.55f, 0.75f, 1.0f } : null;
             job.PaintingFull = full;
+            job.Identity = IdentityOf(job.Body);
             if (!full)
                 job.Coarse = true;
             // Seen from the side the sun lights, at the start.

@@ -17,7 +17,7 @@ namespace SirHolomap
                 { "ModeSystemHelp", "T\u00fcm sistem: gezegenler, 3B sistem ve galaksi." },
                 { "ModePlanetUnavailable", "Yak\u0131nda gezegen yok: Sistem g\u00f6r\u00fcn\u00fcm\u00fcnde birini se\u00e7." },
                 { "TabBodies", "Sistem 2B" },
-                { "TabOrrery", "Sistem 3B" },
+                { "TabOrrery", "Y\u00f6r\u00fcngeler" },
                 { "TabGalaxy", "Galaksi" },
                 { "TabBodiesHelp", "Gezegenler ve uyduları yan yana, d\u00fcnyanın merkezine uzaklığa göre." },
                 { "TabOrreryHelp", "3B sistem: ger\u00e7ek uzaklıklar, gök cisimleri okunabilir kalsın diye b\u00fcy\u00fct\u00fclm\u00fcş." },

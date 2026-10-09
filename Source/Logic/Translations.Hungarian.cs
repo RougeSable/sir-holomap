@@ -17,7 +17,7 @@ namespace SirHolomap
                 { "ModeSystemHelp", "Az eg\u00e9sz rendszer: bolygók, a rendszer 3D-ben \u00e9s a galaxis." },
                 { "ModePlanetUnavailable", "Nincs bolyg\u00f3 a k\u00f6zelben: v\u00e1lassz egyet a Rendszer n\u00e9zetben." },
                 { "TabBodies", "Rendszer 2D" },
-                { "TabOrrery", "Rendszer 3D" },
+                { "TabOrrery", "P\u00e1ly\u00e1k" },
                 { "TabGalaxy", "Galaxis" },
                 { "TabBodiesHelp", "A bolygók \u00e9s holdjaik egymás mellett, a világ közep\u00e9től m\u00e9rt távolság szerint." },
                 { "TabOrreryHelp", "A rendszer 3D-ben: valódi távolságok, felnagyított \u00e9gitestek, hogy olvashatók maradjanak." },

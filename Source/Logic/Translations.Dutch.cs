@@ -17,7 +17,7 @@ namespace SirHolomap
                 { "ModeSystemHelp", "Het hele stelsel: planeten, het stelsel in 3D en de melkweg." },
                 { "ModePlanetUnavailable", "Geen planeet in de buurt: kies er een in de weergave Stelsel." },
                 { "TabBodies", "Stelsel 2D" },
-                { "TabOrrery", "Stelsel 3D" },
+                { "TabOrrery", "Banen" },
                 { "TabGalaxy", "Melkweg" },
                 { "TabBodiesHelp", "De planeten en hun manen plat naast elkaar, op afstand tot het midden van de wereld." },
                 { "TabOrreryHelp", "Het stelsel in 3D: echte afstanden, hemellichamen vergroot zodat ze leesbaar blijven." },

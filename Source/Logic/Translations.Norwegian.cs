@@ -17,7 +17,7 @@ namespace SirHolomap
                 { "ModeSystemHelp", "Hele systemet: planeter, systemet i 3D og galaksen." },
                 { "ModePlanetUnavailable", "Ingen planet i n\u00e6rheten: velg en i System-visningen." },
                 { "TabBodies", "System 2D" },
-                { "TabOrrery", "System 3D" },
+                { "TabOrrery", "Baner" },
                 { "TabGalaxy", "Galakse" },
                 { "TabBodiesHelp", "Planetene og månene deres lagt flatt, etter avstand til verdens sentrum." },
                 { "TabOrreryHelp", "Systemet i 3D: ekte avstander, himmellegemer forstørret så de forblir lesbare." },

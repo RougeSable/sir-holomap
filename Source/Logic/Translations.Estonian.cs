@@ -17,7 +17,7 @@ namespace SirHolomap
                 { "ModeSystemHelp", "Kogu s\u00fcsteem: planeedid, s\u00fcsteem 3D-s ja galaktika." },
                 { "ModePlanetUnavailable", "L\u00e4hedal pole planeeti: vali \u00fcks vaates S\u00fcsteem." },
                 { "TabBodies", "S\u00fcsteem 2D" },
-                { "TabOrrery", "S\u00fcsteem 3D" },
+                { "TabOrrery", "Orbiidid" },
                 { "TabGalaxy", "Galaktika" },
                 { "TabBodiesHelp", "Planeedid ja nende kuud kõrvuti, kauguse järgi maailma keskpunktist." },
                 { "TabOrreryHelp", "S\u00fcsteem 3D-s: tegelikud kaugused, taevakehad suurendatud, et need jääksid loetavaks." },

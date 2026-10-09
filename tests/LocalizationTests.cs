@@ -74,21 +74,38 @@ namespace SirHolomap.Tests
             Assert.NotEqual(english["StayButton"], catalog.Get(GameLanguage.German, "StayButton"));
         }
 
-        // The first tab of the system view sits next to "System 3D": it is
-        // its flat twin, "System 2D", in every language.
+        // The first tab of the system view keeps its name, "System 2D".
         [Fact]
-        public void FlatSystemTabIsNamedAfterTheThreeDimensionalOne()
+        public void FlatSystemTabKeepsItsName()
         {
             var english = Texts.EnglishTable();
             var catalog = new TextCatalog(english, Translations.All());
             Assert.Equal("System 2D", english["TabBodies"]);
             Assert.Equal("Syst\u00e8me 2D", catalog.Get(GameLanguage.French, "TabBodies"));
+        }
+
+        // The second tab of the system view is no longer "System 3D": it is
+        // "Orbits", translated in every language, with no "3D" left in it,
+        // and never the same name as its neighbours.
+        [Fact]
+        public void OrbitsTabReplacesSystem3D()
+        {
+            var english = Texts.EnglishTable();
+            var catalog = new TextCatalog(english, Translations.All());
+            Assert.Equal("Orbits", english["TabOrrery"]);
+            Assert.Equal("Orbites", catalog.Get(GameLanguage.French, "TabOrrery"));
+            Assert.Equal("Umlaufbahnen", catalog.Get(GameLanguage.German, "TabOrrery"));
             foreach (GameLanguage language in Enum.GetValues(typeof(GameLanguage)))
             {
-                var flat = catalog.Get(language, "TabBodies");
-                var solid = catalog.Get(language, "TabOrrery");
-                Assert.Equal(solid.Replace("3D", "2D").Replace("3B", "2B"), flat);
-                Assert.NotEqual(solid, flat);
+                var name = catalog.Get(language, "TabOrrery");
+                Assert.True(catalog.Has(language, "TabOrrery") || language == GameLanguage.English, "no Orbits tab in " + language);
+                Assert.DoesNotContain("3D", name);
+                Assert.DoesNotContain("3B", name);
+                Assert.DoesNotContain("2D", name);
+                Assert.NotEqual(catalog.Get(language, "TabBodies"), name);
+                Assert.NotEqual(catalog.Get(language, "TabGalaxy"), name);
+                if (language != GameLanguage.English)
+                    Assert.NotEqual("Orbits", name);
             }
         }
 

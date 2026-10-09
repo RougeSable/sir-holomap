@@ -17,7 +17,7 @@ namespace SirHolomap
                 { "ModeSystemHelp", "星系全体：惑星、3D の星系、銀河。" },
                 { "ModePlanetUnavailable", "\u8fd1\u304f\u306b\u60d1\u661f\u304c\u3042\u308a\u307e\u305b\u3093\uff1a\u300c\u661f\u7cfb\u300d\u30d3\u30e5\u30fc\u3067\u9078\u3093\u3067\u304f\u3060\u3055\u3044\u3002" },
                 { "TabBodies", "星系 2D" },
-                { "TabOrrery", "星系 3D" },
+                { "TabOrrery", "\u8ecc\u9053" },
                 { "TabGalaxy", "銀河" },
                 { "TabBodiesHelp", "惑星とその衛星を平面に並べ、世界の中心からの距離順に表示。" },
                 { "TabOrreryHelp", "3D の星系：実際の距離、天体は読みやすいよう拡大表示。" },

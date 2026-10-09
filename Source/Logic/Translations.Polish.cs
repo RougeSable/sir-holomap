@@ -17,7 +17,7 @@ namespace SirHolomap
                 { "ModeSystemHelp", "Cały układ: planety, układ w 3D i galaktyka." },
                 { "ModePlanetUnavailable", "Brak planety w pobli\u017cu: wybierz jedn\u0105 w widoku Uk\u0142ad." },
                 { "TabBodies", "Układ 2D" },
-                { "TabOrrery", "Układ 3D" },
+                { "TabOrrery", "Orbity" },
                 { "TabGalaxy", "Galaktyka" },
                 { "TabBodiesHelp", "Planety i ich księżyce obok siebie, według odległości od środka świata." },
                 { "TabOrreryHelp", "Układ w 3D: prawdziwe odległości, ciała powiększone, by pozostały czytelne." },

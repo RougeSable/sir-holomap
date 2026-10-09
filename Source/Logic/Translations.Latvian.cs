@@ -17,7 +17,7 @@ namespace SirHolomap
                 { "ModeSystemHelp", "Visa sistēma: planētas, sistēma 3D un galaktika." },
                 { "ModePlanetUnavailable", "Tuvum\u0101 nav plan\u0113tas: izv\u0113lies k\u0101du skat\u0101 Sist\u0113ma." },
                 { "TabBodies", "Sistēma 2D" },
-                { "TabOrrery", "Sistēma 3D" },
+                { "TabOrrery", "Orb\u012btas" },
                 { "TabGalaxy", "Galaktika" },
                 { "TabBodiesHelp", "Planētas un to pavadoņi blakus, pēc attāluma līdz pasaules centram." },
                 { "TabOrreryHelp", "Sistēma 3D: īsti attālumi, debess ķermeņi palielināti, lai būtu salasāmi." },

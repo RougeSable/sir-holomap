@@ -17,7 +17,7 @@ namespace SirHolomap
                 { "ModeSystemHelp", "Koko järjestelmä: planeetat, järjestelmä 3D:nä ja galaksi." },
                 { "ModePlanetUnavailable", "Ei planeettaa l\u00e4hell\u00e4: valitse yksi J\u00e4rjestelm\u00e4-n\u00e4kym\u00e4ss\u00e4." },
                 { "TabBodies", "Järjestelmä 2D" },
-                { "TabOrrery", "Järjestelmä 3D" },
+                { "TabOrrery", "Kiertoradat" },
                 { "TabGalaxy", "Galaksi" },
                 { "TabBodiesHelp", "Planeetat ja niiden kuut rinnakkain, etäisyyden mukaan maailman keskipisteestä." },
                 { "TabOrreryHelp", "Järjestelmä 3D:nä: todelliset etäisyydet, taivaankappaleet suurennettuina luettavuuden vuoksi." },

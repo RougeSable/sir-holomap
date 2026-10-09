@@ -184,7 +184,7 @@ namespace SirHolomap
                 { "ModeSystemHelp", "The whole system: planets, the system in 3D and the galaxy." },
                 { "ModePlanetUnavailable", "No planet nearby: pick one in the System view." },
                 { "TabBodies", "System 2D" },
-                { "TabOrrery", "System 3D" },
+                { "TabOrrery", "Orbits" },
                 { "TabGalaxy", "Galaxy" },
                 { "TabBodiesHelp", "Planets and their moons laid flat, by distance to the centre of the world." },
                 { "TabOrreryHelp", "The system in 3D: true distances, bodies enlarged so that they stay readable." },

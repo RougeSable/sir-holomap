@@ -164,73 +164,466 @@ namespace SirHolomap
         }
     }
 
+    // An icon of the galaxy on screen: where its server truly lies, and, for
+    // a server that carries its name, the room its row takes (from the left
+    // edge of the icon to the end of the name, and the height of the row).
     public struct ScreenIcon
+    {
+        public int Index;
+        public ulong Key;
+        public double X;
+        public double Y;
+        public double Width;
+        public double Height;
+
+        public ScreenIcon(int index, ulong key, double x, double y, double width, double height)
+        {
+            Index = index;
+            Key = key;
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+        }
+
+        public ScreenIcon(int index, ulong key, double x, double y)
+            : this(index, key, x, y, 0, 0)
+        {
+        }
+    }
+
+    // Where an icon is drawn. An icon that stands alone is drawn at its true
+    // place; in a group it is moved aside, and a thin line joins it to its
+    // true place.
+    public struct PlacedIcon
     {
         public int Index;
         public double X;
         public double Y;
+        public double TrueX;
+        public double TrueY;
+        public int GroupSize;
 
-        public ScreenIcon(int index, double x, double y)
+        public bool Moved
         {
-            Index = index;
-            X = x;
-            Y = y;
+            get { return Math.Abs(X - TrueX) > 0.5 || Math.Abs(Y - TrueY) > 0.5; }
         }
     }
 
-    // A group of icons too close to be told apart on screen: drawn as one
-    // badge with a count, it opens up as the player zooms in.
-    public sealed class IconCluster
+    // Icons too close to be told apart gather into a group, and the group
+    // spreads its icons so that none covers another: every icon stays in
+    // sight and can be clicked on its own. The layout depends only on the
+    // true places, the sizes and the keys of the icons: never on their order
+    // in the list, nor on which server is the current one, so a server is
+    // always drawn at the same spot for the same view of the galaxy.
+    public static class GalaxyLayout
     {
-        public double X;
-        public double Y;
-        public readonly List<int> Members = new List<int>();
-
-        public int Count
+        // Servers shown with their name: a group stacks its rows in a column
+        // centred on the middle of its members, from the highest to the
+        // lowest, so that no name ever covers another. Groups whose columns
+        // would touch become one group.
+        public static PlacedIcon[] Rows(IList<ScreenIcon> icons, double iconHalf, double margin)
         {
-            get { return Members.Count; }
-        }
-    }
+            var columns = new List<Column>();
+            foreach (var index in ByKey(icons))
+                columns.Add(Column.Build(icons, new List<int> { index }, iconHalf));
 
-    public static class IconClustering
-    {
-        // Greedy, in a stable order: an icon joins the first group whose
-        // centre is closer than the radius, the centre following its members.
-        public static List<IconCluster> Cluster(IList<ScreenIcon> icons, double radius)
-        {
-            var clusters = new List<IconCluster>();
-            var sorted = new List<ScreenIcon>(icons);
-            sorted.Sort((a, b) => a.Index.CompareTo(b.Index));
-            var radius2 = radius * radius;
-
-            foreach (var icon in sorted)
+            bool merged;
+            do
             {
-                IconCluster home = null;
-                foreach (var cluster in clusters)
+                merged = false;
+                for (var i = 0; i < columns.Count; i++)
                 {
-                    var dx = cluster.X - icon.X;
-                    var dy = cluster.Y - icon.Y;
-                    if (dx * dx + dy * dy < radius2)
+                    var j = i + 1;
+                    while (j < columns.Count)
                     {
-                        home = cluster;
-                        break;
+                        if (!columns[i].Touches(columns[j], margin))
+                        {
+                            j++;
+                            continue;
+                        }
+                        var members = new List<int>(columns[i].Members);
+                        members.AddRange(columns[j].Members);
+                        columns.RemoveAt(j);
+                        columns[i] = Column.Build(icons, members, iconHalf);
+                        merged = true;
+                        j = i + 1;
                     }
                 }
+            }
+            while (merged);
 
-                if (home == null)
+            var placed = new PlacedIcon[icons.Count];
+            foreach (var column in columns)
+            {
+                var y = column.Top;
+                foreach (var index in column.Members)
                 {
-                    home = new IconCluster { X = icon.X, Y = icon.Y };
-                    clusters.Add(home);
-                    home.Members.Add(icon.Index);
-                    continue;
+                    var icon = icons[index];
+                    var height = Math.Max(icon.Height, 0);
+                    placed[index] = new PlacedIcon
+                    {
+                        Index = icon.Index,
+                        X = column.Members.Count == 1 ? icon.X : column.CentreX,
+                        Y = column.Members.Count == 1 ? icon.Y : y + height / 2,
+                        TrueX = icon.X,
+                        TrueY = icon.Y,
+                        GroupSize = column.Members.Count,
+                    };
+                    y += height;
+                }
+            }
+            return placed;
+        }
+
+        private sealed class Column
+        {
+            public List<int> Members;
+            public double CentreX;
+            public double Left;
+            public double Right;
+            public double Top;
+            public double Bottom;
+
+            // Members from top to bottom; the centre is the mean of the
+            // members, summed in the order of their keys.
+            public static Column Build(IList<ScreenIcon> icons, List<int> members, double iconHalf)
+            {
+                members.Sort((a, b) => CompareByKey(icons[a], icons[b], a, b));
+                double sumX = 0, sumY = 0, height = 0, width = 2 * iconHalf;
+                foreach (var index in members)
+                {
+                    sumX += icons[index].X;
+                    sumY += icons[index].Y;
+                    height += Math.Max(icons[index].Height, 0);
+                    width = Math.Max(width, icons[index].Width);
+                }
+                members.Sort((a, b) =>
+                {
+                    var byY = icons[a].Y.CompareTo(icons[b].Y);
+                    return byY != 0 ? byY : CompareByKey(icons[a], icons[b], a, b);
+                });
+                var column = new Column { Members = members };
+                column.CentreX = sumX / members.Count;
+                var centreY = sumY / members.Count;
+                column.Left = column.CentreX - iconHalf;
+                column.Right = column.Left + width;
+                column.Top = centreY - height / 2;
+                column.Bottom = column.Top + height;
+                return column;
+            }
+
+            public bool Touches(Column other, double margin)
+            {
+                return Left < other.Right + margin && other.Left < Right + margin
+                    && Top < other.Bottom + margin && other.Top < Bottom + margin;
+            }
+        }
+
+        // Servers shown as a plain dot: a group sets its dots on rings around
+        // the middle of its members, each dot at least "spacing" from every
+        // other. Groups whose rings would come too close become one group.
+        public static PlacedIcon[] Dots(IList<ScreenIcon> icons, double spacing)
+        {
+            var count = icons.Count;
+            var placed = new PlacedIcon[count];
+            if (count == 0)
+                return placed;
+            spacing = Math.Max(spacing, 1e-6);
+            var sets = new Sets(count);
+
+            // Neighbours closer than the spacing, through a grid of cells of
+            // that size.
+            var grid = new Dictionary<long, List<int>>();
+            foreach (var index in ByKey(icons))
+            {
+                var cx = Cell(icons[index].X, spacing);
+                var cy = Cell(icons[index].Y, spacing);
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    for (var dy = -1; dy <= 1; dy++)
+                    {
+                        List<int> near;
+                        if (!grid.TryGetValue(CellKey(cx + dx, cy + dy), out near))
+                            continue;
+                        foreach (var other in near)
+                        {
+                            var ex = icons[index].X - icons[other].X;
+                            var ey = icons[index].Y - icons[other].Y;
+                            if (ex * ex + ey * ey < spacing * spacing)
+                                sets.Join(index, other);
+                        }
+                    }
+                }
+                List<int> cell;
+                var key = CellKey(cx, cy);
+                if (!grid.TryGetValue(key, out cell))
+                {
+                    cell = new List<int>();
+                    grid[key] = cell;
+                }
+                cell.Add(index);
+            }
+
+            // Spread groups may reach their neighbours: those become one
+            // group, until no group comes too close to another.
+            var groups = Groups(icons, sets);
+            for (var round = 0; round < 16; round++)
+            {
+                var discs = new List<Disc>();
+                var largest = 0.0;
+                foreach (var members in groups)
+                {
+                    var disc = Spread(icons, members, spacing, placed);
+                    discs.Add(disc);
+                    largest = Math.Max(largest, disc.Radius);
                 }
 
-                var n = home.Members.Count;
-                home.X = (home.X * n + icon.X) / (n + 1);
-                home.Y = (home.Y * n + icon.Y) / (n + 1);
-                home.Members.Add(icon.Index);
+                var reach = 2 * largest + spacing;
+                var discGrid = new Dictionary<long, List<int>>();
+                var joined = false;
+                for (var i = 0; i < discs.Count; i++)
+                {
+                    var cx = Cell(discs[i].X, reach);
+                    var cy = Cell(discs[i].Y, reach);
+                    for (var dx = -1; dx <= 1; dx++)
+                    {
+                        for (var dy = -1; dy <= 1; dy++)
+                        {
+                            List<int> near;
+                            if (!discGrid.TryGetValue(CellKey(cx + dx, cy + dy), out near))
+                                continue;
+                            foreach (var j in near)
+                            {
+                                var ex = discs[i].X - discs[j].X;
+                                var ey = discs[i].Y - discs[j].Y;
+                                var limit = discs[i].Radius + discs[j].Radius + spacing;
+                                if (ex * ex + ey * ey < limit * limit && sets.Join(groups[i][0], groups[j][0]))
+                                    joined = true;
+                            }
+                        }
+                    }
+                    List<int> cell;
+                    var key = CellKey(cx, cy);
+                    if (!discGrid.TryGetValue(key, out cell))
+                    {
+                        cell = new List<int>();
+                        discGrid[key] = cell;
+                    }
+                    cell.Add(i);
+                }
+                if (!joined)
+                    break;
+                groups = Groups(icons, sets);
+                if (round == 15)
+                {
+                    foreach (var members in groups)
+                        Spread(icons, members, spacing, placed);
+                }
             }
-            return clusters;
+            return placed;
+        }
+
+        // How many dots a ring of this rank holds, the ring's radius being
+        // rank times the spacing: a little less than its perimeter allows, so
+        // that two neighbours on the ring are never closer than the spacing.
+        public static int RingCapacity(int rank)
+        {
+            return Math.Max(1, (int)Math.Floor(2 * Math.PI * rank * 0.95));
+        }
+
+        private struct Disc
+        {
+            public double X;
+            public double Y;
+            public double Radius;
+        }
+
+        private static Disc Spread(IList<ScreenIcon> icons, List<int> members, double spacing, PlacedIcon[] placed)
+        {
+            double sumX = 0, sumY = 0;
+            foreach (var index in members)
+            {
+                sumX += icons[index].X;
+                sumY += icons[index].Y;
+            }
+            var disc = new Disc { X = sumX / members.Count, Y = sumY / members.Count };
+            if (members.Count == 1)
+            {
+                var icon = icons[members[0]];
+                placed[members[0]] = new PlacedIcon { Index = icon.Index, X = icon.X, Y = icon.Y, TrueX = icon.X, TrueY = icon.Y, GroupSize = 1 };
+                disc.X = icon.X;
+                disc.Y = icon.Y;
+                return disc;
+            }
+
+            // Closest to the middle first: they take the inner rings.
+            var order = new List<int>(members);
+            order.Sort((a, b) =>
+            {
+                var da = Square(icons[a].X - disc.X) + Square(icons[a].Y - disc.Y);
+                var db = Square(icons[b].X - disc.X) + Square(icons[b].Y - disc.Y);
+                var byDistance = da.CompareTo(db);
+                return byDistance != 0 ? byDistance : CompareByKey(icons[a], icons[b], a, b);
+            });
+
+            var next = 0;
+            if (order.Count <= 6)
+            {
+                var radius = spacing / (2 * Math.Sin(Math.PI / order.Count));
+                Ring(icons, order, 0, order.Count, disc, radius, placed, members.Count);
+                disc.Radius = radius;
+                return disc;
+            }
+
+            var centre = icons[order[0]];
+            placed[order[0]] = new PlacedIcon { Index = centre.Index, X = disc.X, Y = disc.Y, TrueX = centre.X, TrueY = centre.Y, GroupSize = members.Count };
+            next = 1;
+            var rank = 0;
+            while (next < order.Count)
+            {
+                rank++;
+                var take = Math.Min(RingCapacity(rank), order.Count - next);
+                Ring(icons, order, next, take, disc, rank * spacing, placed, members.Count);
+                next += take;
+            }
+            disc.Radius = rank * spacing;
+            return disc;
+        }
+
+        // The dots of one ring, evenly spaced, in the order of the angle of
+        // their true places around the middle of the group.
+        private static void Ring(IList<ScreenIcon> icons, List<int> order, int start, int take, Disc disc, double radius,
+            PlacedIcon[] placed, int groupSize)
+        {
+            var ring = order.GetRange(start, take);
+            ring.Sort((a, b) =>
+            {
+                var byAngle = Angle(icons[a], disc).CompareTo(Angle(icons[b], disc));
+                return byAngle != 0 ? byAngle : CompareByKey(icons[a], icons[b], a, b);
+            });
+            var first = Angle(icons[ring[0]], disc);
+            for (var k = 0; k < ring.Count; k++)
+            {
+                var angle = first + 2 * Math.PI * k / ring.Count;
+                var icon = icons[ring[k]];
+                placed[ring[k]] = new PlacedIcon
+                {
+                    Index = icon.Index,
+                    X = disc.X + radius * Math.Cos(angle),
+                    Y = disc.Y + radius * Math.Sin(angle),
+                    TrueX = icon.X,
+                    TrueY = icon.Y,
+                    GroupSize = groupSize,
+                };
+            }
+        }
+
+        private static double Angle(ScreenIcon icon, Disc disc)
+        {
+            var dx = icon.X - disc.X;
+            var dy = icon.Y - disc.Y;
+            return dx * dx + dy * dy < 1e-12 ? 0 : Math.Atan2(dy, dx);
+        }
+
+        private static double Square(double value)
+        {
+            return value * value;
+        }
+
+        // The groups of the sets, each listing its members in the order of
+        // their keys, the groups in the order of their first key.
+        private static List<List<int>> Groups(IList<ScreenIcon> icons, Sets sets)
+        {
+            var byRoot = new Dictionary<int, List<int>>();
+            var groups = new List<List<int>>();
+            foreach (var index in ByKey(icons))
+            {
+                var root = sets.Find(index);
+                List<int> members;
+                if (!byRoot.TryGetValue(root, out members))
+                {
+                    members = new List<int>();
+                    byRoot[root] = members;
+                    groups.Add(members);
+                }
+                members.Add(index);
+            }
+            return groups;
+        }
+
+        private static List<int> ByKey(IList<ScreenIcon> icons)
+        {
+            var order = new List<int>(icons.Count);
+            for (var i = 0; i < icons.Count; i++)
+                order.Add(i);
+            order.Sort((a, b) => CompareByKey(icons[a], icons[b], a, b));
+            return order;
+        }
+
+        private static int CompareByKey(ScreenIcon a, ScreenIcon b, int ia, int ib)
+        {
+            var byKey = a.Key.CompareTo(b.Key);
+            if (byKey != 0)
+                return byKey;
+            var byX = a.X.CompareTo(b.X);
+            if (byX != 0)
+                return byX;
+            var byY = a.Y.CompareTo(b.Y);
+            return byY != 0 ? byY : ia.CompareTo(ib);
+        }
+
+        // Cells of a grid over the screen; far beyond any screen, cells merge.
+        private const long CellLimit = 1000000;
+
+        private static long Cell(double value, double size)
+        {
+            var cell = Math.Floor(value / size);
+            if (double.IsNaN(cell))
+                return 0;
+            return (long)Math.Max(-CellLimit, Math.Min(CellLimit, cell));
+        }
+
+        private static long CellKey(long x, long y)
+        {
+            return ((x + (1L << 21)) << 22) | (y + (1L << 21));
+        }
+
+        // Disjoint sets of icons.
+        private sealed class Sets
+        {
+            private readonly int[] m_parent;
+
+            public Sets(int count)
+            {
+                m_parent = new int[count];
+                for (var i = 0; i < count; i++)
+                    m_parent[i] = i;
+            }
+
+            public int Find(int i)
+            {
+                while (m_parent[i] != i)
+                {
+                    m_parent[i] = m_parent[m_parent[i]];
+                    i = m_parent[i];
+                }
+                return i;
+            }
+
+            // True when the two were apart.
+            public bool Join(int a, int b)
+            {
+                var ra = Find(a);
+                var rb = Find(b);
+                if (ra == rb)
+                    return false;
+                if (ra < rb)
+                    m_parent[rb] = ra;
+                else
+                    m_parent[ra] = rb;
+                return true;
+            }
         }
     }
 }

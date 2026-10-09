@@ -120,6 +120,43 @@ namespace SirHolomap
             return new ScaleSwitch(planetRadius * PlanetLeaveRadii, planetRadius * PlanetReturnRadii);
         }
 
+        // System (C) to galaxy (D): past this many times the size of the
+        // system, the whole system is a dot and the galaxy takes over. The
+        // system view opens at 1.6 sizes: a few notches away.
+        public const double GalaxySystemSizes = 12;
+        public const double GalaxyHysteresis = 0.5;
+
+        // Below this size the system is counted as this size: a lone base or
+        // a world without planets still has a way out to the galaxy.
+        public const double SmallestSystem = 200000;
+
+        public static ScaleSwitch SystemToGalaxy(double systemSize)
+        {
+            var up = Math.Max(systemSize, SmallestSystem) * GalaxySystemSizes;
+            return new ScaleSwitch(up, up * GalaxyHysteresis);
+        }
+
+        // The galaxy's own zoom, 1 showing the whole galaxy. It rests there
+        // whenever it is entered, so that every server is always found at the
+        // same spot. Zoomed in past the way back, the system returns: a few
+        // notches.
+        public const double GalaxyHomeZoom = 1;
+        public const double GalaxySmallestZoom = 0.6;
+        public const double GalaxyBackToSystem = 3.2;
+
+        // The galaxy entered from the system starts this close on the
+        // current server, then glides out to its whole.
+        public const double GalaxyArrivalZoom = 5;
+
+        public static double GalaxyLargestZoom
+        {
+            get { return GalaxyBackToSystem * ZoomSteps.Factor; }
+        }
+
+        // Notches of the 2D system view out to the galaxy: it has no zoom of
+        // its own.
+        public const double FlatSystemNotchesOut = 2;
+
         // Closest the camera comes to the ground in A, and to a grid in B.
         public const double LowestAltitude = 25;
         public const double ClosestToGrid = 4;
@@ -137,6 +174,37 @@ namespace SirHolomap
         Planet,
         Local,
         System,
+    }
+
+    // The galaxy's zoom, without the screen: where it rests, how far it goes,
+    // and when the wheel takes the map back to the system.
+    public sealed class GalaxyZoom
+    {
+        public double Target { get; private set; }
+
+        public GalaxyZoom()
+        {
+            Target = MapScales.GalaxyHomeZoom;
+        }
+
+        public void Home()
+        {
+            Target = MapScales.GalaxyHomeZoom;
+        }
+
+        // Returns the factor the zoom was multiplied by.
+        public double Wheel(double notches)
+        {
+            var before = Target;
+            Target = Math.Max(MapScales.GalaxySmallestZoom,
+                Math.Min(MapScales.GalaxyLargestZoom, Target * Math.Pow(ZoomSteps.Factor, notches)));
+            return Target / before;
+        }
+
+        public bool BackToSystem
+        {
+            get { return Target > MapScales.GalaxyBackToSystem; }
+        }
     }
 
     // The three rungs of the wheel: the planet (A), the neighbourhood (B),

@@ -125,7 +125,7 @@ namespace SirHolomap
 
             Identity = ServerIdentity.Current();
             Memory = m_store.Load(Identity.Key);
-            if (Identity.IsDedicated)
+            if (Identity.IsRemembered)
             {
                 History.RecordVisit(Identity.Key, Identity.Name, Identity.ConnectionString, DateTime.UtcNow);
                 SaveHistory();
@@ -140,7 +140,7 @@ namespace SirHolomap
                 return;
             Memory.MarkAllRemembered();
             SaveMemory();
-            if (Identity != null && Identity.IsDedicated)
+            if (Identity != null && Identity.IsRemembered)
             {
                 History.RecordVisit(Identity.Key, Identity.Name, Identity.ConnectionString, DateTime.UtcNow);
                 SaveHistory();

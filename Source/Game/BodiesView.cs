@@ -16,6 +16,7 @@ namespace SirHolomap
         private readonly List<float> m_drawnRadius = new List<float>();
         private float m_scroll;
         private float m_contentWidth;
+        private double m_notchesOut;
 
         public BodiesView(MapScreen map) : base(map)
         {
@@ -61,10 +62,22 @@ namespace SirHolomap
             Pan(new Vector2((float)(-keys.X * 900 * dt), 0));
         }
 
-        // The wheel zooms into the body under the cursor: its globe.
+        // The wheel zooms into the body under the cursor: its globe. Turned
+        // the other way, it zooms out to the galaxy after a couple of notches.
         public override void Wheel(double notches, bool ctrl)
         {
-            if (notches <= 0)
+            if (notches < 0)
+            {
+                m_notchesOut += -notches;
+                if (m_notchesOut >= MapScales.FlatSystemNotchesOut - 1e-6)
+                {
+                    m_notchesOut = 0;
+                    Map.GoGalaxy(true);
+                }
+                return;
+            }
+            m_notchesOut = 0;
+            if (notches == 0)
                 return;
             var body = Pick(Gfx.Mouse) as Body;
             if (body != null)

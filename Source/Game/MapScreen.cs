@@ -140,16 +140,10 @@ namespace SirHolomap
                         return PlanetMode;
                     case MapMode.Local:
                         return LocalMode;
+                    case MapMode.Galaxy:
+                        return GalaxyMode;
                     default:
-                        switch (Tab)
-                        {
-                            case SystemTab.Bodies:
-                                return BodiesMode;
-                            case SystemTab.Galaxy:
-                                return GalaxyMode;
-                            default:
-                                return OrreryMode;
-                        }
+                        return Tab == SystemTab.Bodies ? (MapView)BodiesMode : OrreryMode;
                 }
             }
         }
@@ -192,13 +186,38 @@ namespace SirHolomap
             StartTransition();
         }
 
+        // continuous: reached with the wheel, gliding on from where the
+        // camera is; from the galaxy, the system comes back from afar.
         public void GoSystem(SystemTab tab, bool continuous)
         {
+            var fromGalaxy = Mode == MapMode.Galaxy;
             var from3D = View.Uses3D;
             Tab = tab;
             Mode = MapMode.System;
+            if (fromGalaxy)
+                Selected = null;
             if (tab == SystemTab.Orrery)
-                OrreryMode.Enter(continuous && from3D);
+            {
+                if (fromGalaxy && continuous)
+                    OrreryMode.EnterFromGalaxy();
+                else
+                    OrreryMode.Enter(continuous && from3D);
+            }
+            StartTransition();
+        }
+
+        // The galaxy, a view of its own. continuous: reached by zooming out
+        // of the system, it starts close on the current server and glides
+        // out to the whole galaxy.
+        public void GoGalaxy(bool continuous)
+        {
+            if (Mode == MapMode.Galaxy)
+                return;
+            Selected = null;
+            Mode = MapMode.Galaxy;
+            // The servers first: the glide starts on the current one.
+            Servers.Update(World, Settings);
+            GalaxyMode.Enter(continuous);
             StartTransition();
         }
 
@@ -235,6 +254,9 @@ namespace SirHolomap
                         GoLocal(LocalAnchor.Body, gravity, null, false, false);
                     else
                         GoLocal(LocalAnchor.Player, null, null, false, false);
+                    break;
+                case MapMode.Galaxy:
+                    GoGalaxy(false);
                     break;
                 default:
                     GoSystem(Tab, false);
@@ -550,7 +572,7 @@ namespace SirHolomap
             var selectedBody = Selected as Body;
             if (selectedBody != null)
                 Selected = World.Follow(selectedBody);
-            if (Mode == MapMode.System && Tab == SystemTab.Galaxy)
+            if (Mode == MapMode.Galaxy)
                 Servers.Update(World, Settings);
 
             object clicked;
@@ -686,16 +708,22 @@ namespace SirHolomap
             Gfx.Rect(0, TopBarHeight - 2 * s, w, 2 * s, Gfx.Alpha(Style.Accent, 0.8f));
             Gfx.Text(Texts.Title, 24 * s, TopBarHeight / 2, 0.95f, Style.Accent, MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER);
 
-            // The views are named, never lettered.
-            var labels = new[] { Texts.ModePlanet, Texts.ModeLocal, Texts.ModeSystem };
-            var helps = new[] { Texts.ModePlanetHelp, Texts.ModeLocalHelp, Texts.ModeSystemHelp };
-            var modes = new[] { MapMode.Planet, MapMode.Local, MapMode.System };
-            var bw = 210 * s;
-            var bh = 38 * s;
+            // The views are named, never lettered, from the closest to the
+            // farthest. The buttons share the room between the title and the
+            // menu on the right.
+            var labels = new[] { Texts.ModePlanet, Texts.ModeLocal, Texts.ModeSystem, Texts.ModeGalaxy };
+            var helps = new[] { Texts.ModePlanetHelp, Texts.ModeLocalHelp, Texts.ModeSystemHelp, Texts.TabGalaxyHelp };
+            var modes = new[] { MapMode.Planet, MapMode.Local, MapMode.System, MapMode.Galaxy };
+            var count = modes.Length;
             var gap = 10 * s;
-            var x0 = (PanelLeft - (bw * 3 + gap * 2)) / 2;
+            var titleRight = 24 * s + Gfx.Measure(Texts.Title, 0.95f).X + 20 * s;
+            var room = Math.Max(0, PanelLeft - 10 * s - titleRight);
+            var bw = Math.Max(90 * s, Math.Min(210 * s, (room - gap * (count - 1)) / count));
+            var bh = 38 * s;
+            var total = bw * count + gap * (count - 1);
+            var x0 = Math.Max(titleRight, (PanelLeft - total) / 2);
             var noPlanet = World.Bodies.Count == 0;
-            for (var i = 0; i < 3; i++)
+            for (var i = 0; i < count; i++)
             {
                 var x = x0 + i * (bw + gap);
                 var y = (TopBarHeight - bh) / 2;
@@ -725,8 +753,8 @@ namespace SirHolomap
 
             if (Mode == MapMode.System)
             {
-                m_panel.Tabs(new[] { Texts.TabBodies, Texts.TabOrrery, Texts.TabGalaxy },
-                    new[] { Texts.TabBodiesHelp, Texts.TabOrreryHelp, Texts.TabGalaxyHelp },
+                m_panel.Tabs(new[] { Texts.TabBodies, Texts.TabOrrery },
+                    new[] { Texts.TabBodiesHelp, Texts.TabOrreryHelp },
                     (int)Tab, i => GoSystem((SystemTab)i, false));
             }
 
@@ -734,15 +762,12 @@ namespace SirHolomap
             var marker = Selected as Marker;
             var body = Selected as Body;
             var server = Selected as GalaxyServer;
-            var cluster = Selected as IconCluster;
             if (marker != null)
                 view.MarkerInfo(m_panel, marker);
             else if (body != null)
                 view.BodyInfo(m_panel, body);
             else if (server != null)
                 GalaxyMode.ServerInfo(m_panel, server);
-            else if (cluster != null)
-                m_panel.Heading(string.Format(Texts.ServersHere, cluster.Count), Texts.ServersHereHelp);
             else
                 view.DefaultInfo(m_panel);
 

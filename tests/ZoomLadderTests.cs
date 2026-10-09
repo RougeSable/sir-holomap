@@ -197,5 +197,60 @@ namespace SirHolomap.Tests
             Assert.Equal(ZoomRung.Local, ladder.Update(10));
             Assert.Equal(ZoomRung.System, ladder.Update(up * 1.01));
         }
+
+        // Zoomed all the way out, the system (C) gives way to the galaxy (D)
+        // in a few notches; zoomed in, the galaxy gives way to the system in a
+        // few notches too, and the system comes back inside the gap so that
+        // the two never take turns.
+        [Fact]
+        public void SystemAndGalaxyAreAFewNotchesApart()
+        {
+            foreach (var size in new[] { 0.0, 150000.0, 2.5e6, 6e7 })
+            {
+                var change = MapScales.SystemToGalaxy(size);
+                var opened = Math.Max(size, MapScales.SmallestSystem) * 1.6;
+                var notches = ZoomSteps.NotchesBetween(opened, change.UpAbove);
+                Assert.InRange(notches, 2, 6);
+
+                // Back from the galaxy, inside the gap: no way straight out.
+                var back = change.DownBelow * 0.9;
+                Assert.True(back > opened, "the system comes back closer than it opens for " + size);
+                change.Reset(false);
+                Assert.False(change.Update(back));
+                Assert.True(change.Update(change.UpAbove * 1.01));
+                Assert.True(change.IsUp);
+            }
+
+            // The galaxy rests on its whole; three notches in, the system.
+            var zoom = new GalaxyZoom();
+            Assert.Equal(MapScales.GalaxyHomeZoom, zoom.Target);
+            var inward = 0;
+            while (!zoom.BackToSystem && inward < 20)
+            {
+                zoom.Wheel(1);
+                inward++;
+            }
+            Assert.InRange(inward, 2, 4);
+
+            // Zoomed all the way out first, still a few notches.
+            zoom.Home();
+            for (var i = 0; i < 10; i++)
+                zoom.Wheel(-1);
+            Assert.Equal(MapScales.GalaxySmallestZoom, zoom.Target, 9);
+            inward = 0;
+            while (!zoom.BackToSystem && inward < 20)
+            {
+                zoom.Wheel(1);
+                inward++;
+            }
+            Assert.InRange(inward, 2, 6);
+
+            // Entered again, the galaxy is back on its whole: every server at
+            // the same spot.
+            zoom.Home();
+            Assert.False(zoom.BackToSystem);
+            Assert.Equal(MapScales.GalaxyHomeZoom, zoom.Target);
+            Assert.True(MapScales.GalaxyArrivalZoom > MapScales.GalaxyHomeZoom);
+        }
     }
 }

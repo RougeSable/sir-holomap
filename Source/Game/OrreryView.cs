@@ -19,6 +19,7 @@ namespace SirHolomap
         private double m_pitch = 0.75;
         private double m_distance = 2e6;
         private readonly ZoomLadder m_ladder = new ZoomLadder(0, ZoomRung.System);
+        private ScaleSwitch m_galaxy = MapScales.SystemToGalaxy(0);
         private int m_lastMarkers;
 
         private readonly List<object> m_items = new List<object>();
@@ -46,7 +47,8 @@ namespace SirHolomap
 
         public override double NeededFar
         {
-            get { return m_distance * 3 + Extent() * 2; }
+            // The camera may still glide in from the galaxy, farther out.
+            get { return Math.Max(m_distance, Camera.Distance) * 3 + Extent() * 2; }
         }
 
         private double Extent()
@@ -74,10 +76,22 @@ namespace SirHolomap
             }
         }
 
+        // The way out to the galaxy, measured on the whole system once, when
+        // the view is entered: it never moves while the wheel turns.
+        private void PrepareGalaxy()
+        {
+            var size = 0.0;
+            foreach (var body in World.Bodies)
+                size = Math.Max(size, body.Centre.Length() + body.Radius);
+            m_galaxy = MapScales.SystemToGalaxy(Math.Max(size, Extent()));
+            m_galaxy.Reset(false);
+        }
+
         public void Enter(bool continuous)
         {
             FindZone();
             m_ladder.Configure(m_zone != null ? m_zone.Radius : 0, ZoomRung.System);
+            PrepareGalaxy();
             if (continuous)
             {
                 var offset = -Camera.TargetForward;
@@ -96,6 +110,20 @@ namespace SirHolomap
                 var extent = Math.Max(Extent(), 200000);
                 m_distance = m_ladder.Entry(ZoomRung.System, extent * 1.6);
             }
+            m_distance = Math.Min(m_distance, m_galaxy.DownBelow * 0.9);
+        }
+
+        // Back from the galaxy, zooming in: the camera comes from far out and
+        // glides in to the system, inside the gap of the way out so that the
+        // galaxy does not come straight back.
+        public void EnterFromGalaxy()
+        {
+            FindZone();
+            m_ladder.Configure(m_zone != null ? m_zone.Radius : 0, ZoomRung.System);
+            PrepareGalaxy();
+            m_distance = Math.Max(m_ladder.Entry(ZoomRung.System, m_galaxy.DownBelow * 0.9), 1000);
+            Camera.SetTarget(m_focus, -Offset, ScreenUp, m_galaxy.UpAbove * 1.5);
+            Camera.Snap();
         }
 
         private Vector3D Offset
@@ -131,7 +159,11 @@ namespace SirHolomap
                     Map.GoLocal(LocalAnchor.Body, m_zone, null, false, true);
                 else
                     Map.GoLocal(LocalAnchor.Player, null, null, false, true);
+                return;
             }
+            // Zoomed out far enough: the whole system is a dot, the galaxy.
+            if (m_galaxy.Update(m_distance) && m_galaxy.IsUp)
+                Map.GoGalaxy(true);
         }
 
         public override void Wheel(double notches, bool ctrl)
@@ -142,7 +174,7 @@ namespace SirHolomap
                 m_focus += Camera.Forward * (m_distance * 0.25 * notches);
                 return;
             }
-            m_distance = MathHelper.Clamp(ZoomSteps.Apply(m_distance, notches), 1000, 1e10);
+            m_distance = MathHelper.Clamp(ZoomSteps.Apply(m_distance, notches), 1000, m_galaxy.UpAbove * ZoomSteps.Factor);
         }
 
         public override void Rotate(Vector2 delta)

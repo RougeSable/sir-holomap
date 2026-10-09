@@ -20,12 +20,15 @@ namespace SirHolomap
 
         // View C.
         public static string ModeSystem { get { return Localization.Get("ModeSystem"); } }
+
+        // View D.
+        public static string ModeGalaxy { get { return Localization.Get("ModeGalaxy"); } }
         public static string ModePlanetHelp { get { return Localization.Get("ModePlanetHelp"); } }
         public static string ModeLocalHelp { get { return Localization.Get("ModeLocalHelp"); } }
         public static string ModeSystemHelp { get { return Localization.Get("ModeSystemHelp"); } }
         public static string ModePlanetUnavailable { get { return Localization.Get("ModePlanetUnavailable"); } }
 
-        // Tabs of C.
+        // Tabs of C, and the name and help of D in its menu.
         public static string TabBodies { get { return Localization.Get("TabBodies"); } }
         public static string TabOrrery { get { return Localization.Get("TabOrrery"); } }
         public static string TabGalaxy { get { return Localization.Get("TabGalaxy"); } }
@@ -61,8 +64,6 @@ namespace SirHolomap
         public static string VisitedHelp { get { return Localization.Get("VisitedHelp"); } }
         public static string Search { get { return Localization.Get("Search"); } }
         public static string SearchHelp { get { return Localization.Get("SearchHelp"); } }
-        public static string ServersHere { get { return Localization.Get("ServersHere"); } }
-        public static string ServersHereHelp { get { return Localization.Get("ServersHereHelp"); } }
         public static string SyncRange { get { return Localization.Get("SyncRange"); } }
         public static string FilterActive { get { return Localization.Get("FilterActive"); } }
         public static string AllServers { get { return Localization.Get("AllServers"); } }
@@ -177,11 +178,12 @@ namespace SirHolomap
             {
                 { "Title", "HOLOMAP" },
                 { "ModePlanet", "PLANET" },
-                { "ModeLocal", "LOCAL SPACE" },
+                { "ModeLocal", "NEARBY SPACE" },
                 { "ModeSystem", "SYSTEM" },
+                { "ModeGalaxy", "GALAXY" },
                 { "ModePlanetHelp", "The globe of the planet you are on, or the last one you looked at." },
                 { "ModeLocalHelp", "Your neighbourhood in space, seen from above." },
-                { "ModeSystemHelp", "The whole system: planets, the system in 3D and the galaxy." },
+                { "ModeSystemHelp", "The whole system: the planets and their moons, flat or in 3D." },
                 { "ModePlanetUnavailable", "No planet nearby: pick one in the System view." },
                 { "TabBodies", "System 2D" },
                 { "TabOrrery", "Orbits" },
@@ -212,8 +214,6 @@ namespace SirHolomap
                 { "VisitedHelp", "Only the servers you have played on. Kept between game launches." },
                 { "Search", "Search" },
                 { "SearchHelp", "Search a server by name or address." },
-                { "ServersHere", "{0} servers here" },
-                { "ServersHereHelp", "Double click to zoom in on them, or pick one in the list." },
                 { "SyncRange", "Sync range" },
                 { "FilterActive", "Filter active: {0} of {1} servers shown" },
                 { "AllServers", "All known servers shown" },

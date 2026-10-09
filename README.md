@@ -7,10 +7,10 @@ symmetry key.
 Nothing goes through the server: a player without the plugin plays as usual,
 and everything the map remembers, the player saw with their own eyes.
 
-## The three views
+## The four views
 
-The buttons **Planet**, **Local space** and **System** at the top switch
-between them; the mouse wheel also glides from one to the next. Every view has the same menu on the
+The buttons **Planet**, **Nearby space**, **System** and **Galaxy** at the
+top switch between them; the mouse wheel also glides from one to the next. Every view has the same menu on the
 right (info, what to show, the list of what is in view) and answers the same
 gestures:
 
@@ -33,7 +33,7 @@ gestures:
   turns around the grid, the wheel still zooms over the globe. A double click
   on another body in sight (a moon, a neighbour planet) glides the globe over
   to it, still in the planet view, and the menu shows that body.
-- **Local space.** Your neighbourhood seen from above a virtual plane, over
+- **Nearby space.** Your neighbourhood seen from above a virtual plane, over
   the sky of the world. Each grid hangs over the plane by a line telling its
   height. The planets and moons hide the plane: whatever part of it passes
   inside a body, or behind it, is not drawn. The menu lists the grids in
@@ -46,13 +46,11 @@ gestures:
   empty space outside the grid's frame, a right click or the wheel lets go,
   back over you; a left drag only turns around the grid. The Planet button
   keeps a grid near a planet in the middle of its globe.
-- **System.** Three tabs: **System 2D**, the planets and their moons laid
+- **System.** Two tabs: **System 2D**, the planets and their moons laid
   flat by distance to the centre of the world; **Orbits**, the system in 3D
   with true distances and enlarged bodies, the sun marked on the edge of the
-  screen in its true direction; and **Galaxy**, where every server has a fixed place computed
-  from its address, lying on a black, starry sky that fills the view however
-  far you zoom out. A dive from the system view (double click on a body or a
-  grid) comes straight back to it when you zoom out. The globes of the bodies are painted
+  screen in its true direction. A dive from the system view (double click on
+  a body or a grid) comes straight back to it when you zoom out. The globes of the bodies are painted
   from the real planets as soon as you join a world, a coarse picture within
   a few frames, then the full one, so they are ready when the map opens. Each
   one shows its own relief and the terrain the game puts at each place, in
@@ -62,8 +60,23 @@ gestures:
   painted when you close and reopen the map, and when you leave and join the
   same world again. The names of the tabs shrink to fit their buttons in
   every language.
+- **Galaxy.** Every server has a fixed place computed from its address,
+  lying on a black, starry sky that fills the view however far you zoom out.
+  Wheel out of the system to its end (or two notches out of System 2D) and
+  the map glides out to the galaxy; wheel in and it glides back to the
+  system. The galaxy always comes to rest on its whole, so every server is
+  found at the same spot from one opening of the map to the next, whichever
+  server you are on. The server you play on shines with "You are here".
+  Servers you visited or keep in your favorites carry their name; when
+  several lie close together, their rows stack in a column next to their
+  places, a thin line to each true place, so that no icon and no name covers
+  another and each one can be hovered and clicked. The other servers are dots
+  that spread on rings around the middle of their group in the same way.
+  The filters of the menu (favorites, visited, search) are kept between game
+  launches and for every server; the filter in force is named in the menu and
+  in the corner of the map.
 
-The switches between the three views depend on the scale only, with a gap
+The switches between the views depend on the scale only, with a gap
 between the way out and the way back, so the views never take turns when
 the wheel stops on a limit.
 

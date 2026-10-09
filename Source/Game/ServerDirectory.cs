@@ -19,6 +19,10 @@ namespace SirHolomap
         public VisitedServer Visit;
         public MyGameServerItem Item;
         public GalaxyPoint Place;
+
+        // The number its place is computed from: the layout of the icons is
+        // ordered by it, never by the list.
+        public ulong Key;
         public bool IsCurrent;
 
         public bool Visited
@@ -61,14 +65,20 @@ namespace SirHolomap
 
         public void Update(MapWorld world, MapSettings settings)
         {
+            // Every server visited has its place, however long the game's
+            // list: by its address, or by its key for a game joined without
+            // one, the same key the current server is found by.
             if (world.History != null)
             {
                 foreach (var visit in world.History.Servers)
                 {
-                    var server = Get(visit.Address);
+                    var joinable = !string.IsNullOrEmpty(visit.Address);
+                    var server = Get(joinable ? visit.Address : visit.Key, true);
                     if (server == null)
                         continue;
                     server.Visit = visit;
+                    if (!joinable)
+                        server.ConnectionString = "";
                     if (string.IsNullOrEmpty(server.Name))
                         server.Name = visit.Name;
                 }
@@ -82,7 +92,7 @@ namespace SirHolomap
             {
                 var dedicated = identity.IsDedicated;
                 current = dedicated ? identity.Normalized : ServerAddress.Normalize(identity.Key);
-                var here = Get(dedicated ? identity.ConnectionString : identity.Key);
+                var here = Get(dedicated ? identity.ConnectionString : identity.Key, true);
                 if (here != null)
                 {
                     if (string.IsNullOrEmpty(here.Name))
@@ -107,7 +117,9 @@ namespace SirHolomap
             m_internetAsked = false;
         }
 
-        private GalaxyServer Get(string address)
+        // always: a visited or current server, kept even past the limit of
+        // the game's list.
+        private GalaxyServer Get(string address, bool always = false)
         {
             var key = ServerAddress.Normalize(address);
             if (key.Length == 0)
@@ -115,9 +127,15 @@ namespace SirHolomap
             GalaxyServer server;
             if (!m_servers.TryGetValue(key, out server))
             {
-                if (m_servers.Count >= MaximumServers)
+                if (m_servers.Count >= MaximumServers && !always)
                     return null;
-                server = new GalaxyServer { Address = key, ConnectionString = address, Place = GalaxyPlacement.PositionOf(key) };
+                server = new GalaxyServer
+                {
+                    Address = key,
+                    ConnectionString = address,
+                    Place = GalaxyPlacement.PositionOf(key),
+                    Key = GalaxyPlacement.KeyOf(key),
+                };
                 m_servers[key] = server;
             }
             return server;

@@ -5,18 +5,20 @@ using VRageMath;
 
 namespace SirHolomap
 {
+    // The four views, in the order of their buttons at the top.
     public enum MapMode
     {
         Planet,
         Local,
         System,
+        Galaxy,
     }
 
+    // The two tabs of the system view.
     public enum SystemTab
     {
         Bodies,
         Orrery,
-        Galaxy,
     }
 
     // One view of the map. Every view answers the same gestures the same way:

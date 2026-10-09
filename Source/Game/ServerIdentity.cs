@@ -25,6 +25,15 @@ namespace SirHolomap
             get { return ServerAddress.Normalize(ConnectionString); }
         }
 
+        // A server played on, kept in the history and on the galaxy: a
+        // dedicated server, or a game joined through the game's lobby.
+        public bool IsRemembered
+        {
+            get { return IsDedicated || Key.StartsWith(LobbyPrefix, StringComparison.Ordinal); }
+        }
+
+        public const string LobbyPrefix = "lobby:";
+
         public static ServerIdentity Current()
         {
             var identity = new ServerIdentity();
@@ -60,7 +69,7 @@ namespace SirHolomap
 
             if (game != null)
             {
-                identity.Key = "lobby:" + game.ServerId;
+                identity.Key = LobbyPrefix + game.ServerId;
                 try
                 {
                     if (!string.IsNullOrEmpty(game.HostName))

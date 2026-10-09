@@ -28,12 +28,27 @@ namespace SirHolomap
         // Up to this many servers shown, every one carries its name.
         private const int NamedWhenFewer = 60;
 
-        private readonly GalaxyZoom m_zoom = new GalaxyZoom();
-        private Vector2 m_offset;
-        private double m_shownZoom = MapScales.GalaxyHomeZoom;
-        private Vector2 m_shownOffset;
+        // What the view shows and where it glides to; the zoom grows and
+        // shrinks around the cursor, softly, at every notch.
+        private readonly GalaxyCamera m_camera = new GalaxyCamera();
         private double m_enteredAt;
         private bool m_arriving;
+        // Zoomed in past the way back: the galaxy fades as the view glides on
+        // to the system, from this zoom.
+        private bool m_leaving;
+        private double m_leaveFrom;
+
+        // The sky: a far layer of small dim stars and a near one of a few
+        // larger ones, drifting at their own pace for depth.
+        private static readonly SkyStar[] FarSky = StarSky.Layer(StarSky.FarStars, 1);
+        private static readonly SkyStar[] NearSky = StarSky.Layer(StarSky.NearStars, 2);
+
+        // How far each icon is drawn from its true place, as shown: when the
+        // zoom gathers or spreads a group, its icons glide to their new
+        // places instead of jumping there.
+        private Dictionary<ulong, Vector2> m_shifts = new Dictionary<ulong, Vector2>();
+        private Dictionary<ulong, Vector2> m_nextShifts = new Dictionary<ulong, Vector2>();
+        private double m_lastDraw;
 
         private readonly List<GalaxyServer> m_shown = new List<GalaxyServer>();
         private readonly List<GalaxyServer> m_named = new List<GalaxyServer>();
@@ -78,19 +93,16 @@ namespace SirHolomap
         // current server and glides out to the whole galaxy, where it rests.
         public void Enter(bool continuous)
         {
-            m_zoom.Home();
-            m_offset = Vector2.Zero;
             m_enteredAt = Map.Time;
             m_arriving = continuous;
-            m_shownZoom = m_zoom.Target;
-            m_shownOffset = Vector2.Zero;
+            m_leaving = false;
+            m_shifts.Clear();
+            m_camera.Rest();
             if (!continuous)
                 return;
             var current = CurrentServer();
             var place = current != null ? current.Place : new GalaxyPoint(0, 0);
-            m_shownZoom = MapScales.GalaxyArrivalZoom;
-            var half = SizeAt(m_shownZoom) / 2;
-            m_shownOffset = -new Vector2((float)place.X * half, (float)place.Y * half);
+            m_camera.Arrive(MapScales.GalaxyArrivalZoom, place.X, place.Y);
         }
 
         private GalaxyServer CurrentServer()
@@ -105,18 +117,30 @@ namespace SirHolomap
 
         public override void Update(double dt)
         {
-            // Zoomed in past the way back: the system.
-            if (m_zoom.BackToSystem)
+            var halfLife = Map.Time < m_enteredAt + 1.2 ? MapCamera.TransitionHalfLife : GalaxyCamera.HalfLife;
+            m_camera.Update(dt, halfLife);
+            // Zoomed in past the way back: the view glides on, the galaxy
+            // fading, then the system takes over. A notch back out before
+            // that keeps the galaxy.
+            if (!m_camera.BackToSystem)
             {
-                Map.GoSystem(Map.Tab, true);
+                m_leaving = false;
                 return;
             }
-            var halfLife = Map.Time < m_enteredAt + 1.2 ? MapCamera.TransitionHalfLife : MapCamera.QuickHalfLife;
-            m_shownZoom = ZoomSteps.Smooth(m_shownZoom, m_zoom.Target, dt, halfLife);
-            var k = (float)(1 - Math.Pow(0.5, dt / Math.Max(halfLife, 1e-4)));
-            m_shownOffset += (m_offset - m_shownOffset) * k;
-            if ((m_offset - m_shownOffset).LengthSquared() < 0.01f)
-                m_shownOffset = m_offset;
+            if (!m_leaving)
+            {
+                m_leaving = true;
+                m_leaveFrom = m_camera.ShownZoom;
+            }
+            if (m_camera.ShownZoom >= GalaxyCamera.LeaveAt)
+                Map.GoSystem(Map.Tab, true);
+        }
+
+        // The galaxy as it shows: fading in when it arrives from the system,
+        // fading out when it leaves for it.
+        private float Shown
+        {
+            get { return Fade * (m_leaving ? (float)m_camera.LeaveFade(m_leaveFrom) : 1f); }
         }
 
         private Vector2 AreaCentre
@@ -128,29 +152,30 @@ namespace SirHolomap
             }
         }
 
-        private float SizeAt(double zoom)
+        // Pixels for half the galaxy at zoom 1.
+        private float HalfSize
         {
-            var area = Map.MapArea;
-            return (float)(Math.Min(area.Width, area.Height) * 0.92 * zoom);
+            get
+            {
+                var area = Map.MapArea;
+                return (float)Math.Max(Math.Min(area.Width, area.Height) * 0.46, 1);
+            }
         }
 
-        private static Vector2 ToScreen(GalaxyPoint point, Vector2 centre, float size)
+        // Where a galaxy point shows now.
+        private Vector2 ToScreen(GalaxyPoint point)
         {
-            var half = size / 2;
-            return centre + new Vector2((float)point.X * half, (float)point.Y * half);
+            double u, v;
+            m_camera.ToScreen(point.X, point.Y, out u, out v);
+            var half = HalfSize;
+            return AreaCentre + new Vector2((float)(u * half), (float)(v * half));
         }
 
         public override void Wheel(double notches, bool ctrl)
         {
-            // Zoom around the cursor, on where the view is going.
-            var mouse = Gfx.Mouse;
-            var centre = AreaCentre + m_offset;
-            var before = (mouse - centre) / SizeAt(m_zoom.Target);
-            m_zoom.Wheel(notches);
-            if (m_zoom.BackToSystem)
-                return;
-            var after = centre + before * SizeAt(m_zoom.Target);
-            m_offset += mouse - after;
+            // Zoom around the cursor: the point under it stays there.
+            var at = (Gfx.Mouse - AreaCentre) / HalfSize;
+            m_camera.Wheel(notches, at.X, at.Y);
         }
 
         public override void Rotate(Vector2 delta)
@@ -160,22 +185,20 @@ namespace SirHolomap
 
         public override void Pan(Vector2 delta)
         {
-            m_offset += delta;
-            m_shownOffset += delta;
+            var half = HalfSize;
+            m_camera.Pan(delta.X / half, delta.Y / half);
         }
 
         public override void Move(Vector2 keys, double dt)
         {
             var step = new Vector2(keys.X, -keys.Y) * (float)(700 * dt * Gfx.Scale);
-            m_offset -= step;
-            m_shownOffset -= step;
+            Pan(-step);
         }
 
         // Back to the whole galaxy, as it rests.
         public override void Recentre()
         {
-            m_zoom.Home();
-            m_offset = Vector2.Zero;
+            m_camera.Home();
         }
 
         public override void Focus(object target)
@@ -183,8 +206,7 @@ namespace SirHolomap
             var server = target as GalaxyServer;
             if (server == null)
                 return;
-            var at = ToScreen(server.Place, AreaCentre + m_offset, SizeAt(m_zoom.Target));
-            m_offset += AreaCentre - at;
+            m_camera.CentreOn(server.Place.X, server.Place.Y);
         }
 
         public override object Pick(Vector2 mouse)
@@ -247,11 +269,11 @@ namespace SirHolomap
         {
             var s = Gfx.Scale;
             var area = Map.MapArea;
-            var size = SizeAt(m_shownZoom);
-            var centre = AreaCentre + m_shownOffset;
+            var size = HalfSize * 2 * (float)m_camera.ShownZoom;
+            var centre = ToScreen(new GalaxyPoint(0, 0));
             DrawSky();
             if (GameTextures.GalaxyReady())
-                Gfx.Sprite(GameTextures.Galaxy, centre.X, centre.Y, size, size, Gfx.Alpha(Color.White, Fade));
+                Gfx.Sprite(GameTextures.Galaxy, centre.X, centre.Y, size, size, Gfx.Alpha(Color.White, Shown));
             else
                 Gfx.Text(Texts.Loading, area.X + area.Width / 2, area.Y + area.Height / 2, 0.7f, Style.Dim, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER);
 
@@ -277,13 +299,15 @@ namespace SirHolomap
                     m_plain.Add(server);
             }
 
+            var glide = ShiftGlide();
             m_icons.Clear();
             for (var i = 0; i < m_plain.Count; i++)
             {
-                var at = ToScreen(m_plain[i].Place, centre, size);
+                var at = ToScreen(m_plain[i].Place);
                 m_icons.Add(new ScreenIcon(i, m_plain[i].Key, at.X, at.Y));
             }
             m_plainAt = GalaxyLayout.Dots(m_icons, DotSpacing * s);
+            Soften(m_plainAt, m_plain, glide);
 
             // Every named row has the same height and the room of its name,
             // whichever server is the current one: the current server never
@@ -293,10 +317,12 @@ namespace SirHolomap
             {
                 float width;
                 Fitted(ServerNames.Name(m_named[i]), out width);
-                var at = ToScreen(m_named[i].Place, centre, size);
+                var at = ToScreen(m_named[i].Place);
                 m_icons.Add(new ScreenIcon(i, m_named[i].Key, at.X, at.Y, (IconHalf + 11 + 6) * s + width, RowHeight * s));
             }
             m_namedAt = GalaxyLayout.Rows(m_icons, IconHalf * s, 4 * s);
+            Soften(m_namedAt, m_named, glide);
+            SwapShifts();
 
             Vector2 floatingAt;
             var floating = DrawPlain(area, out floatingAt);
@@ -413,37 +439,103 @@ namespace SirHolomap
             return string.Format(Texts.FilterActive, m_shown.Count, Map.Servers.Count) + "  -  " + string.Join(", ", names.ToArray());
         }
 
-        // The night sky the galaxy lies on: black, filled with stars to the
-        // edges of the view however far the galaxy is zoomed out. Two layers
-        // of the same tile at two sizes, drifting a little with the map so
-        // that the sky has depth; the galaxy picture fades into it.
+        // How much of the way the shown shifts of the icons go this frame.
+        private float ShiftGlide()
+        {
+            var dt = MathHelper.Clamp(Map.Time - m_lastDraw, 0, 0.1);
+            m_lastDraw = Map.Time;
+            return (float)(1 - Math.Pow(0.5, dt / GalaxyCamera.HalfLife));
+        }
+
+        // The icons glide from where they were drawn to where the layout
+        // puts them now, around their true places that follow the zoom.
+        private void Soften(PlacedIcon[] placed, List<GalaxyServer> servers, float glide)
+        {
+            for (var i = 0; i < placed.Length && i < servers.Count; i++)
+            {
+                var key = servers[i].Key;
+                var target = new Vector2((float)(placed[i].X - placed[i].TrueX), (float)(placed[i].Y - placed[i].TrueY));
+                Vector2 shift;
+                if (m_shifts.TryGetValue(key, out shift))
+                {
+                    shift += (target - shift) * glide;
+                    if ((target - shift).LengthSquared() < 0.04f)
+                        shift = target;
+                }
+                else
+                {
+                    shift = target;
+                }
+                m_nextShifts[key] = shift;
+                placed[i].X = placed[i].TrueX + shift.X;
+                placed[i].Y = placed[i].TrueY + shift.Y;
+            }
+        }
+
+        // Only the icons drawn this frame are remembered.
+        private void SwapShifts()
+        {
+            var old = m_shifts;
+            m_shifts = m_nextShifts;
+            m_nextShifts = old;
+            m_nextShifts.Clear();
+        }
+
+        // The night sky the galaxy lies on: black, with stars to the edges of
+        // the view however far the galaxy is zoomed out. Few of them, soft
+        // and round with a light halo, in gentle colours, in two layers that
+        // drift and spread at their own pace as the galaxy moves and zooms,
+        // so that the sky has depth and the galaxy stays what the eye reads.
         private void DrawSky()
         {
             var s = Gfx.Scale;
             var top = Map.TopBarHeight;
             Gfx.Rect(0, top, Gfx.Width, Gfx.Height - top, Color.Black);
-            var drift = (float)Math.Log(Math.Max(m_shownZoom, 1e-3));
-            StarLayer(GameTextures.StarsSize * 0.75f * s, m_shownOffset * 0.08f, new Vector2(37, 11) * drift, 0.55f);
-            StarLayer(GameTextures.StarsSize * 1.1f * s, m_shownOffset * 0.2f, new Vector2(-23, 29) * drift, 0.9f);
+            StarLayer(FarSky, 900 * s, 0.1, 0.15, 7 * s, 0.85f);
+            StarLayer(NearSky, 1150 * s, 0.25, 0.35, 12 * s, 1f);
         }
 
-        private static void StarLayer(float tile, Vector2 shift, Vector2 drift, float alpha)
+        // One layer: a tile of stars repeated over the view. parallax: how
+        // much of the galaxy's motion it follows; spread: how much of its
+        // zoom (as a power).
+        private void StarLayer(SkyStar[] stars, float tile, double parallax, double spread, float starSize, float alpha)
         {
-            var top = MapScreen.Current != null ? MapScreen.Current.TopBarHeight : 0;
-            var startX = Wrap(shift.X + drift.X, tile) - tile;
-            var startY = top + Wrap(shift.Y + drift.Y, tile) - tile;
-            var color = Gfx.Alpha(Color.White, alpha);
-            for (var y = startY; y < Gfx.Height; y += tile)
+            var top = Map.TopBarHeight;
+            var centre = AreaCentre;
+            var half = HalfSize;
+            var zoom = (float)Math.Pow(Math.Max(m_camera.ShownZoom, 1e-3), spread);
+            var layerX = (float)(m_camera.ShownX * half * parallax);
+            var layerY = (float)(m_camera.ShownY * half * parallax);
+            var grow = (float)Math.Sqrt(Math.Min(zoom, 1.6f));
+            var margin = starSize * 2.5f;
+            // The part of the layer in view, in its own pixels.
+            var minX = layerX + (0 - margin - centre.X) / zoom;
+            var maxX = layerX + (Gfx.Width + margin - centre.X) / zoom;
+            var minY = layerY + (top - margin - centre.Y) / zoom;
+            var maxY = layerY + (Gfx.Height + margin - centre.Y) / zoom;
+            var firstX = (int)Math.Floor(minX / tile);
+            var lastX = (int)Math.Floor(maxX / tile);
+            var firstY = (int)Math.Floor(minY / tile);
+            var lastY = (int)Math.Floor(maxY / tile);
+            if ((lastX - firstX + 1) * (lastY - firstY + 1) > 64)
+                return;
+            var texture = GameTextures.Shape(Images.Shape.Star);
+            for (var ty = firstY; ty <= lastY; ty++)
             {
-                for (var x = startX; x < Gfx.Width; x += tile)
-                    Gfx.Sprite(GameTextures.Stars, x + tile / 2, y + tile / 2, tile, tile, color);
+                for (var tx = firstX; tx <= lastX; tx++)
+                {
+                    foreach (var star in stars)
+                    {
+                        var x = centre.X + ((tx + (float)star.X) * tile - layerX) * zoom;
+                        var y = centre.Y + ((ty + (float)star.Y) * tile - layerY) * zoom;
+                        var size = starSize * (float)star.Size * grow;
+                        if (y < top - size || y > Gfx.Height + size || x < -size || x > Gfx.Width + size)
+                            continue;
+                        var color = new Color(star.R, star.G, star.B, (byte)(255 * MathHelper.Clamp((float)star.Alpha * alpha, 0, 1)));
+                        Gfx.Sprite(texture, x, y, size, size, color);
+                    }
+                }
             }
-        }
-
-        private static float Wrap(float value, float period)
-        {
-            var r = value % period;
-            return r < 0 ? r + period : r;
         }
 
         // The current server stands out: a pulsing glow and ring.

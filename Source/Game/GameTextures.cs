@@ -16,8 +16,6 @@ namespace SirHolomap
         public const string White = "SirHolomapWhite";
         public const string Sun = "SirHolomapSun";
         public const string Galaxy = "SirHolomapGalaxy";
-        public const string Stars = "SirHolomapStars";
-        public const int StarsSize = 512;
         public const int GalaxySize = 1024;
         public const int SunSize = 256;
 
@@ -54,7 +52,6 @@ namespace SirHolomap
                 Send(Shape(shape), Images.ShapeSize, Images.ShapeSize, Images.ShapeImage(shape));
 
             Send(Sun, SunSize, SunSize, Images.SunImage(SunSize));
-            Send(Stars, StarsSize, StarsSize, Images.StarFieldImage(StarsSize, 1));
         }
 
         // The galaxy takes a moment to paint: done off the game thread, shown

@@ -25,6 +25,8 @@ namespace SirHolomap
             Hexagon,
             Brackets,
             Arrow,
+            // A star of the sky: a soft round core in a light halo.
+            Star,
         }
 
         // White shapes, tinted when drawn.
@@ -76,6 +78,10 @@ namespace SirHolomap
                     return Edge(BracketDistance(x, y), pixel);
                 case Shape.Arrow:
                     return Edge(TriangleDistance(y, -x, 0.9), pixel);
+                case Shape.Star:
+                    var core = Smooth(Clamp01((0.24 - r) / 0.1));
+                    var halo = 0.5 * Math.Pow(Clamp01(1 - r), 2.6);
+                    return core + halo * (1 - core);
             }
             return 0;
         }
@@ -154,16 +160,19 @@ namespace SirHolomap
                     var green = (0.14 * disc + 0.55 * armLight) * dust + 0.86 * bulge;
                     var blue = (0.24 * disc + 0.95 * armLight) * dust + 0.55 * bulge;
 
-                    // Stars: rare bright pixels, denser in the arms; the
-                    // rest of the sky is the map's own star field.
+                    // Stars: a few soft pixels, denser in the arms, in the
+                    // gentle colours of the sky; the rest of the sky is the
+                    // map's own. Few enough that the arms read clearly.
                     var h = Hash(px * 7349 + py * 1931);
-                    var starChance = (0.0025 + 0.02 * arm) * disc * 3;
+                    var starChance = (0.0008 + 0.006 * arm) * disc * 3;
                     if (h < starChance)
                     {
-                        var star = 0.6 + 0.4 * Hash(px * 13 + py * 9973);
-                        red += star;
-                        green += star;
-                        blue += star * 1.05;
+                        var star = 0.3 + 0.3 * Hash(px * 13 + py * 9973);
+                        byte tr, tg, tb;
+                        StarSky.Tint(Hash(px * 211 + py * 7), out tr, out tg, out tb);
+                        red += star * tr / 255.0;
+                        green += star * tg / 255.0;
+                        blue += star * tb / 255.0;
                     }
 
                     var lr = SrgbToLinear(ToneMap(red));
@@ -183,58 +192,6 @@ namespace SirHolomap
                     data[i + 1] = ToByte(LinearToSrgb(lg * keep));
                     data[i + 2] = ToByte(LinearToSrgb(lb * keep));
                     data[i + 3] = ToByte(alpha);
-                }
-            }
-            return data;
-        }
-
-        // A tile of the night sky behind the galaxy: scattered stars of
-        // every brightness, a few tinted, on a transparent ground. The tile
-        // wraps: stars near an edge show again on the other side.
-        public static byte[] StarFieldImage(int size, int seed)
-        {
-            var data = new byte[size * size * 4];
-            var count = size * size / 380;
-            for (var n = 0; n < count; n++)
-            {
-                var cx = Hash(seed * 7919 + n * 31 + 1) * size;
-                var cy = Hash(seed * 104729 + n * 17 + 2) * size;
-                var brightness = Math.Pow(Hash(seed * 13 + n * 101 + 3), 3) * 0.85 + 0.15;
-                var radius = 0.55 + 0.9 * Math.Pow(Hash(seed * 53 + n * 7 + 4), 4);
-                var tint = Hash(seed * 3 + n * 211 + 5);
-                double tr = 1, tg = 1, tb = 1;
-                if (tint < 0.15)
-                {
-                    tr = 0.75;
-                    tg = 0.85;
-                }
-                else if (tint > 0.9)
-                {
-                    tb = 0.7;
-                    tg = 0.9;
-                }
-                var reach = (int)Math.Ceiling(radius + 1.5);
-                for (var dy = -reach; dy <= reach; dy++)
-                {
-                    for (var dx = -reach; dx <= reach; dx++)
-                    {
-                        var px = (int)Math.Floor(cx) + dx;
-                        var py = (int)Math.Floor(cy) + dy;
-                        var ox = px + 0.5 - cx;
-                        var oy = py + 0.5 - cy;
-                        var d = Math.Sqrt(ox * ox + oy * oy);
-                        var light = brightness * Clamp01(1 - (d - radius * 0.5) / (radius + 0.6));
-                        if (light <= 0)
-                            continue;
-                        px = ((px % size) + size) % size;
-                        py = ((py % size) + size) % size;
-                        var i = (py * size + px) * 4;
-                        var a = Math.Max(data[i + 3] / 255.0, light);
-                        data[i] = ToByte(tr);
-                        data[i + 1] = ToByte(tg);
-                        data[i + 2] = ToByte(tb);
-                        data[i + 3] = ToByte(a);
-                    }
                 }
             }
             return data;

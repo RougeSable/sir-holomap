@@ -246,6 +246,9 @@ namespace SirHolomap
                 return;
             if (input.IsAnyCtrlKeyPressed() || input.IsAnyAltKeyPressed() || input.IsAnyShiftKeyPressed())
                 return;
+            // Dead, or waiting to be born again: the game's respawn first.
+            if (!MapScreen.PlayerAlive(m_world.InWorld))
+                return;
             Open();
         }
 

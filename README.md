@@ -2,7 +2,9 @@
 
 An in-game map for Space Engineers, as a client-side plugin loaded by Pulsar.
 Press **M** to open and close it. With a block in hand, M keeps the game's own
-symmetry key.
+symmetry key. Should the character die while the map is open, the map closes
+by itself and the game shows its own respawn screen; M opens the map again
+once the player is back.
 
 Nothing goes through the server: a player without the plugin plays as usual,
 and everything the map remembers, the player saw with their own eyes.
@@ -35,9 +37,12 @@ gestures:
   to it, still in the planet view, and the menu shows that body.
 - **Nearby space.** Your neighbourhood seen from above a virtual plane, over
   the sky of the world. Each grid hangs over the plane by a line telling its
-  height. The planets and moons hide the plane: whatever part of it passes
-  inside a body, or behind it, is not drawn. The menu lists the grids in
-  view; a click highlights one. A double
+  height. The planets and moons hide the plane, and so do the characters of
+  the players, yours included: whatever part of it passes inside a body or a
+  character, or behind it, is not drawn. The menu lists the grids in
+  view; a click highlights one. A click on a planet or a moon in sight shows
+  it in the menu; a double click glides the camera over to its globe, in the
+  planet view, and the menu presents that body. A double
   click on a grid in range fastens the camera to it, and the game draws it
   filling the screen; on a remembered grid, the view centres on its marker
   and its info says it is out of range. While the camera follows a grid,
@@ -66,7 +71,11 @@ gestures:
   the map glides out to the galaxy; wheel in and it glides back to the
   system. The galaxy always comes to rest on its whole, so every server is
   found at the same spot from one opening of the map to the next, whichever
-  server you are on. The server you play on shines with "You are here".
+  server you are on. Each notch of the wheel makes the picture grow or shrink
+  softly around the cursor, the point under it staying there. The sky behind
+  is sparse: a few soft, round stars with a light halo, in gentle colours
+  (white, pale blue, orange, rose), in two layers drifting at their own pace,
+  so that the arms of the galaxy and the names of the servers read first. The server you play on shines with "You are here".
   Servers you visited or keep in your favorites carry their name; when
   several lie close together, their rows stack in a column next to their
   places, a thin line to each true place, so that no icon and no name covers

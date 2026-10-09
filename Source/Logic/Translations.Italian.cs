@@ -108,7 +108,7 @@ namespace SirHolomap
                 { "RelationUnowned", "nessuno" },
                 { "HelpPlanet", "Trascina col tasto sinistro: gira il globo   Rotellina: zoom   Clic: seleziona   Doppio clic su una griglia: girarci attorno   Doppio clic su un corpo celeste: raggiungerlo" },
                 { "HelpPlanetLocked", "Trascina col tasto sinistro: gira attorno alla griglia   Rotellina: zoom   Trascina col tasto centrale o WASD: rilascia" },
-                { "HelpLocal", "Trascina col tasto sinistro: ruota   Trascina col tasto centrale o WASD: sposta   Rotellina: zoom   Doppio clic su una griglia: volarci attorno" },
+                { "HelpLocal", "Trascina col tasto sinistro: ruota   Trascina col tasto centrale o WASD: sposta   Rotellina: zoom   Doppio clic su una griglia: volarci attorno   Doppio clic su un corpo celeste: raggiungerlo" },
                 { "HelpLocked", "Trascina col tasto sinistro: gira attorno alla griglia   Clic nel vuoto, clic destro o rotellina: torna ai tuoi dintorni" },
                 { "HelpOrrery", "Trascina col tasto sinistro: ruota   Trascina col tasto centrale o WASD: sposta   Rotellina: zoom (Ctrl: avanza)   Doppio clic: tuffati" },
                 { "HelpBodies", "Clic: seleziona   Doppio clic o rotellina: apri il globo" },

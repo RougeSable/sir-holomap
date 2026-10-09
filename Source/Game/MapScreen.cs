@@ -556,7 +556,10 @@ namespace SirHolomap
             Time = m_clock.Elapsed.TotalSeconds;
             var dt = MathHelper.Clamp(Time - m_lastTime, 0, 0.1);
 
-            if (!World.InWorld || MyAPIGateway.Session == null)
+            // Out of the world, or the character dead: the map closes by
+            // itself and the game shows its own screen of respawn, as without
+            // the map. M opens it again once the player is back.
+            if (MyAPIGateway.Session == null || !PlayerAlive(World.InWorld))
             {
                 CloseScreen();
                 return;
@@ -610,6 +613,16 @@ namespace SirHolomap
                 m_plugin.SaveSettings();
             }
             m_lastTime = Time;
+        }
+
+        // True while the map may stay open: in a world, with a living
+        // character.
+        public static bool PlayerAlive(bool inWorld)
+        {
+            var session = MyAPIGateway.Session;
+            var player = session != null ? session.Player : null;
+            var character = player != null ? player.Character : null;
+            return !MapLife.MustClose(inWorld && player != null, character != null, character != null && character.IsDead);
         }
 
         public override bool CloseScreen(bool isUnloading = false)

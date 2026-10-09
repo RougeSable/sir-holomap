@@ -108,7 +108,7 @@ namespace SirHolomap
                 { "RelationUnowned", "ingen" },
                 { "HelpPlanet", "Dra med v\u00e4nster: vrid globen   Hjul: zoom   Klick: v\u00e4lj   Dubbelklick p\u00e5 en grid: vrid runt den   Dubbelklick p\u00e5 en himlakropp: g\u00e5 dit" },
                 { "HelpPlanetLocked", "Dra med vänster: vrid runt griden   Hjul: zoom   Dra med mitten eller WASD: släpp" },
-                { "HelpLocal", "Dra med vänster: vrid   Dra med mitten eller WASD: flytta   Hjul: zoom   Dubbelklick på en grid: flyg runt den" },
+                { "HelpLocal", "Dra med vänster: vrid   Dra med mitten eller WASD: flytta   Hjul: zoom   Dubbelklick på en grid: flyg runt den   Dubbelklick p\u00e5 en himlakropp: g\u00e5 dit" },
                 { "HelpLocked", "Dra med vänster: vrid runt griden   Klick i tomrummet, högerklick eller hjul: tillbaka till din omgivning" },
                 { "HelpOrrery", "Dra med vänster: vrid   Dra med mitten eller WASD: flytta   Hjul: zoom (Ctrl: flyg)   Dubbelklick: dyk ner" },
                 { "HelpBodies", "Klick: välj   Dubbelklick eller hjul: öppna globen" },

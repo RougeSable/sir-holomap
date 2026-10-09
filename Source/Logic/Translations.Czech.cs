@@ -108,7 +108,7 @@ namespace SirHolomap
                 { "RelationUnowned", "nikdo" },
                 { "HelpPlanet", "Ta\u017een\u00ed lev\u00fdm: ot\u00e1\u010det gl\u00f3bus   Kole\u010dko: p\u0159ibl\u00ed\u017een\u00ed   Klik: vybrat   Dvojklik na m\u0159\u00ed\u017eku: ot\u00e1\u010det kolem n\u00ed   Dvojklik na t\u011bleso: p\u0159ej\u00edt na n\u011bj" },
                 { "HelpPlanetLocked", "Tažení levým: otáčení kolem mřížky   Kolečko: přiblížení   Tažení prostředním nebo WASD: pustit" },
-                { "HelpLocal", "Tažení levým: otáčet   Tažení prostředním nebo WASD: posun   Kolečko: přiblížení   Dvojklik na mřížku: l\u00e9tat kolem" },
+                { "HelpLocal", "Tažení levým: otáčet   Tažení prostředním nebo WASD: posun   Kolečko: přiblížení   Dvojklik na mřížku: l\u00e9tat kolem   Dvojklik na t\u011bleso: p\u0159ej\u00edt na n\u011bj" },
                 { "HelpLocked", "Tažení levým: otáčení kolem mřížky   Klik do prázdna, pravý klik nebo kolečko: zpět do okolí" },
                 { "HelpOrrery", "Tažení levým: otáčet   Tažení prostředním nebo WASD: posun   Kolečko: přiblížení (Ctrl: letět)   Dvojklik: ponořit se" },
                 { "HelpBodies", "Klik: vybrat   Dvojklik nebo kolečko: otevřít glóbus" },

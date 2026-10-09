@@ -108,7 +108,7 @@ namespace SirHolomap
                 { "RelationUnowned", "kimse" },
                 { "HelpPlanet", "Sol s\u00fcr\u00fckle: k\u00fcreyi d\u00f6nd\u00fcr   Tekerlek: yak\u0131nla\u015ft\u0131r   T\u0131kla: se\u00e7   Izgaraya \u00e7ift t\u0131kla: etraf\u0131nda d\u00f6n   Bir g\u00f6k cismine \u00e7ift t\u0131kla: oraya git" },
                 { "HelpPlanetLocked", "Sol s\u00fcr\u00fckle: ızgaranın etrafında dön   Tekerlek: yakınlaştır   Orta s\u00fcr\u00fckle veya WASD: bırak" },
-                { "HelpLocal", "Sol s\u00fcr\u00fckle: dönd\u00fcr   Orta s\u00fcr\u00fckle veya WASD: taşı   Tekerlek: yakınlaştır   Izgaraya \u00e7ift tıkla: etrafında u\u00e7" },
+                { "HelpLocal", "Sol s\u00fcr\u00fckle: dönd\u00fcr   Orta s\u00fcr\u00fckle veya WASD: taşı   Tekerlek: yakınlaştır   Izgaraya \u00e7ift tıkla: etrafında u\u00e7   Bir g\u00f6k cismine \u00e7ift t\u0131kla: oraya git" },
                 { "HelpLocked", "Sol s\u00fcr\u00fckle: ızgaranın etrafında dön   Boşluğa tıkla, sağ tık veya tekerlek: \u00e7evrene dön" },
                 { "HelpOrrery", "Sol s\u00fcr\u00fckle: dönd\u00fcr   Orta s\u00fcr\u00fckle veya WASD: taşı   Tekerlek: yakınlaştır (Ctrl: u\u00e7)   \u00c7ift tıkla: dal" },
                 { "HelpBodies", "Tıkla: se\u00e7   \u00c7ift tıkla veya tekerlek: k\u00fcreyi a\u00e7" },

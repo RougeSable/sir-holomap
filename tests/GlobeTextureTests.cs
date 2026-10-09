@@ -157,20 +157,14 @@ namespace SirHolomap.Tests
             var centre = (size / 2 * size + size / 2) * 4;
             Assert.True(sent[centre + 3] > 200);
 
-            // The sky tile: stars on a transparent ground.
-            var stars = TexturePixels.Prepare(256, 256, Images.StarFieldImage(256, 1));
-            AssertNoSquare(stars);
-            var clear = 0;
-            var lit = 0;
-            for (var i = 3; i < 256 * 256 * 4; i += 4)
-            {
-                if (stars[i] == 0)
-                    clear++;
-                else
-                    lit++;
-            }
-            Assert.True(clear > lit * 4, clear + " clear, " + lit + " lit");
-            Assert.True(lit > 100, lit + " lit");
+            // The star of the sky: a round core, a light halo, nothing in
+            // the corners.
+            var star = TexturePixels.Prepare(Images.ShapeSize, Images.ShapeSize, Images.ShapeImage(Images.Shape.Star));
+            AssertNoSquare(star);
+            var middle = (Images.ShapeSize / 2 * Images.ShapeSize + Images.ShapeSize / 2) * 4;
+            var halfway = (Images.ShapeSize / 2 * Images.ShapeSize + Images.ShapeSize * 3 / 4) * 4;
+            Assert.True(star[middle + 3] > 240, "core " + star[middle + 3]);
+            Assert.InRange(star[halfway + 3], 5, 60);
         }
 
         private static void AssertNoSquare(byte[] pixels)

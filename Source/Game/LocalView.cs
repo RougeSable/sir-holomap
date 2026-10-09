@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Sandbox.ModAPI;
+using VRage.Game.ModAPI;
+using VRage.ModAPI;
 using VRageMath;
 
 namespace SirHolomap
@@ -63,6 +66,12 @@ namespace SirHolomap
 
         private readonly List<Marker> m_visible = new List<Marker>();
         private readonly List<Vector2> m_visibleAt = new List<Vector2>();
+
+        // The planets and moons in sight: a click shows one in the menu, a
+        // double click glides over to its globe, in the planet view.
+        private readonly List<Body> m_bodies = new List<Body>();
+        private readonly List<Vector2> m_bodiesAt = new List<Vector2>();
+        private readonly List<float> m_bodiesRadius = new List<float>();
 
         public LocalView(MapScreen map) : base(map)
         {
@@ -505,8 +514,10 @@ namespace SirHolomap
                 Lock(marker);
                 return;
             }
+            // A planet or a moon in sight: the camera glides over to its
+            // globe, in the planet view, and the menu shows that body.
             var body = target as Body;
-            if (body != null)
+            if (body != null && body.Planet != null && !body.Planet.Closed)
                 Map.GoPlanet(body, m_returnToSystem, false, null);
         }
 
@@ -532,6 +543,19 @@ namespace SirHolomap
             if (best == null && m_anchor == LocalAnchor.Grid && m_frameShown && m_grid != null
                 && FollowGestures.InsideFrame(mouse.X, mouse.Y, m_frameAt.X, m_frameAt.Y, m_frameSize, Gfx.Scale))
                 best = m_grid;
+            if (best != null)
+                return best;
+            // Markers first; then the planets and moons in sight.
+            var closest = double.MaxValue;
+            for (var i = 0; i < m_bodies.Count; i++)
+            {
+                var d = (m_bodiesAt[i] - mouse).Length();
+                if (d < m_bodiesRadius[i] && d / m_bodiesRadius[i] < closest)
+                {
+                    best = m_bodies[i];
+                    closest = d / m_bodiesRadius[i];
+                }
+            }
             return best;
         }
 
@@ -677,6 +701,10 @@ namespace SirHolomap
         {
             public Vector3D Centre;
             public double Radius;
+            // A character: a capsule from Bottom to Top, of this radius.
+            public bool Capsule;
+            public Vec3 Bottom;
+            public Vec3 Top;
             // Its disc on screen, to skip the lines far from it; Wide when
             // the body is too close to the camera to bound it that way.
             public Vector2 At;
@@ -726,6 +754,79 @@ namespace SirHolomap
                 }
                 m_occluders.Add(occluder);
             }
+            PrepareCharacters();
+        }
+
+        // The characters hide the plane as the bodies do: the player's own,
+        // and every other player the game sends now. Each is a capsule from
+        // its feet to its head, turned as it stands.
+        private readonly HashSet<long> m_characters = new HashSet<long>();
+
+        private void PrepareCharacters()
+        {
+            m_characters.Clear();
+            // Only when the game draws the scene from the map's camera:
+            // otherwise no character shows behind the plane.
+            if (!RenderHooks.Active)
+                return;
+            var session = MyAPIGateway.Session;
+            var player = session != null ? session.Player : null;
+            if (player != null && player.Character != null)
+                AddCharacter(player.Character);
+            foreach (var marker in World.Markers)
+            {
+                if (marker.Kind != ContactKind.Character || !marker.Live || marker.IsSelf || marker.IsGps)
+                    continue;
+                IMyEntity entity;
+                if (MyAPIGateway.Entities.TryGetEntityById(marker.Id, out entity))
+                    AddCharacter(entity as IMyCharacter);
+            }
+        }
+
+        private void AddCharacter(IMyCharacter character)
+        {
+            if (character == null || character.MarkedForClose || character.Closed || !m_characters.Add(character.EntityId))
+                return;
+            var matrix = character.WorldMatrix;
+            var feet = matrix.Translation;
+            // Too far to cover a pixel: nothing to hide.
+            var toFeet = feet - Camera.Position;
+            var distance = toFeet.Length();
+            if (Occlusion.CharacterHeight * Camera.PixelsPerMetre(Math.Max(distance, 0.01)) < 1.5)
+                return;
+            double height = Occlusion.CharacterHeight;
+            double width = Occlusion.CharacterRadius * 2;
+            var box = character.PositionComp != null ? character.PositionComp.LocalAABB : default(BoundingBox);
+            if (box.Max.Y > box.Min.Y)
+            {
+                height = box.Max.Y - Math.Max(0, box.Min.Y);
+                width = Math.Min(box.Max.X - box.Min.X, box.Max.Z - box.Min.Z);
+            }
+            Vec3 bottom, top;
+            double radius;
+            Occlusion.CharacterCapsule(MapWorld.ToVec(feet), MapWorld.ToVec(matrix.Up), height, width, out bottom, out top, out radius);
+            var centre = (MapWorld.ToVector(bottom) + MapWorld.ToVector(top)) / 2;
+            var occluder = new Occluder
+            {
+                Centre = centre,
+                Radius = radius,
+                Capsule = true,
+                Bottom = bottom,
+                Top = top,
+            };
+            Vector2 at;
+            double depth;
+            var reach = (top - bottom).Length / 2 + radius;
+            if (Camera.Project(centre, out at, out depth) && depth > reach * 1.5)
+            {
+                occluder.At = at;
+                occluder.ScreenRadius = (float)(reach * Camera.PixelsPerMetre(depth - reach)) + 4;
+            }
+            else
+            {
+                occluder.Wide = true;
+            }
+            m_occluders.Add(occluder);
         }
 
         // Inside a body, or behind it from the camera.
@@ -735,6 +836,12 @@ namespace SirHolomap
             for (var i = 0; i < m_occluders.Count; i++)
             {
                 var o = m_occluders[i];
+                if (o.Capsule)
+                {
+                    if (Occlusion.HiddenByCapsule(MapWorld.ToVec(eye), MapWorld.ToVec(point), o.Bottom, o.Top, o.Radius))
+                        return true;
+                    continue;
+                }
                 var r2 = o.Radius * o.Radius;
                 if (Vector3D.DistanceSquared(point, o.Centre) < r2)
                     return true;
@@ -772,6 +879,8 @@ namespace SirHolomap
 
         private static bool SegmentInside(Vector3D a, Vector3D b, Occluder o)
         {
+            if (o.Capsule)
+                return Occlusion.SegmentDistanceSquared(MapWorld.ToVec(a), MapWorld.ToVec(b), o.Bottom, o.Top) < o.Radius * o.Radius;
             var ab = b - a;
             var length2 = ab.LengthSquared();
             var t = length2 > 1e-9 ? MathHelper.Clamp(Vector3D.Dot(o.Centre - a, ab) / length2, 0, 1) : 0;
@@ -788,6 +897,8 @@ namespace SirHolomap
 
         // A line of the map in the world, with what the bodies hide left
         // out: the edge of a body cuts it cleanly.
+        private readonly List<double> m_samples = new List<double>();
+
         private void Segment(Vector3D a, Vector3D b, float thickness, Color color)
         {
             if (!NearOccluder(a, b))
@@ -795,13 +906,40 @@ namespace SirHolomap
                 DrawPiece(a, b, thickness, color);
                 return;
             }
+            // Evenly along the piece, and closely where a character could
+            // hide it: a person is small next to a piece of the plane.
             const int samples = 24;
+            m_samples.Clear();
+            for (var i = 0; i <= samples; i++)
+                m_samples.Add((double)i / samples);
+            var eye = MapWorld.ToVec(Camera.Position);
+            for (var i = 0; i < m_occluders.Count; i++)
+            {
+                var o = m_occluders[i];
+                if (!o.Capsule)
+                    continue;
+                var toCentre = MapWorld.ToVec(o.Centre) - eye;
+                var distance = toCentre.Length;
+                var reach = (o.Top - o.Bottom).Length / 2 + o.Radius;
+                double t0 = 0, t1 = 1;
+                if (distance > reach * 1.05
+                    && !Occlusion.ConeInterval(eye, MapWorld.ToVec(a), MapWorld.ToVec(b), toCentre,
+                        Math.Cos(Math.Asin(reach / distance)), out t0, out t1))
+                    continue;
+                const int close = 40;
+                for (var k = 0; k <= close; k++)
+                    m_samples.Add(t0 + (t1 - t0) * k / close);
+            }
+            m_samples.Sort();
+
             var previous = !Occluded(a);
             var previousT = 0.0;
             var start = previous ? 0.0 : -1.0;
-            for (var i = 1; i <= samples; i++)
+            for (var i = 1; i < m_samples.Count; i++)
             {
-                var t = (double)i / samples;
+                var t = m_samples[i];
+                if (t - previousT < 1e-9)
+                    continue;
                 var visible = !Occluded(a + (b - a) * t);
                 if (visible != previous)
                 {
@@ -884,8 +1022,15 @@ namespace SirHolomap
             }
         }
 
+        // The names of the bodies in sight, and what a click finds there. A
+        // body hidden behind another one is not offered.
         private void DrawBodies()
         {
+            m_bodies.Clear();
+            m_bodiesAt.Clear();
+            m_bodiesRadius.Clear();
+            var s = Gfx.Scale;
+            var area = Map.MapArea;
             foreach (var body in World.Bodies)
             {
                 Vector2 at;
@@ -895,9 +1040,49 @@ namespace SirHolomap
                 var radius = (float)(body.Radius * Camera.PixelsPerMetre(depth));
                 if (radius > Gfx.Height * 2)
                     continue;
-                Gfx.Text(body.Name, at.X, at.Y + radius + 6 * Gfx.Scale, 0.7f, Gfx.Alpha(Style.Text, 0.85f),
+                if (at.X + radius < area.X || at.Y + radius < area.Y || at.X - radius > area.Right || at.Y - radius > area.Bottom)
+                    continue;
+                if (BehindAnotherBody(body))
+                    continue;
+                var hovered = Same(Map.Hovered, body) || Same(Map.ListHovered, body);
+                var selected = Same(Map.Selected, body);
+                var shown = Math.Max(radius, 3 * s);
+                if (hovered || selected)
+                    Gfx.Sprite(GameTextures.Shape(Images.Shape.Ring), at, Math.Min(shown * 2.4f + 10 * s, Gfx.Height * 3),
+                        Gfx.Alpha(selected ? Style.Selection : Style.Accent, 0.9f));
+                Gfx.Text(body.Name, at.X, at.Y + shown + 6 * s, 0.7f,
+                    selected ? Style.Selection : Gfx.Alpha(Style.Text, hovered ? 1f : 0.85f),
                     VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP);
+                m_bodies.Add(body);
+                m_bodiesAt.Add(at);
+                m_bodiesRadius.Add(Math.Max(shown, 12 * s));
             }
+        }
+
+        private static bool Same(object item, Body body)
+        {
+            var other = item as Body;
+            return other != null && other.Id == body.Id;
+        }
+
+        // The side of the body facing the camera lies behind another body.
+        private bool BehindAnotherBody(Body body)
+        {
+            var eye = Camera.Position;
+            var toEye = eye - body.Centre;
+            var length = toEye.Length();
+            if (length <= body.Radius)
+                return false;
+            var near = body.Centre + toEye / length * body.Radius * 1.001;
+            for (var i = 0; i < m_occluders.Count; i++)
+            {
+                var o = m_occluders[i];
+                if (o.Capsule || Vector3D.DistanceSquared(o.Centre, body.Centre) < 1)
+                    continue;
+                if (Occlusion.HiddenBySphere(MapWorld.ToVec(eye), MapWorld.ToVec(near), MapWorld.ToVec(o.Centre), o.Radius))
+                    return true;
+            }
+            return false;
         }
 
         public override void DefaultInfo(Panel panel)

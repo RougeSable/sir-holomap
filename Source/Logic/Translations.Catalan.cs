@@ -108,7 +108,7 @@ namespace SirHolomap
                 { "RelationUnowned", "ningú" },
                 { "HelpPlanet", "Arrossegar amb el clic esquerre: girar el globus   Roda: zoom   Clic: seleccionar   Doble clic en una quadr\u00edcula: girar-hi al voltant   Doble clic en un astre: anar-hi" },
                 { "HelpPlanetLocked", "Arrossegar amb el clic esquerre: girar al voltant de la quadrícula   Roda: zoom   Arrossegar amb el clic central o WASD: deixar anar" },
-                { "HelpLocal", "Arrossegar amb el clic esquerre: girar   Arrossegar amb el clic central o WASD: moure   Roda: zoom   Doble clic en una quadrícula: volar-hi al voltant" },
+                { "HelpLocal", "Arrossegar amb el clic esquerre: girar   Arrossegar amb el clic central o WASD: moure   Roda: zoom   Doble clic en una quadrícula: volar-hi al voltant   Doble clic en un astre: anar-hi" },
                 { "HelpLocked", "Arrossegar amb el clic esquerre: girar al voltant de la quadrícula   Clic en un espai buit, clic dret o roda: tornar al teu entorn" },
                 { "HelpOrrery", "Arrossegar amb el clic esquerre: girar   Arrossegar amb el clic central o WASD: moure   Roda: zoom (Ctrl: avan\u00e7ar)   Doble clic: capbussar-se" },
                 { "HelpBodies", "Clic: seleccionar   Doble clic o roda: obrir el globus" },

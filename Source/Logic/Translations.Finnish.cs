@@ -108,7 +108,7 @@ namespace SirHolomap
                 { "RelationUnowned", "ei kukaan" },
                 { "HelpPlanet", "Vasen veto: kierr\u00e4 palloa   Rulla: zoomaus   Napsautus: valitse   Kaksoisnapsautus gridiin: kierr\u00e4 sen ymp\u00e4ri   Kaksoisnapsautus taivaankappaleeseen: siirry sinne" },
                 { "HelpPlanetLocked", "Vasen veto: kierrä gridin ympäri   Rulla: zoomaus   Keskiveto tai WASD: irrota" },
-                { "HelpLocal", "Vasen veto: kierrä   Keskiveto tai WASD: siirrä   Rulla: zoomaus   Kaksoisnapsautus gridiin: lennä sen ympäri" },
+                { "HelpLocal", "Vasen veto: kierrä   Keskiveto tai WASD: siirrä   Rulla: zoomaus   Kaksoisnapsautus gridiin: lennä sen ympäri   Kaksoisnapsautus taivaankappaleeseen: siirry sinne" },
                 { "HelpLocked", "Vasen veto: kierrä gridin ympäri   Napsautus tyhjään, oikea napsautus tai rulla: takaisin ympäristöösi" },
                 { "HelpOrrery", "Vasen veto: kierrä   Keskiveto tai WASD: siirrä   Rulla: zoomaus (Ctrl: lennä)   Kaksoisnapsautus: sukella" },
                 { "HelpBodies", "Napsautus: valitse   Kaksoisnapsautus tai rulla: avaa pallo" },

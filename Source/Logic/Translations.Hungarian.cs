@@ -16,7 +16,7 @@ namespace SirHolomap
                 { "ModeLocalHelp", "A környezeted az űrben, fel\u00fclről n\u00e9zve." },
                 { "ModeSystemHelp", "Az eg\u00e9sz rendszer: bolygók, a rendszer 3D-ben \u00e9s a galaxis." },
                 { "ModePlanetUnavailable", "Nincs bolyg\u00f3 a k\u00f6zelben: v\u00e1lassz egyet a Rendszer n\u00e9zetben." },
-                { "TabBodies", "Bolygók" },
+                { "TabBodies", "Rendszer 2D" },
                 { "TabOrrery", "Rendszer 3D" },
                 { "TabGalaxy", "Galaxis" },
                 { "TabBodiesHelp", "A bolygók \u00e9s holdjaik egymás mellett, a világ közep\u00e9től m\u00e9rt távolság szerint." },

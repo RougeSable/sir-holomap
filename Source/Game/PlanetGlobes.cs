@@ -9,9 +9,10 @@ using VRageMath;
 namespace SirHolomap
 {
     // The small globes of the system view, painted from the real planet: its
-    // relief, read from the planet's own shape, and the colour the game gives
-    // each terrain material when seen from far away. Any planet works,
-    // modded ones included: nothing is prepared in advance.
+    // relief, read from the planet's own shape, and the terrain material the
+    // game itself puts at each place, coloured as seen from far away (see
+    // TerrainColors). Any planet works, modded ones included: nothing is
+    // prepared in advance.
     //
     // They are painted as soon as a world is joined, map open or not, a few
     // milliseconds per frame so that the game never stalls: a coarse globe
@@ -38,40 +39,128 @@ namespace SirHolomap
         private int m_rest;
 
         private delegate MyVoxelMaterialDefinition MaterialAtPosition(ref Vector3 storagePosition, float lodSize);
+        private delegate void PrepareRules(ref BoundingBox storageBox);
+        private delegate void PrepareShape();
 
         // The planet's own material lookup, found by name: when a version of
         // the game renames it, the globes keep their relief, painted grey.
         private static readonly MaterialAtPosition MissingLookup = (ref Vector3 p, float l) => null;
 
-        private static MaterialAtPosition MaterialLookup(MyPlanet planet)
+        // The planet's materials, as the game reads them for its own terrain.
+        // The game keeps the rules of the biomes per thread, in one list
+        // shared by every planet, and only the threads that build the terrain
+        // fill it: on the game thread it is missing, and every lookup of a
+        // biome's material fails. The heights the lookup reads go through
+        // the shape's coefficient cache, also kept per thread and only set up
+        // by MyPlanetShapeProvider.PrepareCache, which the game calls itself
+        // before reading materials (MyPlanetEnvironmentComponent): without
+        // it every lookup fails on the game thread, and a cache left by
+        // another planet would give that planet's heights. Prime sets up the
+        // cache for this planet, then fills the rules with every rule of
+        // this planet, before the samples of a frame are taken.
+        private sealed class MaterialSource
         {
+            public MyPlanet Planet;
+            public MaterialAtPosition Lookup = MissingLookup;
+            public PrepareShape Cache;
+            public PrepareRules Prime;
+        }
+
+        private static MaterialSource MaterialLookup(MyPlanet planet)
+        {
+            var source = new MaterialSource { Planet = planet };
             try
             {
                 const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-                var provider = planet.GetType().GetProperty("Provider", flags);
+                var provider = planet.GetType().GetProperty("Provider", flags | BindingFlags.DeclaredOnly)
+                    ?? planet.GetType().GetProperty("Provider", flags);
                 var storage = provider != null ? provider.GetValue(planet, null) : null;
+                var shapeProperty = storage != null ? storage.GetType().GetProperty("Shape", flags) : null;
+                var shape = shapeProperty != null ? shapeProperty.GetValue(storage, null) : null;
+                var cache = shape != null
+                    ? shape.GetType().GetMethod("PrepareCache", flags, null, Type.EmptyTypes, null)
+                    : null;
                 var materialProperty = storage != null ? storage.GetType().GetProperty("Material", flags) : null;
                 var materials = materialProperty != null ? materialProperty.GetValue(storage, null) : null;
                 var method = materials != null
                     ? materials.GetType().GetMethod("GetMaterialForPosition", flags, null,
                         new[] { typeof(Vector3).MakeByRefType(), typeof(float) }, null)
                     : null;
+                var prepare = materials != null
+                    ? materials.GetType().GetMethod("PrepareRulesForBox", flags, null,
+                        new[] { typeof(BoundingBox).MakeByRefType() }, null)
+                    : null;
                 if (method != null && method.ReturnType == typeof(MyVoxelMaterialDefinition))
-                    return (MaterialAtPosition)Delegate.CreateDelegate(typeof(MaterialAtPosition), materials, method);
-                HolomapPlugin.Log("planet material lookup not found: globes painted grey");
+                    source.Lookup = (MaterialAtPosition)Delegate.CreateDelegate(typeof(MaterialAtPosition), materials, method);
+                else
+                    HolomapPlugin.Log("planet material lookup not found: globes painted grey");
+                if (cache != null && cache.ReturnType == typeof(void))
+                    source.Cache = (PrepareShape)Delegate.CreateDelegate(typeof(PrepareShape), shape, cache);
+                else
+                    HolomapPlugin.Log("planet shape cache not found: globes may be painted grey");
+                if (prepare != null && prepare.ReturnType == typeof(void))
+                    source.Prime = (PrepareRules)Delegate.CreateDelegate(typeof(PrepareRules), materials, prepare);
+                else
+                    HolomapPlugin.Log("planet material rules not found: biomes may be painted with their default material");
             }
             catch (Exception e)
             {
                 HolomapPlugin.Log("planet material lookup failed: " + e.Message);
             }
-            return MissingLookup;
+            return source;
+        }
+
+        private static MaterialSource SourceOf(Job job)
+        {
+            var planet = job.Body.Planet;
+            if (job.Materials == null || !ReferenceEquals(job.Materials.Planet, planet))
+                job.Materials = MaterialLookup(planet);
+            return job.Materials;
+        }
+
+        // The shape's cache of this planet first, as the game does before
+        // its own lookups. Cheap when it is already this planet's.
+        private static void PrimeShape(Job job, MaterialSource source)
+        {
+            if (source.Cache == null)
+                return;
+            try
+            {
+                source.Cache();
+            }
+            catch (Exception e)
+            {
+                HolomapPlugin.Log("planet shape cache of " + job.Body.Name + " not ready: " + e.Message);
+                source.Cache = null;
+            }
+        }
+
+        // A box this small asks the game for every rule of the planet, not
+        // only those of a region (MyPlanetMaterialProvider.PrepareRulesForBox).
+        private static void Prime(Job job)
+        {
+            var source = SourceOf(job);
+            PrimeShape(job, source);
+            if (source.Prime == null)
+                return;
+            try
+            {
+                var box = new BoundingBox(Vector3.Zero, Vector3.One);
+                source.Prime(ref box);
+            }
+            catch (Exception e)
+            {
+                HolomapPlugin.Log("planet material rules of " + job.Body.Name + " not ready: " + e.Message);
+                source.Prime = null;
+            }
         }
 
         private sealed class Job
         {
-            public MaterialAtPosition MaterialAt;
+            public MaterialSource Materials;
             public Body Body;
             public int Next;
+            public readonly MyVoxelMaterialDefinition[] Terrain = new MyVoxelMaterialDefinition[Columns * Rows];
             public readonly float[] Colors = new float[Columns * Rows * 3];
             public readonly float[] Heights = new float[Columns * Rows];
             public readonly bool[] Done = new bool[Columns * Rows];
@@ -79,6 +168,7 @@ namespace SirHolomap
             public bool Coarse;
             public bool Full;
             public bool Failed;
+            public bool SampleFailureLogged;
             public Task<byte[]> Painting;
             public bool PaintingFull;
         }
@@ -107,6 +197,7 @@ namespace SirHolomap
             * ((Columns - CoarseStep / 2 + CoarseStep - 1) / CoarseStep);
 
         private readonly Dictionary<long, Job> m_jobs = new Dictionary<long, Job>();
+        private readonly TerrainColors m_terrain = new TerrainColors();
         private readonly System.Diagnostics.Stopwatch m_watch = new System.Diagnostics.Stopwatch();
 
         // The texture of a body's globe, or null while it is being painted.
@@ -137,6 +228,7 @@ namespace SirHolomap
         public void Clear()
         {
             m_jobs.Clear();
+            m_terrain.Clear();
         }
 
         // The globe of view A painted by the map itself, as the map's camera
@@ -232,7 +324,8 @@ namespace SirHolomap
         }
 
         // A little work every frame, for the globes still unpainted: the
-        // coarse globes of every body first, then the full ones.
+        // coarse globes of every body first, then the full ones. A globe is
+        // painted once the colour of every terrain it shows is known.
         public void Work(bool mapOpen)
         {
             foreach (var job in m_jobs.Values)
@@ -259,6 +352,8 @@ namespace SirHolomap
                     var goal = pass == 0 ? CoarseCount : Columns * Rows;
                     if (pass == 0 && job.Coarse)
                         continue;
+                    if (job.Next < goal)
+                        Prime(job);
                     while (job.Next < goal)
                     {
                         var before = m_watch.Elapsed.TotalMilliseconds;
@@ -271,16 +366,22 @@ namespace SirHolomap
                             return;
                     }
                     if (job.Next >= Columns * Rows)
-                        Paint(job, true);
+                    {
+                        if (m_terrain.AllReady(job.Terrain))
+                            Paint(job, true);
+                    }
                     else if (!job.Coarse && job.Next >= CoarseCount)
-                        Paint(job, false);
+                    {
+                        if (m_terrain.AllReady(job.Terrain))
+                            Paint(job, false);
+                    }
                     if (m_watch.Elapsed.TotalMilliseconds > budget)
                         return;
                 }
             }
         }
 
-        private static void Sample(Job job, int index)
+        private void Sample(Job job, int index)
         {
             var planet = job.Body.Planet;
             var column = index % Columns;
@@ -291,7 +392,7 @@ namespace SirHolomap
             var direction = Vector3D.TransformNormal(local, planet.WorldMatrix);
 
             var centre = planet.PositionComp.GetPosition();
-            float r = 0.45f, g = 0.43f, b = 0.40f;
+            MyVoxelMaterialDefinition material = null;
             double height = 0;
             try
             {
@@ -299,50 +400,42 @@ namespace SirHolomap
                 var surface = planet.GetClosestSurfacePointGlobal(ref above);
                 height = (surface - centre).Length() - planet.AverageRadius;
 
-                // A metre under the ground, in the planet's storage frame.
-                var inside = surface - direction * 1.0;
+                // Just under the ground, in the planet's storage frame, read
+                // as the game reads its terrain from a little way off: the
+                // surface material, not the rock below it.
+                var inside = surface - direction * 0.25;
                 var storage = (Vector3)(inside - planet.PositionLeftBottomCorner);
-                var materialAt = job.MaterialAt ?? (job.MaterialAt = MaterialLookup(planet));
-                var material = materialAt != MissingLookup ? materialAt(ref storage, 1f) : null;
-                if (material != null)
-                    ColorOf(material, ref r, ref g, ref b);
+                var source = SourceOf(job);
+                PrimeShape(job, source);
+                material = source.Lookup != MissingLookup ? source.Lookup(ref storage, 4f) : null;
+                m_terrain.Request(material);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                if (!job.SampleFailureLogged)
+                {
+                    job.SampleFailureLogged = true;
+                    HolomapPlugin.Log("terrain of " + job.Body.Name + " not read: " + e.GetType().Name + " " + e.Message);
+                }
             }
 
-            job.Colors[index * 3] = r;
-            job.Colors[index * 3 + 1] = g;
-            job.Colors[index * 3 + 2] = b;
+            job.Terrain[index] = material;
             job.Heights[index] = (float)height;
             job.Done[index] = true;
         }
 
-        // The colour of a terrain seen from orbit: the game's own far colour of
-        // the material, linear, brought to sRGB; its colour key otherwise.
-        private static void ColorOf(MyVoxelMaterialDefinition material, ref float r, ref float g, ref float b)
-        {
-            var far = material.RenderParams.Far3Color;
-            if (far.X + far.Y + far.Z > 0.02f)
-            {
-                r = (float)Math.Pow(MathHelper.Clamp(far.X, 0, 1), 1 / 2.2);
-                g = (float)Math.Pow(MathHelper.Clamp(far.Y, 0, 1), 1 / 2.2);
-                b = (float)Math.Pow(MathHelper.Clamp(far.Z, 0, 1), 1 / 2.2);
-                return;
-            }
-            if (material.ColorKey.HasValue)
-            {
-                var rgb = material.ColorKey.Value.HSVtoColor();
-                r = rgb.R / 255f;
-                g = rgb.G / 255f;
-                b = rgb.B / 255f;
-            }
-        }
-
         // The picture is composed off the game thread, from a copy of the
         // samples: the coarse one fills every cell from its nearest sample.
-        private static void Paint(Job job, bool full)
+        private void Paint(Job job, bool full)
         {
+            for (var i = 0; i < Columns * Rows; i++)
+            {
+                float r, g, b;
+                m_terrain.ColorOf(job.Terrain[i], out r, out g, out b);
+                job.Colors[i * 3] = r;
+                job.Colors[i * 3 + 1] = g;
+                job.Colors[i * 3 + 2] = b;
+            }
             var colors = (float[])job.Colors.Clone();
             var heights = (float[])job.Heights.Clone();
             if (!full)

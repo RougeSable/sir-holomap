@@ -16,7 +16,7 @@ namespace SirHolomap
                 { "ModeLocalHelp", "Tvoja okolica u svemiru, gledana odozgo." },
                 { "ModeSystemHelp", "Cijeli sustav: planeti, sustav u 3D-u i galaksija." },
                 { "ModePlanetUnavailable", "Nema planeta u blizini: odaberi jedan u prikazu Sustav." },
-                { "TabBodies", "Planeti" },
+                { "TabBodies", "Sustav 2D" },
                 { "TabOrrery", "Sustav 3D" },
                 { "TabGalaxy", "Galaksija" },
                 { "TabBodiesHelp", "Planeti i njihovi mjeseci jedan uz drugi, po udaljenosti od središta svijeta." },

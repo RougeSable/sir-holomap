@@ -16,7 +16,7 @@ namespace SirHolomap
                 { "ModeLocalHelp", "\u00cemprejurimile tale \u00een spațiu, văzute de sus." },
                 { "ModeSystemHelp", "\u00centregul sistem: planete, sistemul \u00een 3D și galaxia." },
                 { "ModePlanetUnavailable", "Nicio planet\u0103 \u00een apropiere: alege una \u00een vizualizarea Sistem." },
-                { "TabBodies", "Planete" },
+                { "TabBodies", "Sistem 2D" },
                 { "TabOrrery", "Sistem 3D" },
                 { "TabGalaxy", "Galaxie" },
                 { "TabBodiesHelp", "Planetele și lunile lor una l\u00e2ngă alta, după distanța p\u00e2nă la centrul lumii." },

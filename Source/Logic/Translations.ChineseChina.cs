@@ -16,7 +16,7 @@ namespace SirHolomap
                 { "ModeLocalHelp", "你在太空中的周边，俯视视角。" },
                 { "ModeSystemHelp", "整个星系：行星、3D 星系和银河。" },
                 { "ModePlanetUnavailable", "\u9644\u8fd1\u6ca1\u6709\u884c\u661f\uff1a\u8bf7\u5728\u201c\u661f\u7cfb\u201d\u89c6\u56fe\u4e2d\u9009\u62e9\u4e00\u9897\u3002" },
-                { "TabBodies", "行星" },
+                { "TabBodies", "2D 星系" },
                 { "TabOrrery", "3D 星系" },
                 { "TabGalaxy", "银河" },
                 { "TabBodiesHelp", "行星及其卫星平铺排列，按到世界中心的距离排序。" },

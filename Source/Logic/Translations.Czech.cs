@@ -16,7 +16,7 @@ namespace SirHolomap
                 { "ModeLocalHelp", "Tv\u00e9 okolí ve vesmíru, viděn\u00e9 shora." },
                 { "ModeSystemHelp", "Celá soustava: planety, soustava ve 3D a galaxie." },
                 { "ModePlanetUnavailable", "\u017d\u00e1dn\u00e1 planeta pobl\u00ed\u017e: vyber jednu v zobrazen\u00ed Soustava." },
-                { "TabBodies", "Planety" },
+                { "TabBodies", "Soustava 2D" },
                 { "TabOrrery", "Soustava 3D" },
                 { "TabGalaxy", "Galaxie" },
                 { "TabBodiesHelp", "Planety a jejich měsíce vedle sebe, podle vzdálenosti od středu světa." },

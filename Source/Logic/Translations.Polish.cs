@@ -16,7 +16,7 @@ namespace SirHolomap
                 { "ModeLocalHelp", "Twoje otoczenie w kosmosie, widziane z góry." },
                 { "ModeSystemHelp", "Cały układ: planety, układ w 3D i galaktyka." },
                 { "ModePlanetUnavailable", "Brak planety w pobli\u017cu: wybierz jedn\u0105 w widoku Uk\u0142ad." },
-                { "TabBodies", "Planety" },
+                { "TabBodies", "Układ 2D" },
                 { "TabOrrery", "Układ 3D" },
                 { "TabGalaxy", "Galaktyka" },
                 { "TabBodiesHelp", "Planety i ich księżyce obok siebie, według odległości od środka świata." },

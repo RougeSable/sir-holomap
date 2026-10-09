@@ -16,7 +16,7 @@ namespace SirHolomap
                 { "ModeLocalHelp", "Votre voisinage dans l'espace, vu d'en haut." },
                 { "ModeSystemHelp", "Tout le syst\u00e8me : les plan\u00e8tes, le syst\u00e8me en 3D et la galaxie." },
                 { "ModePlanetUnavailable", "Aucune plan\u00e8te proche : choisissez-en une dans la vue Syst\u00e8me." },
-                { "TabBodies", "Plan\u00e8tes" },
+                { "TabBodies", "Syst\u00e8me 2D" },
                 { "TabOrrery", "Syst\u00e8me 3D" },
                 { "TabGalaxy", "Galaxie" },
                 { "TabBodiesHelp", "Les plan\u00e8tes et leurs lunes \u00e0 plat, par distance au centre du monde." },

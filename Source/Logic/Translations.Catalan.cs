@@ -16,7 +16,7 @@ namespace SirHolomap
                 { "ModeLocalHelp", "El teu entorn a l'espai, vist des de dalt." },
                 { "ModeSystemHelp", "Tot el sistema: planetes, el sistema en 3D i la gal\u00e0xia." },
                 { "ModePlanetUnavailable", "Cap planeta a prop: tria'n un a la vista Sistema." },
-                { "TabBodies", "Planetes" },
+                { "TabBodies", "Sistema 2D" },
                 { "TabOrrery", "Sistema 3D" },
                 { "TabGalaxy", "Gal\u00e0xia" },
                 { "TabBodiesHelp", "Els planetes i les seves llunes en pla, per dist\u00e0ncia al centre del món." },

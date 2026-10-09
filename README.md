@@ -46,15 +46,19 @@ gestures:
   empty space outside the grid's frame, a right click or the wheel lets go,
   back over you; a left drag only turns around the grid. The Planet button
   keeps a grid near a planet in the middle of its globe.
-- **System.** Three tabs: the planets and their moons laid flat by
-  distance to the centre of the world; the system in 3D with true distances
-  and enlarged bodies, the sun marked on the edge of the screen in its true
-  direction; and the galaxy, where every server has a fixed place computed
+- **System.** Three tabs: **System 2D**, the planets and their moons laid
+  flat by distance to the centre of the world; **System 3D**, the system with
+  true distances and enlarged bodies, the sun marked on the edge of the screen
+  in its true direction; and **Galaxy**, where every server has a fixed place computed
   from its address, lying on a black, starry sky that fills the view however
   far you zoom out. A dive from the system view (double click on a body or a
   grid) comes straight back to it when you zoom out. The globes of the bodies are painted
   from the real planets as soon as you join a world, a coarse picture within
-  a few frames, then the full one, so they are ready when the map opens.
+  a few frames, then the full one, so they are ready when the map opens. Each
+  one shows its own relief and the terrain the game puts at each place, in
+  the colour the game paints it with from far away, or else the mean colour
+  of the terrain's own texture: green and blue for EarthLike, red for Mars,
+  and the same for the planets of a world mod.
 
 The switches between the three views depend on the scale only, with a gap
 between the way out and the way back, so the views never take turns when

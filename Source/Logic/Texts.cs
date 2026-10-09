@@ -183,7 +183,7 @@ namespace SirHolomap
                 { "ModeLocalHelp", "Your neighbourhood in space, seen from above." },
                 { "ModeSystemHelp", "The whole system: planets, the system in 3D and the galaxy." },
                 { "ModePlanetUnavailable", "No planet nearby: pick one in the System view." },
-                { "TabBodies", "Planets" },
+                { "TabBodies", "System 2D" },
                 { "TabOrrery", "System 3D" },
                 { "TabGalaxy", "Galaxy" },
                 { "TabBodiesHelp", "Planets and their moons laid flat, by distance to the centre of the world." },

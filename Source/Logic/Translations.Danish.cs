@@ -16,7 +16,7 @@ namespace SirHolomap
                 { "ModeLocalHelp", "Dine omgivelser i rummet, set ovenfra." },
                 { "ModeSystemHelp", "Hele systemet: planeter, systemet i 3D og galaksen." },
                 { "ModePlanetUnavailable", "Ingen planet i n\u00e6rheden: v\u00e6lg en i System-visningen." },
-                { "TabBodies", "Planeter" },
+                { "TabBodies", "System 2D" },
                 { "TabOrrery", "System 3D" },
                 { "TabGalaxy", "Galakse" },
                 { "TabBodiesHelp", "Planeterne og deres måner lagt fladt, efter afstand til verdens centrum." },

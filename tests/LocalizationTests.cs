@@ -74,6 +74,24 @@ namespace SirHolomap.Tests
             Assert.NotEqual(english["StayButton"], catalog.Get(GameLanguage.German, "StayButton"));
         }
 
+        // The first tab of the system view sits next to "System 3D": it is
+        // its flat twin, "System 2D", in every language.
+        [Fact]
+        public void FlatSystemTabIsNamedAfterTheThreeDimensionalOne()
+        {
+            var english = Texts.EnglishTable();
+            var catalog = new TextCatalog(english, Translations.All());
+            Assert.Equal("System 2D", english["TabBodies"]);
+            Assert.Equal("Syst\u00e8me 2D", catalog.Get(GameLanguage.French, "TabBodies"));
+            foreach (GameLanguage language in Enum.GetValues(typeof(GameLanguage)))
+            {
+                var flat = catalog.Get(language, "TabBodies");
+                var solid = catalog.Get(language, "TabOrrery");
+                Assert.Equal(solid.Replace("3D", "2D").Replace("3B", "2B"), flat);
+                Assert.NotEqual(solid, flat);
+            }
+        }
+
         [Fact]
         public void MissingTranslationFallsBackToEnglish()
         {

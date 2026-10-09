@@ -16,7 +16,7 @@ namespace SirHolomap
                 { "ModeLocalHelp", "Umhverfi þitt í geimnum, s\u00e9ð að ofan." },
                 { "ModeSystemHelp", "Allt kerfið: plánetur, kerfið í 3D og vetrarbrautin." },
                 { "ModePlanetUnavailable", "Engin pl\u00e1neta n\u00e1l\u00e6gt: veldu eina \u00ed Kerfi-s\u00fdninni." },
-                { "TabBodies", "Plánetur" },
+                { "TabBodies", "Kerfi 2D" },
                 { "TabOrrery", "Kerfi 3D" },
                 { "TabGalaxy", "Vetrarbraut" },
                 { "TabBodiesHelp", "Pláneturnar og tungl þeirra hlið við hlið, eftir fjarlægð frá miðju heimsins." },

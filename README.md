@@ -7,11 +7,10 @@ symmetry key.
 Nothing goes through the server: a player without the plugin plays as usual,
 and everything the map remembers, the player saw with their own eyes.
 
-## The four views
+## The three views
 
-The buttons **Planet**, **Local space**, **System** and **Galaxy** at the top
-switch between them; the mouse wheel also glides from one to the next, out
-from the ground to the galaxy and back in. Every view has the same menu on the
+The buttons **Planet**, **Local space** and **System** at the top switch
+between them; the mouse wheel also glides from one to the next. Every view has the same menu on the
 right (info, what to show, the list of what is in view) and answers the same
 gestures:
 
@@ -22,7 +21,6 @@ gestures:
 | Wheel | zoom; every notch multiplies the distance (Ctrl + wheel flies forward in the 3D system) |
 | Click | select, the info shows on the right |
 | Double click | dive into what is under the cursor |
-| Click beside a fastened grid, or right click | let go of it |
 | Space | back to you |
 | M or Esc | close |
 
@@ -41,34 +39,23 @@ gestures:
   inside a body, or behind it, is not drawn. The menu lists the grids in
   view; a click highlights one. A double
   click on a grid in range fastens the camera to it, and the game draws it
-  filling the screen while the plane stays where it was; on a remembered
-  grid, the view centres on its marker and its info says it is out of range.
-  A click beside the grid, or a right click, lets go and brings the view back
-  as it was; the wheel out goes back to your neighbourhood. With a grid
-  fastened near a planet, the Planet button keeps it in the middle of the
-  globe. A double click on a planet or a moon in sight opens its globe.
-- **System.** Two tabs: **2D**, the planets and their moons laid flat by
-  distance to the centre of the world; **3D**, the system with true distances
+  filling the screen; on a remembered grid, the view centres on its marker
+  and its info says it is out of range. The wheel out lets go: over the
+  planet the grid stands on (the planet view, the grid still in the middle,
+  also with the Planet button), or back over you.
+- **System.** Three tabs: the planets and their moons laid flat by
+  distance to the centre of the world; the system in 3D with true distances
   and enlarged bodies, the sun marked on the edge of the screen in its true
-  direction. A dive from the system view (double click on a body or a grid)
-  comes straight back to it when you zoom out. The wheel out of the system
-  leads to the galaxy. The globes of the bodies are painted from the real
-  planets (relief, and the colour the game gives each terrain seen from far)
-  as soon as you join a world, a coarse picture within a few frames, then the
-  full one, so they are ready when the map opens.
-- **Galaxy.** Where this server lies in the galaxy: every server has a fixed
-  place computed from its address, on a black sky with a few soft-coloured
-  stars that fills the view however far you zoom out. The current server
-  shines with "You are here"; icons too close together gather into a badge
-  with a count that opens as you zoom in. The camera glides as it zooms; at
-  the closest zoom, one more notch in goes back to the system.
+  direction; and the galaxy, where every server has a fixed place computed
+  from its address, lying on a black, starry sky that fills the view however
+  far you zoom out. A dive from the system view (double click on a body or a
+  grid) comes straight back to it when you zoom out. The globes of the bodies are painted
+  from the real planets as soon as you join a world, a coarse picture within
+  a few frames, then the full one, so they are ready when the map opens.
 
-The switches between the views depend on the scale only, with a gap
+The switches between the three views depend on the scale only, with a gap
 between the way out and the way back, so the views never take turns when
 the wheel stops on a limit.
-
-If you die with the map open, it closes by itself and the game shows its
-respawn screen; opened again, it starts over you.
 
 ## Memory
 

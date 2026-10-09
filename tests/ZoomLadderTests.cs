@@ -9,7 +9,7 @@ namespace SirHolomap.Tests
     public class ZoomLadderTests
     {
         [Fact]
-        public void EachWheelStepMultipliesDistance()
+        public void EachNotchMultipliesDistance()
         {
             // Every notch multiplies the distance by the same factor, at every
             // scale.
@@ -77,37 +77,6 @@ namespace SirHolomap.Tests
         {
             PlanetToLocalSwitchHasHysteresis();
             LocalToSystemSwitchHasHysteresis();
-            SystemToGalaxySwitchHasHysteresis();
-        }
-
-        // Out of the system (C) to the galaxy (D): past a few times the size
-        // of the system, with the same gap between the way out and the way
-        // back.
-        private static void SystemToGalaxySwitchHasHysteresis()
-        {
-            const double extent = 5800000;
-            var change = MapScales.SystemToGalaxy(extent);
-            Assert.True(change.DownBelow < change.UpAbove);
-            Assert.True(change.UpAbove >= extent * MapScales.GalaxyAboveExtent);
-
-            Assert.False(change.Update(change.UpAbove * 0.99));
-            Assert.True(change.Update(change.UpAbove * 1.01));
-            Assert.True(change.IsUp);
-
-            // Wobbling at the limit keeps the galaxy.
-            Assert.False(change.Update(change.UpAbove * 0.98));
-            Assert.False(change.Update(change.DownBelow * 1.01));
-            Assert.True(change.IsUp);
-
-            // Back to the system only well below.
-            Assert.True(change.Update(change.DownBelow * 0.99));
-            Assert.False(change.IsUp);
-
-            // A small system still leaves room between C and D.
-            Assert.True(MapScales.SystemToGalaxy(0).DownBelow > MapScales.SystemAbove);
-
-            // From the system to the galaxy takes a handful of notches.
-            Assert.True(ZoomSteps.NotchesBetween(extent * 1.6, change.UpAbove) <= 6);
         }
 
         private static void PlanetToLocalSwitchHasHysteresis()

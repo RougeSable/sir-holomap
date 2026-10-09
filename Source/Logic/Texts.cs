@@ -20,9 +20,6 @@ namespace SirHolomap
 
         // View C.
         public static string ModeSystem { get { return Localization.Get("ModeSystem"); } }
-
-        // View D: the galaxy, past the system.
-        public static string ModeGalaxy { get { return Localization.Get("ModeGalaxy"); } }
         public static string ModePlanetHelp { get { return Localization.Get("ModePlanetHelp"); } }
         public static string ModeLocalHelp { get { return Localization.Get("ModeLocalHelp"); } }
         public static string ModeSystemHelp { get { return Localization.Get("ModeSystemHelp"); } }
@@ -137,10 +134,6 @@ namespace SirHolomap
         public static string HelpOrrery { get { return Localization.Get("HelpOrrery"); } }
         public static string HelpBodies { get { return Localization.Get("HelpBodies"); } }
         public static string HelpGalaxy { get { return Localization.Get("HelpGalaxy"); } }
-        public static string HelpLetGo { get { return Localization.Get("HelpLetGo"); } }
-        public static string HelpWheelOutGalaxy { get { return Localization.Get("HelpWheelOutGalaxy"); } }
-        public static string HelpWheelInSystem { get { return Localization.Get("HelpWheelInSystem"); } }
-        public static string HelpDoubleClickBody { get { return Localization.Get("HelpDoubleClickBody"); } }
         public static string CloseHint { get { return Localization.Get("CloseHint"); } }
 
         // Joining another server.
@@ -188,19 +181,14 @@ namespace SirHolomap
                 { "ModeSystem", "SYSTEM" },
                 { "ModePlanetHelp", "The globe of the planet you are on, or the last one you looked at." },
                 { "ModeLocalHelp", "Your neighbourhood in space, seen from above." },
-                { "ModeSystemHelp", "The whole system: the planets laid flat (2D) and the system in 3D." },
+                { "ModeSystemHelp", "The whole system: planets, the system in 3D and the galaxy." },
                 { "ModePlanetUnavailable", "No planet nearby: pick one in the System view." },
-                { "TabBodies", "2D" },
-                { "TabOrrery", "3D" },
+                { "TabBodies", "Planets" },
+                { "TabOrrery", "System 3D" },
                 { "TabGalaxy", "Galaxy" },
                 { "TabBodiesHelp", "Planets and their moons laid flat, by distance to the centre of the world." },
                 { "TabOrreryHelp", "The system in 3D: true distances, bodies enlarged so that they stay readable." },
                 { "TabGalaxyHelp", "Where this server lies in the galaxy, among the servers you know." },
-                { "ModeGalaxy", "GALAXY" },
-                { "HelpLetGo", "Click beside it or right click: let go" },
-                { "HelpWheelOutGalaxy", "Wheel out: galaxy" },
-                { "HelpWheelInSystem", "Wheel in: back to the system" },
-                { "HelpDoubleClickBody", "Double click a body: its globe" },
                 { "SectionInfo", "INFO" },
                 { "SectionShow", "SHOW" },
                 { "SectionGrids", "GRIDS IN VIEW" },

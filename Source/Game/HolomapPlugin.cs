@@ -246,9 +246,6 @@ namespace SirHolomap
                 return;
             if (input.IsAnyCtrlKeyPressed() || input.IsAnyAltKeyPressed() || input.IsAnyShiftKeyPressed())
                 return;
-            // Dead, waiting for the respawn screen: the map waits too.
-            if (MapScreen.PlayerIsGone())
-                return;
             Open();
         }
 

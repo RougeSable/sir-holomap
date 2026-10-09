@@ -5,8 +5,7 @@ using VRageMath;
 
 namespace SirHolomap
 {
-    // D: where this server lies in the galaxy, past the system: the wheel
-    // out of the system leads here, the wheel in leads back. Every server has a
+    // C, third tab: where this server lies in the galaxy. Every server has a
     // fixed place, computed from its address: every player sees it at the
     // same spot. Icons too close to be told apart gather into a badge with a
     // count, which opens up as the player zooms in. The current server shines
@@ -14,15 +13,8 @@ namespace SirHolomap
     // leaving for it.
     internal sealed class GalaxyView : MapView
     {
-        // Where the view goes (zoom, and the point of the galaxy in the middle
-        // of the map, -1 to 1), and where it is on its way there: the view
-        // glides, it never jumps.
-        private double m_zoom = MapScales.GalaxyOverview;
-        private Vector2D m_centre;
-        private double m_shownZoom = MapScales.GalaxyOverview;
-        private Vector2D m_shownCentre;
-        private double m_slowUntil;
-        private SystemTab m_returnTab = SystemTab.Orrery;
+        private double m_zoom = 1;
+        private Vector2 m_offset;
         private readonly List<GalaxyServer> m_shown = new List<GalaxyServer>();
         private readonly List<IconCluster> m_clusters = new List<IconCluster>();
         private readonly List<ScreenIcon> m_icons = new List<ScreenIcon>();
@@ -49,108 +41,45 @@ namespace SirHolomap
 
         public override string Help
         {
-            get { return Texts.HelpGalaxy + "   " + Texts.HelpWheelInSystem; }
-        }
-
-        // fromSystem: the wheel went out of the system. The view opens close
-        // on the place of this server, the system just left, and draws back
-        // until the whole galaxy shows. tab: the tab of the system the wheel
-        // in leads back to.
-        public void Enter(bool fromSystem, SystemTab tab)
-        {
-            m_returnTab = tab;
-            var here = CurrentPlace();
-            m_zoom = MapScales.GalaxyOverview;
-            m_centre = Vector2D.Zero;
-            if (fromSystem)
-            {
-                m_shownZoom = MapScales.GalaxyClosest;
-                m_shownCentre = here;
-                m_slowUntil = Map.Time + 1.6;
-            }
-            else
-            {
-                m_shownZoom = m_zoom;
-                m_shownCentre = m_centre;
-                m_slowUntil = 0;
-            }
-        }
-
-        private Vector2D CurrentPlace()
-        {
-            foreach (var server in Map.Servers.Servers)
-            {
-                if (server.IsCurrent)
-                    return new Vector2D(server.Place.X, server.Place.Y);
-            }
-            return Vector2D.Zero;
+            get { return Texts.HelpGalaxy; }
         }
 
         public override void Update(double dt)
         {
-            var halfLife = Map.Time < m_slowUntil ? 0.3 : 0.1;
-            m_shownZoom = ZoomSteps.Smooth(m_shownZoom, m_zoom, dt, halfLife);
-            var k = 1 - Math.Pow(0.5, dt / halfLife);
-            m_shownCentre += (m_centre - m_shownCentre) * k;
-            if ((m_centre - m_shownCentre).LengthSquared() < 1e-12)
-                m_shownCentre = m_centre;
-        }
-
-        private Vector2 AreaCentre
-        {
-            get
-            {
-                var area = Map.MapArea;
-                return new Vector2(area.X + area.Width / 2, area.Y + area.Height / 2);
-            }
-        }
-
-        private float SizeAt(double zoom)
-        {
-            var area = Map.MapArea;
-            return (float)(Math.Min(area.Width, area.Height) * 0.92 * zoom);
         }
 
         private float Size
         {
-            get { return SizeAt(m_shownZoom); }
+            get
+            {
+                var area = Map.MapArea;
+                return (float)(Math.Min(area.Width, area.Height) * 0.92 * m_zoom);
+            }
         }
 
-        // The middle of the galaxy on screen.
         private Vector2 Centre
         {
-            get { return ToScreen(new GalaxyPoint(0, 0)); }
+            get
+            {
+                var area = Map.MapArea;
+                return new Vector2(area.X + area.Width / 2, area.Y + area.Height / 2) + m_offset;
+            }
         }
 
         private Vector2 ToScreen(GalaxyPoint point)
         {
             var half = Size / 2;
-            return AreaCentre + new Vector2((float)((point.X - m_shownCentre.X) * half), (float)((point.Y - m_shownCentre.Y) * half));
+            return Centre + new Vector2((float)point.X * half, (float)point.Y * half);
         }
 
-        private Vector2D ToGalaxy(Vector2 screen, double zoom, Vector2D centre)
-        {
-            var half = SizeAt(zoom) / 2.0;
-            var d = screen - AreaCentre;
-            return centre + new Vector2D(d.X / half, d.Y / half);
-        }
-
-        // The wheel zooms around the cursor, gliding. At the closest zoom,
-        // one more notch in goes back to the system.
         public override void Wheel(double notches, bool ctrl)
         {
-            if (notches > 0 && m_zoom >= MapScales.GalaxyClosest * 0.999)
-            {
-                Map.GoSystem(m_returnTab, true);
-                return;
-            }
+            // Zoom around the cursor.
             var mouse = Gfx.Mouse;
-            var under = ToGalaxy(mouse, m_zoom, m_centre);
-            m_zoom = MathHelper.Clamp(m_zoom * Math.Pow(ZoomSteps.Factor, notches), MapScales.GalaxyFarthest, MapScales.GalaxyClosest);
-            var d = mouse - AreaCentre;
-            var half = SizeAt(m_zoom) / 2.0;
-            m_centre = under - new Vector2D(d.X / half, d.Y / half);
-            m_slowUntil = 0;
+            var before = (mouse - Centre) / Size;
+            m_zoom = MathHelper.Clamp(m_zoom * Math.Pow(ZoomSteps.Factor, notches), 0.6, 400);
+            var after = Centre + before * Size;
+            m_offset += mouse - after;
         }
 
         public override void Rotate(Vector2 delta)
@@ -158,23 +87,27 @@ namespace SirHolomap
             Pan(delta);
         }
 
-        // The galaxy follows the cursor at once.
         public override void Pan(Vector2 delta)
         {
-            var half = Math.Max(Size / 2.0, 1);
-            var shift = new Vector2D(delta.X / half, delta.Y / half);
-            m_centre -= shift;
-            m_shownCentre -= shift;
+            m_offset += delta;
         }
 
         public override void Move(Vector2 keys, double dt)
         {
-            Pan(-new Vector2(keys.X, -keys.Y) * (float)(700 * dt));
+            m_offset -= new Vector2(keys.X, -keys.Y) * (float)(700 * dt);
         }
 
         public override void Recentre()
         {
-            m_centre = CurrentPlace();
+            foreach (var server in Map.Servers.Servers)
+            {
+                if (server.IsCurrent)
+                {
+                    Focus(server);
+                    return;
+                }
+            }
+            m_offset = Vector2.Zero;
         }
 
         public override void Focus(object target)
@@ -182,7 +115,9 @@ namespace SirHolomap
             var server = target as GalaxyServer;
             if (server == null)
                 return;
-            m_centre = new Vector2D(server.Place.X, server.Place.Y);
+            var at = ToScreen(server.Place);
+            var area = Map.MapArea;
+            m_offset += new Vector2(area.X + area.Width / 2, area.Y + area.Height / 2) - at;
         }
 
         public override object Pick(Vector2 mouse)
@@ -209,10 +144,12 @@ namespace SirHolomap
             var cluster = target as IconCluster;
             if (cluster != null)
             {
-                // Open the badge: glide in on it.
+                // Open the badge: zoom in on it.
                 var at = new Vector2((float)cluster.X, (float)cluster.Y);
-                m_centre = ToGalaxy(at, m_shownZoom, m_shownCentre);
-                m_zoom = Math.Min(MapScales.GalaxyClosest, m_zoom * 3);
+                var area = Map.MapArea;
+                var before = (at - Centre) / Size;
+                m_zoom = Math.Min(400, m_zoom * 3);
+                m_offset += new Vector2(area.X + area.Width / 2, area.Y + area.Height / 2) - (Centre + before * Size);
             }
         }
 
@@ -312,11 +249,9 @@ namespace SirHolomap
             var s = Gfx.Scale;
             var top = Map.TopBarHeight;
             Gfx.Rect(0, top, Gfx.Width, Gfx.Height - top, Color.Black);
-            var drift = (float)Math.Log(m_shownZoom);
-            var span = (float)(Math.Min(Map.MapArea.Width, Map.MapArea.Height) * 0.46);
-            var along = new Vector2((float)-m_shownCentre.X, (float)-m_shownCentre.Y) * span;
-            StarLayer(GameTextures.StarsSize * 1.3f * s, along * 0.08f, new Vector2(37, 11) * drift, 0.6f);
-            StarLayer(GameTextures.StarsSize * 2.1f * s, along * 0.2f, new Vector2(-23, 29) * drift, 0.85f);
+            var drift = (float)Math.Log(m_zoom);
+            StarLayer(GameTextures.StarsSize * 0.75f * s, m_offset * 0.08f, new Vector2(37, 11) * drift, 0.55f);
+            StarLayer(GameTextures.StarsSize * 1.1f * s, m_offset * 0.2f, new Vector2(-23, 29) * drift, 0.9f);
         }
 
         private static void StarLayer(float tile, Vector2 shift, Vector2 drift, float alpha)

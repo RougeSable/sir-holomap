@@ -38,26 +38,13 @@ namespace SirHolomap
         private int m_rest;
 
         private delegate MyVoxelMaterialDefinition MaterialAtPosition(ref Vector3 storagePosition, float lodSize);
-        private delegate void PrepareRules(ref BoundingBox storageBox);
 
         // The planet's own material lookup, found by name: when a version of
         // the game renames it, the globes keep their relief, painted grey.
         private static readonly MaterialAtPosition MissingLookup = (ref Vector3 p, float l) => null;
 
-        // The planet's materials, as the game reads them for its own terrain.
-        // The rules of its biomes are kept by the game per thread, and only
-        // the threads that build the terrain prepare them: on the game thread
-        // they are missing, and every lookup would fail. Prime readies them,
-        // all rules of this planet, before the samples of a frame are taken.
-        private sealed class MaterialSource
+        private static MaterialAtPosition MaterialLookup(MyPlanet planet)
         {
-            public MaterialAtPosition Lookup = MissingLookup;
-            public PrepareRules Prime;
-        }
-
-        private static MaterialSource MaterialLookup(MyPlanet planet)
-        {
-            var source = new MaterialSource();
             try
             {
                 const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
@@ -69,47 +56,20 @@ namespace SirHolomap
                     ? materials.GetType().GetMethod("GetMaterialForPosition", flags, null,
                         new[] { typeof(Vector3).MakeByRefType(), typeof(float) }, null)
                     : null;
-                var prepare = materials != null
-                    ? materials.GetType().GetMethod("PrepareRulesForBox", flags, null,
-                        new[] { typeof(BoundingBox).MakeByRefType() }, null)
-                    : null;
                 if (method != null && method.ReturnType == typeof(MyVoxelMaterialDefinition))
-                    source.Lookup = (MaterialAtPosition)Delegate.CreateDelegate(typeof(MaterialAtPosition), materials, method);
-                else
-                    HolomapPlugin.Log("planet material lookup not found: globes painted grey");
-                if (prepare != null && prepare.ReturnType == typeof(void))
-                    source.Prime = (PrepareRules)Delegate.CreateDelegate(typeof(PrepareRules), materials, prepare);
-                else
-                    HolomapPlugin.Log("planet material rules not found: biomes may be painted with their default material");
+                    return (MaterialAtPosition)Delegate.CreateDelegate(typeof(MaterialAtPosition), materials, method);
+                HolomapPlugin.Log("planet material lookup not found: globes painted grey");
             }
             catch (Exception e)
             {
                 HolomapPlugin.Log("planet material lookup failed: " + e.Message);
             }
-            return source;
-        }
-
-        // A box this small asks the game for every rule of the planet.
-        private static void Prime(Job job)
-        {
-            var source = job.Materials ?? (job.Materials = MaterialLookup(job.Body.Planet));
-            if (source.Prime == null)
-                return;
-            try
-            {
-                var box = new BoundingBox(Vector3.Zero, Vector3.One);
-                source.Prime(ref box);
-            }
-            catch (Exception e)
-            {
-                source.Prime = null;
-                HolomapPlugin.Log("planet material rules could not be prepared: " + e.Message);
-            }
+            return MissingLookup;
         }
 
         private sealed class Job
         {
-            public MaterialSource Materials;
+            public MaterialAtPosition MaterialAt;
             public Body Body;
             public int Next;
             public readonly float[] Colors = new float[Columns * Rows * 3];
@@ -299,8 +259,6 @@ namespace SirHolomap
                     var goal = pass == 0 ? CoarseCount : Columns * Rows;
                     if (pass == 0 && job.Coarse)
                         continue;
-                    if (job.Next < goal)
-                        Prime(job);
                     while (job.Next < goal)
                     {
                         var before = m_watch.Elapsed.TotalMilliseconds;
@@ -341,13 +299,11 @@ namespace SirHolomap
                 var surface = planet.GetClosestSurfacePointGlobal(ref above);
                 height = (surface - centre).Length() - planet.AverageRadius;
 
-                // Just under the ground, in the planet's storage frame, read
-                // as the game reads its terrain from a little way off: the
-                // surface material, not the rock below it.
-                var inside = surface - direction * 0.25;
+                // A metre under the ground, in the planet's storage frame.
+                var inside = surface - direction * 1.0;
                 var storage = (Vector3)(inside - planet.PositionLeftBottomCorner);
-                var source = job.Materials ?? (job.Materials = MaterialLookup(planet));
-                var material = source.Lookup != MissingLookup ? source.Lookup(ref storage, 4f) : null;
+                var materialAt = job.MaterialAt ?? (job.MaterialAt = MaterialLookup(planet));
+                var material = materialAt != MissingLookup ? materialAt(ref storage, 1f) : null;
                 if (material != null)
                     ColorOf(material, ref r, ref g, ref b);
             }

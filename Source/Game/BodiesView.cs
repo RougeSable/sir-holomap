@@ -16,8 +16,6 @@ namespace SirHolomap
         private readonly List<float> m_drawnRadius = new List<float>();
         private float m_scroll;
         private float m_contentWidth;
-        private double m_wheelOut;
-        private double m_wheelOutAt;
 
         public BodiesView(MapScreen map) : base(map)
         {
@@ -40,7 +38,7 @@ namespace SirHolomap
 
         public override string Help
         {
-            get { return Texts.HelpBodies + "   " + Texts.HelpWheelOutGalaxy; }
+            get { return Texts.HelpBodies; }
         }
 
         public override void Update(double dt)
@@ -63,25 +61,11 @@ namespace SirHolomap
             Pan(new Vector2((float)(-keys.X * 900 * dt), 0));
         }
 
-        // The wheel zooms into the body under the cursor: its globe. Out, two
-        // notches in a row lead to the galaxy, as the wheel out of the 3D
-        // system does.
+        // The wheel zooms into the body under the cursor: its globe.
         public override void Wheel(double notches, bool ctrl)
         {
-            if (notches < 0)
-            {
-                if (Map.Time - m_wheelOutAt > 1.0)
-                    m_wheelOut = 0;
-                m_wheelOutAt = Map.Time;
-                m_wheelOut -= notches;
-                if (m_wheelOut >= 2)
-                {
-                    m_wheelOut = 0;
-                    Map.GoGalaxy(true);
-                }
+            if (notches <= 0)
                 return;
-            }
-            m_wheelOut = 0;
             var body = Pick(Gfx.Mouse) as Body;
             if (body != null)
                 Map.GoPlanet(body, true, false, null);
@@ -193,7 +177,7 @@ namespace SirHolomap
 
         public override void DefaultInfo(Panel panel)
         {
-            panel.Heading(Texts.ModeSystem, Texts.TabBodies);
+            panel.Heading(Texts.TabBodies, Texts.TabBodiesHelp);
             var planets = 0;
             var moons = 0;
             foreach (var body in World.Bodies)

@@ -42,11 +42,6 @@ namespace SirHolomap
         private readonly List<Vector2> m_othersAt = new List<Vector2>();
         private readonly List<float> m_othersRadius = new List<float>();
 
-        // The corners around the fastened grid: a click inside keeps it.
-        private bool m_lockShown;
-        private Vector2 m_lockAt;
-        private float m_lockSize;
-
         public PlanetView(MapScreen map) : base(map)
         {
         }
@@ -74,7 +69,7 @@ namespace SirHolomap
 
         public override string Help
         {
-            get { return m_grid != null ? Texts.HelpPlanetLocked + "   " + Texts.HelpLetGo : Texts.HelpPlanet; }
+            get { return m_grid != null ? Texts.HelpPlanetLocked : Texts.HelpPlanet; }
         }
 
         public override double NeededFar
@@ -306,14 +301,6 @@ namespace SirHolomap
             Drag(new Vector2(-keys.X, keys.Y) * (float)pixels);
         }
 
-        // A click beside the fastened grid, or a right click: the camera lets
-        // go of it and looks at the ground below, the zoom of the globe as
-        // usual.
-        public override void LetGo()
-        {
-            Release();
-        }
-
         private void Release()
         {
             if (m_grid == null)
@@ -366,7 +353,6 @@ namespace SirHolomap
         {
             if (Body == null)
                 return;
-            m_lockShown = false;
             DrawOtherBodies();
             if (!RenderHooks.Active)
                 DrawOwnGlobe();
@@ -404,11 +390,7 @@ namespace SirHolomap
                         var size = (float)(marker.Radius * 2 * Camera.PixelsPerMetre(Math.Max(Camera.Distance, 1)));
                         if (size > 40 * Gfx.Scale)
                         {
-                            size = Math.Min(size, Gfx.Height * 0.9f);
                             Gfx.Brackets(m_visibleAt[i], size, size, Math.Max(1.5f, 2 * Gfx.Scale), Gfx.Alpha(Style.Selection, 0.8f));
-                            m_lockShown = true;
-                            m_lockAt = m_visibleAt[i];
-                            m_lockSize = size;
                             continue;
                         }
                     }
@@ -526,12 +508,6 @@ namespace SirHolomap
             }
             if (best != null)
                 return best;
-            if (m_grid != null && m_lockShown)
-            {
-                var half = m_lockSize / 2 + 6 * Gfx.Scale;
-                if (Math.Abs(mouse.X - m_lockAt.X) < half && Math.Abs(mouse.Y - m_lockAt.Y) < half)
-                    return m_grid;
-            }
             // Markers first; then the other bodies in sight.
             var closest = double.MaxValue;
             for (var i = 0; i < m_others.Count; i++)

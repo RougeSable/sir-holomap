@@ -32,7 +32,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void SelectedBodyStaysSelectedAfterRefresh()
+        public void SelectedBodySurvivesRefresh()
         {
             var created = 0;
             var registry = new Registry<FakeBody>(id =>

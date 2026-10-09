@@ -157,7 +157,7 @@ namespace SirHolomap
                     // Stars: rare bright pixels, denser in the arms; the
                     // rest of the sky is the map's own star field.
                     var h = Hash(px * 7349 + py * 1931);
-                    var starChance = (0.0006 + 0.005 * arm) * disc * 3;
+                    var starChance = (0.0025 + 0.02 * arm) * disc * 3;
                     if (h < starChance)
                     {
                         var star = 0.6 + 0.4 * Hash(px * 13 + py * 9973);
@@ -188,31 +188,32 @@ namespace SirHolomap
             return data;
         }
 
-        // A tile of the night sky behind the galaxy: a few stars, round and
-        // soft, each with a faint halo, in gentle tints (pale blue, warm
-        // white, amber, rose, lilac) as on a holographic star map. Sparse,
-        // so that the servers stay easy to read. The tile wraps: stars near
-        // an edge show again on the other side.
+        // A tile of the night sky behind the galaxy: scattered stars of
+        // every brightness, a few tinted, on a transparent ground. The tile
+        // wraps: stars near an edge show again on the other side.
         public static byte[] StarFieldImage(int size, int seed)
         {
             var data = new byte[size * size * 4];
-            var light = new double[size * size * 4];
-            var count = Math.Max(8, size * size / 7000);
+            var count = size * size / 380;
             for (var n = 0; n < count; n++)
             {
                 var cx = Hash(seed * 7919 + n * 31 + 1) * size;
                 var cy = Hash(seed * 104729 + n * 17 + 2) * size;
-                var brightness = 0.35 + 0.65 * Math.Pow(Hash(seed * 13 + n * 101 + 3), 2);
-                var core = 0.8 + 1.6 * Math.Pow(Hash(seed * 53 + n * 7 + 4), 3);
-                var halo = core * (2.6 + 2.0 * Hash(seed * 59 + n * 43 + 6));
-                var tint = StarTint(Hash(seed * 3 + n * 211 + 5));
-                var reach = (int)Math.Ceiling(halo * 2.2 + 1);
-                // The corners of the tile stay empty, as every picture of the
-                // map keeps a transparent corner.
-                var cornerX = Math.Min(cx, size - cx);
-                var cornerY = Math.Min(cy, size - cy);
-                if (cornerX * cornerX + cornerY * cornerY < (reach + 2) * (reach + 2))
-                    continue;
+                var brightness = Math.Pow(Hash(seed * 13 + n * 101 + 3), 3) * 0.85 + 0.15;
+                var radius = 0.55 + 0.9 * Math.Pow(Hash(seed * 53 + n * 7 + 4), 4);
+                var tint = Hash(seed * 3 + n * 211 + 5);
+                double tr = 1, tg = 1, tb = 1;
+                if (tint < 0.15)
+                {
+                    tr = 0.75;
+                    tg = 0.85;
+                }
+                else if (tint > 0.9)
+                {
+                    tb = 0.7;
+                    tg = 0.9;
+                }
+                var reach = (int)Math.Ceiling(radius + 1.5);
                 for (var dy = -reach; dy <= reach; dy++)
                 {
                     for (var dx = -reach; dx <= reach; dx++)
@@ -221,51 +222,22 @@ namespace SirHolomap
                         var py = (int)Math.Floor(cy) + dy;
                         var ox = px + 0.5 - cx;
                         var oy = py + 0.5 - cy;
-                        var d2 = ox * ox + oy * oy;
-                        // A bright round core and a soft halo around it.
-                        var value = brightness * (Math.Exp(-d2 / (core * core)) + 0.22 * Math.Exp(-d2 / (halo * halo)));
-                        if (value < 1.0 / 512)
+                        var d = Math.Sqrt(ox * ox + oy * oy);
+                        var light = brightness * Clamp01(1 - (d - radius * 0.5) / (radius + 0.6));
+                        if (light <= 0)
                             continue;
                         px = ((px % size) + size) % size;
                         py = ((py % size) + size) % size;
                         var i = (py * size + px) * 4;
-                        // Light adds up, in linear light, premultiplied.
-                        var white = Clamp01((value - 0.75) * 1.2);
-                        light[i] += value * (tint[0] + (1 - tint[0]) * white);
-                        light[i + 1] += value * (tint[1] + (1 - tint[1]) * white);
-                        light[i + 2] += value * (tint[2] + (1 - tint[2]) * white);
-                        light[i + 3] += value;
+                        var a = Math.Max(data[i + 3] / 255.0, light);
+                        data[i] = ToByte(tr);
+                        data[i + 1] = ToByte(tg);
+                        data[i + 2] = ToByte(tb);
+                        data[i + 3] = ToByte(a);
                     }
                 }
             }
-            for (var i = 0; i < light.Length; i += 4)
-            {
-                var a = Clamp01(light[i + 3]);
-                if (a < 1.0 / 512)
-                    continue;
-                var scale = 1 / Math.Max(light[i + 3], 1e-6);
-                data[i] = ToByte(LinearToSrgb(Clamp01(light[i] * scale)));
-                data[i + 1] = ToByte(LinearToSrgb(Clamp01(light[i + 1] * scale)));
-                data[i + 2] = ToByte(LinearToSrgb(Clamp01(light[i + 2] * scale)));
-                data[i + 3] = ToByte(a);
-            }
             return data;
-        }
-
-        // Soft star colours, in linear light.
-        private static double[] StarTint(double pick)
-        {
-            if (pick < 0.30)
-                return new[] { 0.55, 0.70, 1.00 };
-            if (pick < 0.55)
-                return new[] { 1.00, 0.92, 0.80 };
-            if (pick < 0.70)
-                return new[] { 1.00, 0.62, 0.35 };
-            if (pick < 0.82)
-                return new[] { 1.00, 0.55, 0.70 };
-            if (pick < 0.92)
-                return new[] { 0.72, 0.58, 1.00 };
-            return new[] { 0.60, 1.00, 0.90 };
         }
 
         private static double SrgbToLinear(double c)

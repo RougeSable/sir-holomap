@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SirHolomap.Tests
 {
-    public class SightMemoryTests
+    public class MemoryTests
     {
         private const double SyncRadius = 3000;
         private static readonly DateTime T0 = new DateTime(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc);
@@ -33,7 +33,7 @@ namespace SirHolomap.Tests
         }
 
         [Fact]
-        public void RecordsPositionAndTimeOfWhatIsSeen()
+        public void RecordsPositionAndTimeOfSeenGrid()
         {
             var memory = new MapMemory("steam://1.2.3.4:27016");
             Scan(memory, new Vec3(0, 0, 0), T0, Base(new Vec3(100, 0, 0)));

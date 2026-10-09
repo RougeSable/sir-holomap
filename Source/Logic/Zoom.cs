@@ -120,24 +120,6 @@ namespace SirHolomap
             return new ScaleSwitch(planetRadius * PlanetLeaveRadii, planetRadius * PlanetReturnRadii);
         }
 
-        // System (C) to galaxy (D): once the whole system is a few times
-        // smaller than the view, the galaxy it lies in takes over. The way
-        // back starts a little lower, as everywhere.
-        public const double GalaxyAboveExtent = 3;
-        public const double GalaxyLowest = 2000000;
-
-        public static ScaleSwitch SystemToGalaxy(double systemExtent)
-        {
-            var up = Math.Max(GalaxyLowest, systemExtent * GalaxyAboveExtent);
-            return new ScaleSwitch(up, up * SystemHysteresis);
-        }
-
-        // The galaxy's own zoom: 1 shows it whole. The wheel in stops at the
-        // closest zoom; one more notch there goes back to the system.
-        public const double GalaxyFarthest = 0.6;
-        public const double GalaxyClosest = 16;
-        public const double GalaxyOverview = 1;
-
         // Closest the camera comes to the ground in A, and to a grid in B.
         public const double LowestAltitude = 25;
         public const double ClosestToGrid = 4;

@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Bal h\u00faz\u00e1s: g\u00f6mb forgat\u00e1sa   G\u00f6rg\u0151: nagy\u00edt\u00e1s   Kattint\u00e1s: kijel\u00f6l\u00e9s   Dupla kattint\u00e1s egy r\u00e1cson: forg\u00e1s k\u00f6r\u00fcl\u00f6tte   Dupla kattint\u00e1s egy \u00e9gitesten: odaugr\u00e1s" },
                 { "HelpPlanetLocked", "Bal húzás: forgás a rács kör\u00fcl   Görgő: nagyítás   Köz\u00e9pső húzás vagy WASD: elenged\u00e9s" },
                 { "HelpLocal", "Bal húzás: forgatás   Köz\u00e9pső húzás vagy WASD: mozgatás   Görgő: nagyítás   Dupla kattintás egy rácson: rep\u00fcl\u00e9s kör\u00fclötte" },
-                { "HelpLocked", "Bal húzás: forgás a rács kör\u00fcl   Görgő hátra: vissza a környezetedbe" },
+                { "HelpLocked", "Bal húzás: forgás a rács kör\u00fcl   Kattintás \u00fcres helyre, jobb kattintás vagy görgő: vissza a környezetedbe" },
                 { "HelpOrrery", "Bal húzás: forgatás   Köz\u00e9pső húzás vagy WASD: mozgatás   Görgő: nagyítás (Ctrl: rep\u00fcl\u00e9s)   Dupla kattintás: alámer\u00fcl\u00e9s" },
                 { "HelpBodies", "Kattintás: kijelöl\u00e9s   Dupla kattintás vagy görgő: gömb megnyitása" },
                 { "HelpGalaxy", "Görgő: nagyítás   Köz\u00e9pső húzás: mozgatás   Kattintás: r\u00e9szletek   Dupla kattintás: csatlakozás" },

@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Arrastrar con clic izquierdo: girar el globo   Rueda: zoom   Clic: seleccionar   Doble clic en una cuadr\u00edcula: girar alrededor   Doble clic en un astro: ir a \u00e9l" },
                 { "HelpPlanetLocked", "Arrastrar con clic izquierdo: girar alrededor de la cuadrícula   Rueda: zoom   Arrastrar con clic central o WASD: soltar" },
                 { "HelpLocal", "Arrastrar con clic izquierdo: girar   Arrastrar con clic central o WASD: mover   Rueda: zoom   Doble clic en una cuadrícula: volar alrededor" },
-                { "HelpLocked", "Arrastrar con clic izquierdo: girar alrededor de la cuadrícula   Rueda hacia atrás: volver a tu entorno" },
+                { "HelpLocked", "Arrastrar con clic izquierdo: girar alrededor de la cuadrícula   Clic en el vacío, clic derecho o rueda: volver a tu entorno" },
                 { "HelpOrrery", "Arrastrar con clic izquierdo: girar   Arrastrar con clic central o WASD: mover   Rueda: zoom (Ctrl: avanzar)   Doble clic: sumergirse" },
                 { "HelpBodies", "Clic: seleccionar   Doble clic o rueda: abrir el globo" },
                 { "HelpGalaxy", "Rueda: zoom   Arrastrar con clic central: mover   Clic: detalles   Doble clic: unirse al servidor" },

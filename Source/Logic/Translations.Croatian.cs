@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Lijevo povla\u010denje: okretanje globusa   Kota\u010di\u0107: zum   Klik: odabir   Dvostruki klik na mre\u017eu: okretanje oko nje   Dvostruki klik na nebesko tijelo: idi do njega" },
                 { "HelpPlanetLocked", "Lijevo povlačenje: okretanje oko mreže   Kotačić: zum   Srednje povlačenje ili WASD: pusti" },
                 { "HelpLocal", "Lijevo povlačenje: okretanje   Srednje povlačenje ili WASD: pomicanje   Kotačić: zum   Dvostruki klik na mrežu: let oko nje" },
-                { "HelpLocked", "Lijevo povlačenje: okretanje oko mreže   Kotačić unatrag: natrag u okolicu" },
+                { "HelpLocked", "Lijevo povlačenje: okretanje oko mreže   Klik u prazno, desni klik ili kotačić: natrag u okolicu" },
                 { "HelpOrrery", "Lijevo povlačenje: okretanje   Srednje povlačenje ili WASD: pomicanje   Kotačić: zum (Ctrl: let)   Dvostruki klik: zaroni" },
                 { "HelpBodies", "Klik: odabir   Dvostruki klik ili kotačić: otvori globus" },
                 { "HelpGalaxy", "Kotačić: zum   Srednje povlačenje: pomicanje   Klik: pojedinosti   Dvostruki klik: pridruži se poslužitelju" },

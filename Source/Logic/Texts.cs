@@ -277,7 +277,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Left drag: turn the globe   Wheel: zoom   Click: select   Double click a grid: turn around it   Double click a body: go to it" },
                 { "HelpPlanetLocked", "Left drag: turn around the grid   Wheel: zoom   Middle drag or WASD: let go" },
                 { "HelpLocal", "Left drag: turn   Middle drag or WASD: move   Wheel: zoom   Double click a grid: fly around it" },
-                { "HelpLocked", "Left drag: turn around the grid   Wheel out: back to your neighbourhood" },
+                { "HelpLocked", "Left drag: turn around the grid   Click on empty space, right click or wheel: back to your neighbourhood" },
                 { "HelpOrrery", "Left drag: turn   Middle drag or WASD: move   Wheel: zoom (Ctrl: fly)   Double click: dive" },
                 { "HelpBodies", "Click: select   Double click or wheel: open the globe" },
                 { "HelpGalaxy", "Wheel: zoom   Middle drag: move   Click: details   Double click: join the server" },

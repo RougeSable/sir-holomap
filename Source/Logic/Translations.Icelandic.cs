@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Draga me\u00f0 vinstri: sn\u00faa hnettinum   Hj\u00f3l: \u00feysja   Smella: velja   Tv\u00edsmella \u00e1 grind: sn\u00faa um hana   Tv\u00edsmella \u00e1 hn\u00f6tt: fara \u00feanga\u00f0" },
                 { "HelpPlanetLocked", "Draga með vinstri: snúa um grindina   Hjól: þysja   Draga með miðju eða WASD: sleppa" },
                 { "HelpLocal", "Draga með vinstri: snúa   Draga með miðju eða WASD: færa   Hjól: þysja   Tvísmella á grind: fljúga um hana" },
-                { "HelpLocked", "Draga með vinstri: snúa um grindina   Hjól til baka: aftur í umhverfið þitt" },
+                { "HelpLocked", "Draga með vinstri: snúa um grindina   Smellt á autt svæði, hægrismellur eða hjól: aftur í umhverfið þitt" },
                 { "HelpOrrery", "Draga með vinstri: snúa   Draga með miðju eða WASD: færa   Hjól: þysja (Ctrl: fljúga)   Tvísmella: kafa" },
                 { "HelpBodies", "Smella: velja   Tvísmella eða hjól: opna hnöttinn" },
                 { "HelpGalaxy", "Hjól: þysja   Draga með miðju: færa   Smella: nánar   Tvísmella: tengjast þjóninum" },

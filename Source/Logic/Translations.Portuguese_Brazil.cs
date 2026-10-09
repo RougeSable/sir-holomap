@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Arrastar com bot\u00e3o esquerdo: girar o globo   Roda: zoom   Clique: selecionar   Clique duplo em uma grade: girar em volta   Clique duplo em um astro: ir at\u00e9 ele" },
                 { "HelpPlanetLocked", "Arrastar com botão esquerdo: girar em volta da grade   Roda: zoom   Arrastar com botão do meio ou WASD: soltar" },
                 { "HelpLocal", "Arrastar com botão esquerdo: girar   Arrastar com botão do meio ou WASD: mover   Roda: zoom   Clique duplo em uma grade: voar em volta" },
-                { "HelpLocked", "Arrastar com botão esquerdo: girar em volta da grade   Roda para trás: voltar \u00e0 sua vizinhan\u00e7a" },
+                { "HelpLocked", "Arrastar com botão esquerdo: girar em volta da grade   Clique no vazio, clique direito ou roda: voltar \u00e0 sua vizinhan\u00e7a" },
                 { "HelpOrrery", "Arrastar com botão esquerdo: girar   Arrastar com botão do meio ou WASD: mover   Roda: zoom (Ctrl: avan\u00e7ar)   Clique duplo: mergulhar" },
                 { "HelpBodies", "Clique: selecionar   Clique duplo ou roda: abrir o globo" },
                 { "HelpGalaxy", "Roda: zoom   Arrastar com botão do meio: mover   Clique: detalhes   Clique duplo: entrar no servidor" },

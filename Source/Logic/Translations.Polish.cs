@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Przeci\u0105ganie LPM: obr\u00f3t globu   K\u00f3\u0142ko: przybli\u017cenie   Klik: wyb\u00f3r   Dwuklik na siatce: obr\u00f3t wok\u00f3\u0142 niej   Dwuklik na ciele niebieskim: przejd\u017a do niego" },
                 { "HelpPlanetLocked", "Przeciąganie LPM: obrót wokół siatki   Kółko: przybliżenie   Przeciąganie ŚPM lub WASD: puść" },
                 { "HelpLocal", "Przeciąganie LPM: obrót   Przeciąganie ŚPM lub WASD: ruch   Kółko: przybliżenie   Dwuklik na siatce: przelot wokół" },
-                { "HelpLocked", "Przeciąganie LPM: obrót wokół siatki   Kółko do tyłu: powrót do otoczenia" },
+                { "HelpLocked", "Przeciąganie LPM: obrót wokół siatki   Kliknięcie w pustkę, PPM lub kółko: powrót do otoczenia" },
                 { "HelpOrrery", "Przeciąganie LPM: obrót   Przeciąganie ŚPM lub WASD: ruch   Kółko: przybliżenie (Ctrl: lot)   Dwuklik: zanurz się" },
                 { "HelpBodies", "Klik: wybór   Dwuklik lub kółko: otwórz glob" },
                 { "HelpGalaxy", "Kółko: przybliżenie   Przeciąganie ŚPM: ruch   Klik: szczegóły   Dwuklik: dołącz do serwera" },

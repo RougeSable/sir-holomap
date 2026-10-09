@@ -22,9 +22,9 @@ namespace SirHolomap
     // the plane by a line that tells its height; grids move as they move in
     // the game. A double click on a grid in range fastens the camera to it,
     // close enough for the grid to fill the screen; on a remembered grid it
-    // centres the view on its marker. The wheel out lets go: over the planet
-    // the grid stands on (A, the grid still in the middle), or back over the
-    // player.
+    // centres the view on its marker. While a grid is followed the plane
+    // stays where it was; a simple click on empty space, a right click or
+    // the wheel lets go, back over the player.
     internal sealed class LocalView : MapView
     {
         // The plane is the same everywhere in the system: the world's
@@ -40,11 +40,26 @@ namespace SirHolomap
         private double m_yaw;
         private double m_pitch = 0.9;
         private double m_distance = 4000;
-        private double m_memoryStart = 300;
         private bool m_returnToSystem;
         private SystemTab m_returnTab;
         private readonly ZoomLadder m_ladder = new ZoomLadder(0, ZoomRung.Local);
         private Vector3D m_focus;
+
+        // The plane stays put while a grid is followed.
+        private readonly FollowPlane m_plane = new FollowPlane();
+        // The follow came from a dive in C: the wheel out goes back there.
+        private bool m_followFromSystem;
+        // The view over the player as it was before the double click, given
+        // back when the follow ends.
+        private bool m_hasBefore;
+        private double m_beforeYaw;
+        private double m_beforePitch;
+        private double m_beforeDistance;
+
+        // The frame drawn around the followed grid, on screen.
+        private bool m_frameShown;
+        private Vector2 m_frameAt;
+        private float m_frameSize;
 
         private readonly List<Marker> m_visible = new List<Marker>();
         private readonly List<Vector2> m_visibleAt = new List<Vector2>();
@@ -67,6 +82,12 @@ namespace SirHolomap
         public bool ReturnsToSystem
         {
             get { return m_returnToSystem; }
+        }
+
+        // The camera follows a grid, live or remembered.
+        public bool Following
+        {
+            get { return m_anchor == LocalAnchor.Grid || m_anchor == LocalAnchor.Memory; }
         }
 
         public override string Title
@@ -114,6 +135,9 @@ namespace SirHolomap
             // Nothing to fly around on a remembered grid: centred on it.
             if (anchor == LocalAnchor.Grid && grid != null && !grid.Live)
                 anchor = LocalAnchor.Memory;
+            m_plane.Release();
+            m_hasBefore = false;
+            m_followFromSystem = fromSystem && (anchor == LocalAnchor.Grid || anchor == LocalAnchor.Memory);
             m_anchor = anchor;
             m_body = body;
             m_grid = grid;
@@ -160,17 +184,47 @@ namespace SirHolomap
                         break;
                     case LocalAnchor.Memory:
                         m_distance = MemoryDistance(grid);
-                        m_memoryStart = m_distance;
                         break;
                     default:
-                        var sync = World.SyncRadius < double.MaxValue ? World.SyncRadius : 5000;
-                        m_distance = MathHelper.Clamp(sync * 1.1, 1500, 15000);
+                        m_distance = NeighbourhoodDistance();
                         break;
                 }
             }
-            if (anchor == LocalAnchor.Memory)
-                m_memoryStart = Math.Max(m_distance, 50);
             m_focus = AnchorPoint();
+            // Coming onto a grid from another view: the plane is laid through
+            // the grid as it is now, at the scale of the neighbourhood, and
+            // stays there while the camera follows it.
+            if (anchor == LocalAnchor.Grid)
+                m_plane.Keep(MapWorld.ToVec(m_focus), NeighbourhoodDistance());
+        }
+
+        private double NeighbourhoodDistance()
+        {
+            var sync = World.SyncRadius < double.MaxValue ? World.SyncRadius : 5000;
+            return MathHelper.Clamp(sync * 1.1, 1500, 15000);
+        }
+
+        // The plane as it is on screen now: through the point the camera
+        // looks at, at the height of the view's centre.
+        private void KeepPlaneAsShown()
+        {
+            m_plane.Keep(MapWorld.ToVec(LivePlaneOrigin()), Camera.Distance);
+        }
+
+        private Vector3D LivePlaneOrigin()
+        {
+            var focus = Camera.Focus;
+            return focus - Normal * Vector3D.Dot(focus - m_focus, Normal);
+        }
+
+        private Vector3D PlaneOrigin
+        {
+            get { return m_plane.Kept ? MapWorld.ToVector(m_plane.Origin) : LivePlaneOrigin(); }
+        }
+
+        private double PlaneDistance
+        {
+            get { return m_plane.DistanceOr(Camera.Distance); }
         }
 
         private static double LockDistance(Marker grid)
@@ -253,41 +307,25 @@ namespace SirHolomap
             {
                 var radius = m_grid != null ? Math.Max(m_grid.Radius, 3) : 20;
                 m_distance = Math.Max(m_distance, radius * 1.1 + MapScales.ClosestToGrid);
-                // Out far enough: let go.
-                if (m_distance > Math.Max(radius * 9, 400))
-                {
-                    LetGo();
-                    return;
-                }
-                // The grid left the range of the game: its memory stays.
+                // The grid left the range of the game: its memory stays, and
+                // the plane with it.
                 if (m_grid != null && !m_grid.Live)
-                {
                     m_anchor = LocalAnchor.Memory;
-                    m_memoryStart = Math.Max(m_distance, 50);
-                }
             }
             else if (m_anchor == LocalAnchor.Memory)
             {
-                // A remembered grid seen again: the camera fastens to it.
+                // A remembered grid seen again: the camera fastens to it, the
+                // plane staying where it is now.
                 if (m_grid != null && m_grid.Live)
                 {
+                    KeepPlaneAsShown();
                     m_anchor = LocalAnchor.Grid;
                     m_distance = Math.Min(m_distance, LockDistance(m_grid) * 2);
-                }
-                else if (m_distance > m_memoryStart * 5)
-                {
-                    if (m_returnToSystem)
-                    {
-                        m_returnToSystem = false;
-                        Map.GoSystem(m_returnTab, true);
-                        return;
-                    }
-                    BackToPlayer();
-                    return;
                 }
             }
             else
             {
+                m_plane.Release();
                 Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
                 var before = m_ladder.Rung;
                 var rung = m_ladder.Update(m_distance);
@@ -309,43 +347,62 @@ namespace SirHolomap
             Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
         }
 
-        // The wheel out of a fastened grid: back to the system the dive came
-        // from, else over the planet the grid stands on (the grid still in
-        // the middle), else over the player.
-        private void LetGo()
-        {
-            var grid = m_grid;
-            if (m_returnToSystem)
-            {
-                m_returnToSystem = false;
-                Map.GoSystem(m_returnTab, true);
-                return;
-            }
-            var planet = grid != null ? World.BodyAt(grid.Position, 1.6) : null;
-            if (planet != null)
-            {
-                Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
-                Map.GoPlanet(planet, false, true, grid);
-                return;
-            }
-            BackToPlayer();
-        }
-
+        // The end of a follow: the neighbourhood centred on the player, as it
+        // was before the double click when the follow started here. The
+        // camera only glides; nothing reaches the character.
         private void BackToPlayer()
         {
-            var grid = m_grid;
             m_anchor = LocalAnchor.Player;
             m_returnToSystem = false;
+            m_followFromSystem = false;
+            m_plane.Release();
             Configure(ZoomRung.Local);
-            var sync = World.SyncRadius < double.MaxValue ? World.SyncRadius : 5000;
-            m_distance = m_ladder.Entry(ZoomRung.Local, Math.Max(m_distance, MathHelper.Clamp(sync * 0.6, 800, 15000)));
-            Map.Selected = grid;
+            if (m_hasBefore)
+            {
+                m_yaw = m_beforeYaw;
+                m_pitch = m_beforePitch;
+                m_distance = m_ladder.Entry(ZoomRung.Local, m_beforeDistance);
+            }
+            else
+            {
+                var sync = World.SyncRadius < double.MaxValue ? World.SyncRadius : 5000;
+                m_pitch = MathHelper.Clamp(m_pitch, 0.08, 1.55);
+                m_distance = m_ladder.Entry(ZoomRung.Local, Math.Max(m_distance, MathHelper.Clamp(sync * 0.6, 800, 15000)));
+            }
+            m_hasBefore = false;
             m_focus = AnchorPoint();
             Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
         }
 
+        // A simple click on empty space, a right click or the wheel ends the
+        // follow. False when no grid was followed.
+        public bool StopFollowing()
+        {
+            if (!Following)
+                return false;
+            BackToPlayer();
+            return true;
+        }
+
         public override void Wheel(double notches, bool ctrl)
         {
+            if (Following)
+            {
+                // A dive from C goes back there when the wheel turns out;
+                // otherwise the wheel always brings back the neighbourhood of
+                // the player.
+                if (notches < 0 && m_followFromSystem && m_returnToSystem)
+                {
+                    m_followFromSystem = false;
+                    m_returnToSystem = false;
+                    m_plane.Release();
+                    Map.GoSystem(m_returnTab, true);
+                    return;
+                }
+                StopFollowing();
+                Map.Glide();
+                return;
+            }
             m_distance = MathHelper.Clamp(ZoomSteps.Apply(m_distance, notches), 2, 1e9);
         }
 
@@ -404,19 +461,34 @@ namespace SirHolomap
         {
             if (grid == null)
                 return;
+            if (!Following)
+            {
+                // Remembered to be given back when the follow ends.
+                m_hasBefore = true;
+                m_beforeYaw = m_yaw;
+                m_beforePitch = m_pitch;
+                m_beforeDistance = m_distance;
+                m_followFromSystem = false;
+                m_plane.Release();
+            }
             m_grid = grid;
             m_gridId = grid.Id;
             if (grid.Live)
             {
+                // The plane stays as it is on screen now, wherever the grid
+                // goes; following another grid keeps it there too.
+                KeepPlaneAsShown();
                 m_anchor = LocalAnchor.Grid;
                 m_distance = LockDistance(grid);
                 m_pitch = 0.45;
             }
             else
             {
+                // A remembered grid does not move: the plane is laid through
+                // its marker, which shows with its card.
+                m_plane.Release();
                 m_anchor = LocalAnchor.Memory;
                 m_distance = MemoryDistance(grid);
-                m_memoryStart = m_distance;
             }
         }
 
@@ -455,21 +527,28 @@ namespace SirHolomap
                     bestDistance = d;
                 }
             }
+            // Anywhere in the frame of the followed grid is the grid: only a
+            // click outside it, on empty space, ends the follow.
+            if (best == null && m_anchor == LocalAnchor.Grid && m_frameShown && m_grid != null
+                && FollowGestures.InsideFrame(mouse.X, mouse.Y, m_frameAt.X, m_frameAt.Y, m_frameSize, Gfx.Scale))
+                best = m_grid;
             return best;
         }
 
+        // Straight under (or over) a position, on the plane.
         private Vector3D Foot(Vector3D position)
         {
-            return position - Normal * Vector3D.Dot(position - m_focus, Normal);
+            return position - Normal * Vector3D.Dot(position - PlaneOrigin, Normal);
         }
 
         public override void DrawMap()
         {
             var focus = Camera.Focus;
-            PrepareOccluders(focus);
+            var planeOrigin = PlaneOrigin;
+            PrepareOccluders(planeOrigin);
             if (!RenderHooks.Active)
                 DrawPaintedBodies();
-            DrawPlane(focus, Camera.Distance);
+            DrawPlane(planeOrigin, PlaneDistance);
             DrawSyncRange();
             DrawBodies();
 
@@ -491,12 +570,14 @@ namespace SirHolomap
                 m_visibleAt.Add(at);
             }
 
-            // The height lines first, under every marker.
+            // The height lines first, under every marker. The followed grid
+            // has its own over the kept plane: it grows and shrinks as the
+            // grid climbs or sinks.
             var s = Gfx.Scale;
             for (var i = 0; i < m_visible.Count; i++)
             {
                 var marker = m_visible[i];
-                if (m_anchor == LocalAnchor.Grid && marker.Id == m_gridId)
+                if (m_anchor == LocalAnchor.Grid && marker.Id == m_gridId && !m_plane.Kept)
                     continue;
                 var foot = Foot(marker.Position);
                 var color = Gfx.Alpha(Style.MarkerColor(marker), marker.Live ? 0.75f : 0.4f);
@@ -508,6 +589,7 @@ namespace SirHolomap
             }
 
             var crowded = m_visible.Count > 30;
+            m_frameShown = false;
             for (var i = 0; i < m_visible.Count; i++)
             {
                 var marker = m_visible[i];
@@ -521,6 +603,9 @@ namespace SirHolomap
                     {
                         var size = (float)(marker.Radius * 2 * Camera.PixelsPerMetre(depth));
                         Gfx.Brackets(at, size, size, Math.Max(1.5f, 2 * s), Gfx.Alpha(Style.Selection, 0.8f));
+                        m_frameShown = true;
+                        m_frameAt = at;
+                        m_frameSize = size;
                     }
                     continue;
                 }

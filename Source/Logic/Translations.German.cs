@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Linke Maustaste ziehen: Globus drehen   Mausrad: Zoom   Klick: ausw\u00e4hlen   Doppelklick auf ein Grid: darum drehen   Doppelklick auf einen Himmelsk\u00f6rper: dorthin wechseln" },
                 { "HelpPlanetLocked", "Linke Maustaste ziehen: um das Grid drehen   Mausrad: Zoom   Mittlere Maustaste ziehen oder WASD: loslassen" },
                 { "HelpLocal", "Linke Maustaste ziehen: drehen   Mittlere Maustaste ziehen oder WASD: bewegen   Mausrad: Zoom   Doppelklick auf ein Grid: darum fliegen" },
-                { "HelpLocked", "Linke Maustaste ziehen: um das Grid drehen   Mausrad zur\u00fcck: zur\u00fcck zu deiner Umgebung" },
+                { "HelpLocked", "Linke Maustaste ziehen: um das Grid drehen   Klick ins Leere, Rechtsklick oder Mausrad: zur\u00fcck zu deiner Umgebung" },
                 { "HelpOrrery", "Linke Maustaste ziehen: drehen   Mittlere Maustaste ziehen oder WASD: bewegen   Mausrad: Zoom (Strg: fliegen)   Doppelklick: eintauchen" },
                 { "HelpBodies", "Klick: auswählen   Doppelklick oder Mausrad: Globus öffnen" },
                 { "HelpGalaxy", "Mausrad: Zoom   Mittlere Maustaste ziehen: bewegen   Klick: Details   Doppelklick: Server beitreten" },

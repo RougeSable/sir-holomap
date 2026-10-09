@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "\u5de6\u30c9\u30e9\u30c3\u30b0\uff1a\u5730\u7403\u5100\u3092\u56de\u3059   \u30db\u30a4\u30fc\u30eb\uff1a\u30ba\u30fc\u30e0   \u30af\u30ea\u30c3\u30af\uff1a\u9078\u629e   \u30b0\u30ea\u30c3\u30c9\u3092\u30c0\u30d6\u30eb\u30af\u30ea\u30c3\u30af\uff1a\u305d\u306e\u5468\u308a\u3092\u56de\u308b   \u5929\u4f53\u3092\u30c0\u30d6\u30eb\u30af\u30ea\u30c3\u30af\uff1a\u305d\u3053\u3078\u79fb\u52d5" },
                 { "HelpPlanetLocked", "左ドラッグ：グリッドの周りを回る   ホイール：ズーム   中ドラッグまたは WASD：解除" },
                 { "HelpLocal", "左ドラッグ：回転   中ドラッグまたは WASD：移動   ホイール：ズーム   グリッドをダブルクリック：その周りを飛ぶ" },
-                { "HelpLocked", "左ドラッグ：グリッドの周りを回る   ホイールを戻す：周辺に戻る" },
+                { "HelpLocked", "左ドラッグ：グリッドの周りを回る   空白をクリック、右クリック、ホイール：周辺に戻る" },
                 { "HelpOrrery", "左ドラッグ：回転   中ドラッグまたは WASD：移動   ホイール：ズーム（Ctrl：前進）   ダブルクリック：ダイブ" },
                 { "HelpBodies", "クリック：選択   ダブルクリックまたはホイール：地球儀を開く" },
                 { "HelpGalaxy", "ホイール：ズーム   中ドラッグ：移動   クリック：詳細   ダブルクリック：サーバーに参加" },

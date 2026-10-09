@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Vasak lohistus: p\u00f6\u00f6ra gloobust   Ratas: suumi   Kl\u00f5ps: vali   Topeltkl\u00f5ps v\u00f5restikul: p\u00f6\u00f6ra selle \u00fcmber   Topeltkl\u00f5ps taevakehal: mine selle juurde" },
                 { "HelpPlanetLocked", "Vasak lohistus: pööra \u00fcmber võrestiku   Ratas: suumi   Keskmine lohistus või WASD: vabasta" },
                 { "HelpLocal", "Vasak lohistus: pööra   Keskmine lohistus või WASD: liiguta   Ratas: suumi   Topeltklõps võrestikul: lenda \u00fcmber" },
-                { "HelpLocked", "Vasak lohistus: pööra \u00fcmber võrestiku   Ratas tagasi: tagasi oma \u00fcmbrusse" },
+                { "HelpLocked", "Vasak lohistus: pööra \u00fcmber võrestiku   Klõps t\u00fchjale alale, paremklõps või ratas: tagasi oma \u00fcmbrusse" },
                 { "HelpOrrery", "Vasak lohistus: pööra   Keskmine lohistus või WASD: liiguta   Ratas: suumi (Ctrl: lenda)   Topeltklõps: sukeldu" },
                 { "HelpBodies", "Klõps: vali   Topeltklõps või ratas: ava gloobus" },
                 { "HelpGalaxy", "Ratas: suumi   Keskmine lohistus: liiguta   Klõps: \u00fcksikasjad   Topeltklõps: liitu serveriga" },

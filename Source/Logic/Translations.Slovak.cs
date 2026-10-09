@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "\u0164ahanie \u013eav\u00fdm: ot\u00e1\u010da\u0165 gl\u00f3bus   Koliesko: pribl\u00ed\u017eenie   Klik: vybra\u0165   Dvojklik na mrie\u017eku: ot\u00e1\u010da\u0165 okolo nej   Dvojklik na teleso: prejs\u0165 na\u0148" },
                 { "HelpPlanetLocked", "Ťahanie ľavým: otáčanie okolo mriežky   Koliesko: priblíženie   Ťahanie stredným alebo WASD: pustiť" },
                 { "HelpLocal", "Ťahanie ľavým: otáčať   Ťahanie stredným alebo WASD: posun   Koliesko: priblíženie   Dvojklik na mriežku: lietať okolo" },
-                { "HelpLocked", "Ťahanie ľavým: otáčanie okolo mriežky   Koliesko späť: späť do okolia" },
+                { "HelpLocked", "Ťahanie ľavým: otáčanie okolo mriežky   Klik do prázdna, pravý klik alebo koliesko: späť do okolia" },
                 { "HelpOrrery", "Ťahanie ľavým: otáčať   Ťahanie stredným alebo WASD: posun   Koliesko: priblíženie (Ctrl: letieť)   Dvojklik: ponoriť sa" },
                 { "HelpBodies", "Klik: vybrať   Dvojklik alebo koliesko: otvoriť glóbus" },
                 { "HelpGalaxy", "Koliesko: priblíženie   Ťahanie stredným: posun   Klik: podrobnosti   Dvojklik: pripojiť sa" },

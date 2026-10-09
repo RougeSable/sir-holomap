@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Clic gauche gliss\u00e9 : tourner le globe   Molette : zoom   Clic : s\u00e9lectionner   Double-clic sur une grille : tourner autour   Double-clic sur un astre : y aller" },
                 { "HelpPlanetLocked", "Clic gauche gliss\u00e9 : tourner autour de la grille   Molette : zoom   Clic molette gliss\u00e9 ou ZQSD : l\u00e2cher" },
                 { "HelpLocal", "Clic gauche gliss\u00e9 : tourner   Clic molette gliss\u00e9 ou ZQSD : d\u00e9placer   Molette : zoom   Double-clic sur une grille : voler autour" },
-                { "HelpLocked", "Clic gauche gliss\u00e9 : tourner autour de la grille   Molette arri\u00e8re : retour \u00e0 votre voisinage" },
+                { "HelpLocked", "Clic gauche gliss\u00e9 : tourner autour de la grille   Clic dans le vide, clic droit ou molette : retour \u00e0 votre voisinage" },
                 { "HelpOrrery", "Clic gauche gliss\u00e9 : tourner   Clic molette gliss\u00e9 ou ZQSD : d\u00e9placer   Molette : zoom (Ctrl : avancer)   Double-clic : plonger" },
                 { "HelpBodies", "Clic : s\u00e9lectionner   Double-clic ou molette : ouvrir le globe" },
                 { "HelpGalaxy", "Molette : zoom   Clic molette gliss\u00e9 : d\u00e9placer   Clic : d\u00e9tails   Double-clic : rejoindre le serveur" },

@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "\u5de6\u952e\u62d6\u52a8\uff1a\u65cb\u8f6c\u5730\u7403\u4eea   \u6eda\u8f6e\uff1a\u7f29\u653e   \u5355\u51fb\uff1a\u9009\u62e9   \u53cc\u51fb\u7f51\u683c\uff1a\u7ed5\u5176\u65cb\u8f6c   \u53cc\u51fb\u5929\u4f53\uff1a\u524d\u5f80\u8be5\u5929\u4f53" },
                 { "HelpPlanetLocked", "左键拖动：绕网格旋转   滚轮：缩放   中键拖动或 WASD：松开" },
                 { "HelpLocal", "左键拖动：旋转   中键拖动或 WASD：移动   滚轮：缩放   双击网格：绕其飞行" },
-                { "HelpLocked", "左键拖动：绕网格旋转   向后滚动：回到你的周边" },
+                { "HelpLocked", "左键拖动：绕网格旋转   点击空白处、右键或滚轮：回到你的周边" },
                 { "HelpOrrery", "左键拖动：旋转   中键拖动或 WASD：移动   滚轮：缩放（Ctrl：飞行）   双击：深入" },
                 { "HelpBodies", "单击：选择   双击或滚轮：打开地球仪" },
                 { "HelpGalaxy", "滚轮：缩放   中键拖动：移动   单击：详情   双击：加入服务器" },

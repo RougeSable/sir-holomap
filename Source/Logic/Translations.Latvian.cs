@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Kreis\u0101 vilk\u0161ana: griezt globusu   Ritenis: t\u0101lummai\u0146a   Klik\u0161\u0137is: atlas\u012bt   Dubultklik\u0161\u0137is uz re\u017e\u0123a: griezties ap to   Dubultklik\u0161\u0137is uz debess \u0137erme\u0146a: doties uz to" },
                 { "HelpPlanetLocked", "Kreisā vilkšana: griezties ap režģi   Ritenis: tālummaiņa   Vidējā vilkšana vai WASD: atlaist" },
                 { "HelpLocal", "Kreisā vilkšana: griezt   Vidējā vilkšana vai WASD: pārvietot   Ritenis: tālummaiņa   Dubultklikšķis uz režģa: lidot ap to" },
-                { "HelpLocked", "Kreisā vilkšana: griezties ap režģi   Ritenis atpakaļ: atpakaļ uz apkārtni" },
+                { "HelpLocked", "Kreisā vilkšana: griezties ap režģi   Klikšķis tukšumā, labais klikšķis vai ritenis: atpakaļ uz apkārtni" },
                 { "HelpOrrery", "Kreisā vilkšana: griezt   Vidējā vilkšana vai WASD: pārvietot   Ritenis: tālummaiņa (Ctrl: lidot)   Dubultklikšķis: ienirt" },
                 { "HelpBodies", "Klikšķis: atlasīt   Dubultklikšķis vai ritenis: atvērt globusu" },
                 { "HelpGalaxy", "Ritenis: tālummaiņa   Vidējā vilkšana: pārvietot   Klikšķis: sīkāk   Dubultklikšķis: pievienoties serverim" },

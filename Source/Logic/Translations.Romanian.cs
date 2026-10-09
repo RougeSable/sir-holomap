@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Tragere st\u00e2nga: rote\u0219te globul   Roti\u021b\u0103: zoom   Clic: selecteaz\u0103   Dublu clic pe o gril\u0103: rotire \u00een jurul ei   Dublu clic pe un astru: mergi la el" },
                 { "HelpPlanetLocked", "Tragere st\u00e2nga: rotire \u00een jurul grilei   Rotiță: zoom   Tragere mijloc sau WASD: eliberează" },
                 { "HelpLocal", "Tragere st\u00e2nga: rotește   Tragere mijloc sau WASD: mută   Rotiță: zoom   Dublu clic pe o grilă: zbor \u00een jurul ei" },
-                { "HelpLocked", "Tragere st\u00e2nga: rotire \u00een jurul grilei   Rotiță \u00eenapoi: \u00eenapoi la \u00eemprejurimi" },
+                { "HelpLocked", "Tragere st\u00e2nga: rotire \u00een jurul grilei   Clic \u00een gol, clic dreapta sau rotiță: \u00eenapoi la \u00eemprejurimi" },
                 { "HelpOrrery", "Tragere st\u00e2nga: rotește   Tragere mijloc sau WASD: mută   Rotiță: zoom (Ctrl: zbor)   Dublu clic: plonjează" },
                 { "HelpBodies", "Clic: selectează   Dublu clic sau rotiță: deschide globul" },
                 { "HelpGalaxy", "Rotiță: zoom   Tragere mijloc: mută   Clic: detalii   Dublu clic: intră pe server" },

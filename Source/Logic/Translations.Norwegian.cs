@@ -110,7 +110,7 @@ namespace SirHolomap
                 { "HelpPlanet", "Dra med venstre: snu globusen   Hjul: zoom   Klikk: velg   Dobbeltklikk p\u00e5 et grid: snu rundt det   Dobbeltklikk p\u00e5 et himmellegeme: g\u00e5 dit" },
                 { "HelpPlanetLocked", "Dra med venstre: snu rundt griddet   Hjul: zoom   Dra med midtre eller WASD: slipp" },
                 { "HelpLocal", "Dra med venstre: snu   Dra med midtre eller WASD: flytt   Hjul: zoom   Dobbeltklikk på et grid: fly rundt det" },
-                { "HelpLocked", "Dra med venstre: snu rundt griddet   Hjul tilbake: tilbake til omgivelsene" },
+                { "HelpLocked", "Dra med venstre: snu rundt griddet   Klikk i tomrommet, høyreklikk eller hjul: tilbake til omgivelsene" },
                 { "HelpOrrery", "Dra med venstre: snu   Dra med midtre eller WASD: flytt   Hjul: zoom (Ctrl: fly)   Dobbeltklikk: dykk ned" },
                 { "HelpBodies", "Klikk: velg   Dobbeltklikk eller hjul: åpne globusen" },
                 { "HelpGalaxy", "Hjul: zoom   Dra med midtre: flytt   Klikk: detaljer   Dobbeltklikk: koble til serveren" },

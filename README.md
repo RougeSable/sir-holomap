@@ -40,9 +40,12 @@ gestures:
   view; a click highlights one. A double
   click on a grid in range fastens the camera to it, and the game draws it
   filling the screen; on a remembered grid, the view centres on its marker
-  and its info says it is out of range. The wheel out lets go: over the
-  planet the grid stands on (the planet view, the grid still in the middle,
-  also with the Planet button), or back over you.
+  and its info says it is out of range. While the camera follows a grid,
+  the plane stays where it was before the double click, and the grid's
+  height line grows and shrinks as it climbs or sinks. A simple click on
+  empty space outside the grid's frame, a right click or the wheel lets go,
+  back over you; a left drag only turns around the grid. The Planet button
+  keeps a grid near a planet in the middle of its globe.
 - **System.** Three tabs: the planets and their moons laid flat by
   distance to the centre of the world; the system in 3D with true distances
   and enlarged bodies, the sun marked on the edge of the screen in its true

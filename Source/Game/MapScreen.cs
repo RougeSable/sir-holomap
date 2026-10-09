@@ -56,6 +56,8 @@ namespace SirHolomap
         private Vector2 m_pressAt;
         private bool m_leftOnMap;
         private bool m_middleOnMap;
+        private Vector2 m_rightPressAt;
+        private bool m_rightOnMap;
         private bool m_dragging;
         private string m_help;
 
@@ -296,7 +298,7 @@ namespace SirHolomap
             }
             if (m_leftOnMap && input.IsLeftMousePressed())
             {
-                if (!m_dragging && (mouse - m_pressAt).Length() > 5 * Gfx.Scale)
+                if (!m_dragging && !FollowGestures.IsClick(m_pressAt.X, m_pressAt.Y, mouse.X, mouse.Y, Gfx.Scale))
                 {
                     m_dragging = true;
                     m_clicks.Cancel();
@@ -324,8 +326,23 @@ namespace SirHolomap
             else
                 m_middleOnMap = false;
 
-            if (input.IsNewRightMousePressed() && OverMap(mouse))
-                Selected = null;
+            // Right button: a simple click clears the selection and ends the
+            // follow of a grid; the game never sees it.
+            if (input.IsNewRightMousePressed())
+            {
+                m_rightPressAt = mouse;
+                m_rightOnMap = OverMap(mouse);
+                if (m_rightOnMap)
+                    Selected = null;
+            }
+            if (m_rightOnMap && input.IsRightMousePressed()
+                && !FollowGestures.IsClick(m_rightPressAt.X, m_rightPressAt.Y, mouse.X, mouse.Y, Gfx.Scale))
+                m_rightOnMap = false;
+            if (m_rightOnMap && input.IsNewRightMouseReleased())
+            {
+                m_rightOnMap = false;
+                StopFollowing();
+            }
 
             var wheel = input.DeltaMouseScrollWheelValue();
             if (wheel != 0)
@@ -364,10 +381,27 @@ namespace SirHolomap
 
         private void DoubleClick(object target)
         {
-            if (target == null || ReferenceEquals(target, Nothing))
+            if (target == null)
                 return;
+            // Two quick clicks on empty space are still clicks on nothing.
+            if (ReferenceEquals(target, Nothing))
+            {
+                Selected = null;
+                StopFollowing();
+                return;
+            }
             Selected = target;
             View.DoubleClick(target);
+        }
+
+        // Back to the neighbourhood centred on the player, gliding, when a
+        // grid is followed in B.
+        private void StopFollowing()
+        {
+            if (Mode != MapMode.Local || !LocalMode.StopFollowing())
+                return;
+            Selected = null;
+            StartTransition();
         }
 
         private bool OverMap(Vector2 mouse)
@@ -521,7 +555,13 @@ namespace SirHolomap
 
             object clicked;
             if (m_clicks.Poll(Time, out clicked) == ClickKind.Single)
+            {
                 Selected = ReferenceEquals(clicked, Nothing) ? null : clicked;
+                // A simple click on empty space, outside the frame of the
+                // followed grid, lets go of it.
+                if (ReferenceEquals(clicked, Nothing))
+                    StopFollowing();
+            }
 
             Camera.SetLens(RenderHooks.LastFov, Gfx.Width / Gfx.Height);
             Camera.HalfLife = Time < m_transitionUntil ? MapCamera.TransitionHalfLife : MapCamera.QuickHalfLife;

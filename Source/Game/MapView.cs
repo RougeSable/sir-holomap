@@ -114,16 +114,24 @@ namespace SirHolomap
                 return Settings.ShowGps;
             if (!marker.Live && !Settings.ShowMemories)
                 return false;
-            switch (marker.Kind)
+            if (marker.Kind == ContactKind.Character)
+                return Settings.ShowPlayers;
+            return GridListing.Shown(marker.Blocks, threshold, marker.SubGrid) && KindShown(marker.Kind);
+        }
+
+        // The boxes of the panel: which kinds of grids are shown.
+        protected bool KindShown(ContactKind kind)
+        {
+            switch (kind)
             {
+                case ContactKind.Station:
+                    return Settings.ShowStations;
+                case ContactKind.LargeShip:
+                    return Settings.ShowShips;
                 case ContactKind.Character:
                     return Settings.ShowPlayers;
-                case ContactKind.Station:
-                    return Settings.ShowStations && marker.Blocks >= threshold;
-                case ContactKind.LargeShip:
-                    return Settings.ShowShips && marker.Blocks >= threshold;
                 default:
-                    return Settings.ShowSmallGrids && marker.Blocks >= threshold;
+                    return Settings.ShowSmallGrids;
             }
         }
 

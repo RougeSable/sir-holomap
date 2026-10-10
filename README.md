@@ -40,7 +40,12 @@ gestures:
   height. The planets and moons hide the plane, and so do the characters of
   the players, yours included: whatever part of it passes inside a body or a
   character, or behind it, is not drawn. The menu lists the grids in
-  view; a click highlights one. A click on a planet or a moon in sight shows
+  view; a click highlights one. A grid with parts on rotors, pistons, hinges
+  or wheels takes one line, under the name of its main grid; two ships locked
+  by connectors keep a line each. The boxes of the menu (bases, large ships,
+  small grids) and the block threshold apply to the view as well: a grid left
+  out of the list is not drawn either, on your screen only, until the box is
+  ticked again or the map closes. A click on a planet or a moon in sight shows
   it in the menu; a double click glides the camera over to its globe, in the
   planet view, and the menu presents that body. A double
   click on a grid in range fastens the camera to it, and the game draws it

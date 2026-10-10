@@ -134,6 +134,14 @@ namespace SirHolomap
             Active = false;
             Jump = false;
             Daylight = false;
+            // The grids hidden for the map are always shown again with it.
+            try
+            {
+                GridHiding.RestoreAll();
+            }
+            catch (Exception)
+            {
+            }
         }
     }
 }

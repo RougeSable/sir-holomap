@@ -33,6 +33,10 @@ namespace SirHolomap
         public double Radius;
         public Vec3 Position;
         public string Body;
+
+        // Held by a rotor, piston, hinge or wheel suspension of another grid:
+        // listed under its parent, never on its own line.
+        public bool SubGrid;
     }
 
     // One remembered thing. Live while the game sends it to the player, a
@@ -48,6 +52,7 @@ namespace SirHolomap
         public double Radius;
         public Vec3 Position;
         public DateTime LastSeenUtc;
+        public bool SubGrid;
 
         // Empty when the contact is not near a planet.
         public string Body = "";
@@ -127,6 +132,7 @@ namespace SirHolomap
             }
             else if (contact.Position.DistanceTo(sighting.Position) > 1.0
                 || contact.Blocks != sighting.Blocks
+                || contact.SubGrid != sighting.SubGrid
                 || contact.Relation != sighting.Relation
                 || contact.Kind != sighting.Kind
                 || !string.Equals(contact.Name, sighting.Name ?? "", StringComparison.Ordinal))
@@ -138,6 +144,7 @@ namespace SirHolomap
             contact.Kind = sighting.Kind;
             contact.Relation = sighting.Relation;
             contact.Blocks = sighting.Blocks;
+            contact.SubGrid = sighting.SubGrid;
             contact.Radius = sighting.Radius;
             contact.Position = sighting.Position;
             contact.Body = Clean(sighting.Body);
@@ -230,7 +237,8 @@ namespace SirHolomap
                     .Append(c.Position.Z.ToString("R", CultureInfo.InvariantCulture)).Append('\t')
                     .Append(c.LastSeenUtc.Ticks.ToString(CultureInfo.InvariantCulture)).Append('\t')
                     .Append(Clean(c.Body)).Append('\t')
-                    .Append(Clean(c.Name)).Append('\n');
+                    .Append(Clean(c.Name)).Append('\t')
+                    .Append(c.SubGrid ? "1" : "0").Append('\n');
             }
             return text.ToString();
         }
@@ -281,6 +289,7 @@ namespace SirHolomap
                     LastSeenUtc = new DateTime(ticks, DateTimeKind.Utc),
                     Body = parts[9],
                     Name = parts[10],
+                    SubGrid = parts.Length > 11 && parts[11].Trim() == "1",
                 };
             }
             return memory;

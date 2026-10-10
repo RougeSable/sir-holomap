@@ -49,6 +49,9 @@ namespace SirHolomap
         public Vector3 Velocity;
         public double Radius;
         public int Blocks;
+        public bool SubGrid;
+        // The parent grid of a live sub-grid, 0 otherwise.
+        public long ParentId;
         public bool Live;
         public DateTime LastSeenUtc;
         public string Body = "";
@@ -151,6 +154,7 @@ namespace SirHolomap
             m_bodyCache.Clear();
             Markers.Clear();
             m_markerCache.Clear();
+            m_parentOf.Clear();
         }
 
         public void SaveMemory()
@@ -230,6 +234,7 @@ namespace SirHolomap
             m_players.Clear();
             MyAPIGateway.Players.GetPlayers(m_players);
 
+            m_parentOf.Clear();
             Memory.BeginScan();
             foreach (var entity in m_entities)
             {
@@ -258,6 +263,7 @@ namespace SirHolomap
                 sighting.Name = grid.CustomName ?? grid.DisplayName ?? "";
                 sighting.Blocks = full != null ? full.BlocksCount : 1;
                 sighting.Radius = volume.Radius;
+                sighting.SubGrid = ParentOf(grid) != grid.EntityId;
                 sighting.Position = ToVec(volume.Center);
                 sighting.Kind = grid.IsStatic ? ContactKind.Station
                     : grid.GridSizeEnum == MyCubeSize.Large ? ContactKind.LargeShip : ContactKind.SmallShip;
@@ -294,6 +300,66 @@ namespace SirHolomap
                 return true;
             }
             return false;
+        }
+
+        // The parent of the grid's mechanical group (rotors, pistons, hinges,
+        // wheel suspensions): the grid itself when it stands alone or is the
+        // parent. A ship locked by a connector is not in the group of the
+        // other ship: each keeps its own line.
+        private long ParentOf(IMyCubeGrid grid)
+        {
+            long parent;
+            if (m_parentOf.TryGetValue(grid.EntityId, out parent))
+                return parent;
+            parent = grid.EntityId;
+            try
+            {
+                var groups = MyAPIGateway.GridGroups;
+                if (groups != null)
+                {
+                    m_group.Clear();
+                    groups.GetGroup(grid, GridLinkTypeEnum.Mechanical, m_group);
+                    if (m_group.Count > 1)
+                    {
+                        m_parts.Clear();
+                        foreach (var member in m_group)
+                        {
+                            if (member == null)
+                                continue;
+                            var full = member as MyCubeGrid;
+                            m_parts.Add(new GridPart(member.EntityId, full != null ? full.BlocksCount : 1, member.IsStatic));
+                        }
+                        var found = GridListing.Parent(m_parts);
+                        if (found != 0)
+                        {
+                            parent = found;
+                            foreach (var part in m_parts)
+                                m_parentOf[part.Id] = parent;
+                        }
+                        m_parts.Clear();
+                    }
+                    m_group.Clear();
+                }
+            }
+            catch (Exception)
+            {
+                parent = grid.EntityId;
+            }
+            m_parentOf[grid.EntityId] = parent;
+            return parent;
+        }
+
+        // The parent of each grid seen at the last scan, by id. A grid alone
+        // is not in it, or is its own parent.
+        private readonly Dictionary<long, long> m_parentOf = new Dictionary<long, long>();
+        private readonly List<IMyCubeGrid> m_group = new List<IMyCubeGrid>();
+        private readonly List<GridPart> m_parts = new List<GridPart>();
+
+        // The parent grid of a live grid, 0 when it is not part of a group.
+        public long ParentId(long id)
+        {
+            long parent;
+            return m_parentOf.TryGetValue(id, out parent) && parent != id ? parent : 0;
         }
 
         private ContactRelation RelationOf(long owner)
@@ -514,6 +580,8 @@ namespace SirHolomap
                 marker.Relation = contact.Relation;
                 marker.Name = contact.Name;
                 marker.Blocks = contact.Blocks;
+                marker.SubGrid = contact.SubGrid;
+                marker.ParentId = contact.IsLive ? ParentId(contact.Id) : 0;
                 marker.Radius = contact.Radius;
                 marker.LastSeenUtc = contact.LastSeenUtc;
                 marker.Body = contact.Body;

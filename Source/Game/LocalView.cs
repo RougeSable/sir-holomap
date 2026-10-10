@@ -66,6 +66,7 @@ namespace SirHolomap
 
         private readonly List<Marker> m_visible = new List<Marker>();
         private readonly List<Vector2> m_visibleAt = new List<Vector2>();
+        private readonly List<float> m_visibleRadius = new List<float>();
 
         // The planets and moons in sight: a click shows one in the menu, a
         // double click glides over to its globe, in the planet view.
@@ -578,13 +579,18 @@ namespace SirHolomap
 
             m_visible.Clear();
             m_visibleAt.Clear();
+            m_visibleRadius.Clear();
             var threshold = Settings.SpaceBlockThreshold;
             var reach = Camera.Distance * 8;
             foreach (var marker in World.Markers)
             {
                 if (!Passes(marker, threshold))
                     continue;
-                if (Vector3D.DistanceSquared(marker.Position, focus) > reach * reach)
+                // A live grid is drawn by the game wherever it is: it keeps
+                // its marker and its line however far it is. Memories and GPS
+                // points far from the view are left out.
+                var drawnByGame = marker.Live && marker.IsGrid && RenderHooks.Active;
+                if (!drawnByGame && Vector3D.DistanceSquared(marker.Position, focus) > reach * reach)
                     continue;
                 Vector2 at;
                 double depth;
@@ -592,6 +598,7 @@ namespace SirHolomap
                     continue;
                 m_visible.Add(marker);
                 m_visibleAt.Add(at);
+                m_visibleRadius.Add(marker.IsGrid ? (float)(marker.Radius * Camera.PixelsPerMetre(depth)) : 0f);
             }
 
             // The height lines first, under every marker. The followed grid
@@ -1091,7 +1098,7 @@ namespace SirHolomap
             var remembered = 0;
             foreach (var marker in World.Markers)
             {
-                if (marker.IsSelf || marker.IsGps)
+                if (marker.IsSelf || marker.IsGps || marker.SubGrid)
                     continue;
                 if (marker.Live)
                     live++;
@@ -1114,6 +1121,37 @@ namespace SirHolomap
         }
 
         private readonly List<Marker> m_list = new List<Marker>();
+        private readonly Dictionary<long, Marker> m_byId = new Dictionary<long, Marker>();
+
+        // The live grids the game must not draw in this view: those the boxes
+        // or the block threshold leave out, so that the view and the list
+        // agree. A sub-grid goes with its parent: a rover's wheels are drawn
+        // when the rover is, and only then.
+        public void CollectHidden(HashSet<long> hide)
+        {
+            hide.Clear();
+            m_byId.Clear();
+            foreach (var marker in World.Markers)
+            {
+                if (marker.Live && marker.IsGrid && !marker.IsSelf)
+                    m_byId[marker.Id] = marker;
+            }
+            var threshold = Settings.SpaceBlockThreshold;
+            foreach (var marker in m_byId.Values)
+            {
+                Marker parent = null;
+                if (marker.SubGrid && marker.ParentId != 0)
+                    m_byId.TryGetValue(marker.ParentId, out parent);
+                var whole = parent ?? marker;
+                // A sub-grid whose parent is unknown is drawn as the game
+                // draws it: never hidden on a guess.
+                if (marker.SubGrid && parent == null)
+                    continue;
+                if (!KindShown(whole.Kind) || !GridListing.Shown(whole.Blocks, threshold, false))
+                    hide.Add(marker.Id);
+            }
+            m_byId.Clear();
+        }
 
         // The grids on screen, closest to the player first. Clicking one
         // shows it on the map.
@@ -1124,7 +1162,7 @@ namespace SirHolomap
             {
                 var marker = m_visible[i];
                 var at = m_visibleAt[i];
-                if (marker.IsSelf || at.X < 0 || at.Y < 0 || at.X > Map.PanelLeft || at.Y > Gfx.Height)
+                if (marker.IsSelf || !GridListing.OnScreen(at.X, at.Y, m_visibleRadius[i], 0, 0, Map.PanelLeft, Gfx.Height))
                     continue;
                 m_list.Add(marker);
             }

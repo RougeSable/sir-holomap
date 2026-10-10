@@ -529,6 +529,8 @@ namespace SirHolomap
             return false;
         }
 
+        private readonly HashSet<long> m_hiddenGrids = new HashSet<long>();
+
         public void SettingsChanged()
         {
             m_settingsDirty = true;
@@ -606,6 +608,17 @@ namespace SirHolomap
             RenderHooks.Daylight = Mode == MapMode.Planet && Settings.DaylightGlobe;
             var light = Camera.Forward * 0.8 - Camera.Up * 0.45 + Camera.Right * 0.4;
             RenderHooks.LightDirection = Vector3D.Normalize(light);
+
+            // In near space, the grids the boxes leave out are not drawn by
+            // the game either. Any other view shows them all again.
+            var local = view as LocalView;
+            if (RenderHooks.Active && local != null)
+            {
+                local.CollectHidden(m_hiddenGrids);
+                GridHiding.Apply(m_hiddenGrids);
+            }
+            else
+                GridHiding.RestoreAll();
 
             if (m_settingsDirty && Time > m_settingsSaveAt)
             {

@@ -49,6 +49,7 @@ namespace SirHolomap
         public Vector3 Velocity;
         public double Radius;
         public int Blocks;
+        public bool SubGrid;
         public bool Live;
         public DateTime LastSeenUtc;
         public string Body = "";
@@ -258,6 +259,7 @@ namespace SirHolomap
                 sighting.Name = grid.CustomName ?? grid.DisplayName ?? "";
                 sighting.Blocks = full != null ? full.BlocksCount : 1;
                 sighting.Radius = volume.Radius;
+                sighting.SubGrid = IsSubGrid(grid);
                 sighting.Position = ToVec(volume.Center);
                 sighting.Kind = grid.IsStatic ? ContactKind.Station
                     : grid.GridSizeEnum == MyCubeSize.Large ? ContactKind.LargeShip : ContactKind.SmallShip;
@@ -295,6 +297,37 @@ namespace SirHolomap
             }
             return false;
         }
+
+        // True when the grid is held by a rotor, a piston, a hinge or a wheel
+        // suspension of another grid: a moving part of a larger whole, listed
+        // under its parent. A ship locked by a connector is not one.
+        private bool IsSubGrid(IMyCubeGrid grid)
+        {
+            try
+            {
+                var groups = MyAPIGateway.GridGroups;
+                if (groups == null)
+                    return false;
+                m_group.Clear();
+                groups.GetGroup(grid, GridLinkTypeEnum.Mechanical, m_group);
+                var joined = m_group.Count > 1;
+                m_group.Clear();
+                if (!joined)
+                    return false;
+                foreach (var top in grid.GetFatBlocks<IMyAttachableTopBlock>())
+                {
+                    if (top.Base != null && top.Base.CubeGrid != grid)
+                        return true;
+                }
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private readonly List<IMyCubeGrid> m_group = new List<IMyCubeGrid>();
 
         private ContactRelation RelationOf(long owner)
         {
@@ -514,6 +547,7 @@ namespace SirHolomap
                 marker.Relation = contact.Relation;
                 marker.Name = contact.Name;
                 marker.Blocks = contact.Blocks;
+                marker.SubGrid = contact.SubGrid;
                 marker.Radius = contact.Radius;
                 marker.LastSeenUtc = contact.LastSeenUtc;
                 marker.Body = contact.Body;

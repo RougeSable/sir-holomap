@@ -1091,7 +1091,7 @@ namespace SirHolomap
             var remembered = 0;
             foreach (var marker in World.Markers)
             {
-                if (marker.IsSelf || marker.IsGps)
+                if (marker.IsSelf || marker.IsGps || marker.SubGrid)
                     continue;
                 if (marker.Live)
                     live++;

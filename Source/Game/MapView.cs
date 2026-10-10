@@ -119,11 +119,11 @@ namespace SirHolomap
                 case ContactKind.Character:
                     return Settings.ShowPlayers;
                 case ContactKind.Station:
-                    return Settings.ShowStations && marker.Blocks >= threshold;
+                    return Settings.ShowStations && GridListing.Shown(marker.Blocks, threshold, marker.Linked);
                 case ContactKind.LargeShip:
-                    return Settings.ShowShips && marker.Blocks >= threshold;
+                    return Settings.ShowShips && GridListing.Shown(marker.Blocks, threshold, marker.Linked);
                 default:
-                    return Settings.ShowSmallGrids && marker.Blocks >= threshold;
+                    return Settings.ShowSmallGrids && GridListing.Shown(marker.Blocks, threshold, marker.Linked);
             }
         }
 

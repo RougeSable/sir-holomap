@@ -49,6 +49,7 @@ namespace SirHolomap
         public Vector3 Velocity;
         public double Radius;
         public int Blocks;
+        public bool Linked;
         public bool Live;
         public DateTime LastSeenUtc;
         public string Body = "";
@@ -258,6 +259,7 @@ namespace SirHolomap
                 sighting.Name = grid.CustomName ?? grid.DisplayName ?? "";
                 sighting.Blocks = full != null ? full.BlocksCount : 1;
                 sighting.Radius = volume.Radius;
+                sighting.Linked = IsLinked(grid);
                 sighting.Position = ToVec(volume.Center);
                 sighting.Kind = grid.IsStatic ? ContactKind.Station
                     : grid.GridSizeEnum == MyCubeSize.Large ? ContactKind.LargeShip : ContactKind.SmallShip;
@@ -295,6 +297,29 @@ namespace SirHolomap
             }
             return false;
         }
+
+        // True when the grid is joined to another one: a wheel on its
+        // suspension, a rotor or piston head, a ship locked by a connector.
+        private bool IsLinked(IMyCubeGrid grid)
+        {
+            try
+            {
+                var groups = MyAPIGateway.GridGroups;
+                if (groups == null)
+                    return false;
+                m_group.Clear();
+                groups.GetGroup(grid, GridLinkTypeEnum.Physical, m_group);
+                var linked = m_group.Count > 1;
+                m_group.Clear();
+                return linked;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private readonly List<IMyCubeGrid> m_group = new List<IMyCubeGrid>();
 
         private ContactRelation RelationOf(long owner)
         {
@@ -514,6 +539,7 @@ namespace SirHolomap
                 marker.Relation = contact.Relation;
                 marker.Name = contact.Name;
                 marker.Blocks = contact.Blocks;
+                marker.Linked = contact.Linked;
                 marker.Radius = contact.Radius;
                 marker.LastSeenUtc = contact.LastSeenUtc;
                 marker.Body = contact.Body;

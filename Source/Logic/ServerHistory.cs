@@ -130,8 +130,9 @@ namespace SirHolomap
                 var path = Path.Combine(directory, FileName);
                 return File.Exists(path) ? Load(File.ReadAllText(path, Encoding.UTF8)) : new ServerHistory();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Faults.Caught("ServerHistory.LoadFrom", ex);
                 return new ServerHistory();
             }
         }

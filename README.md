@@ -6,8 +6,10 @@ symmetry key. Should the character die while the map is open, the map closes
 by itself and the game shows its own respawn screen; M opens the map again
 once the player is back.
 
-Nothing goes through the server: a player without the plugin plays as usual,
-and everything the map remembers, the player saw with their own eyes.
+A player without the plugin plays as usual, and everything the map remembers,
+the player saw with their own eyes. The map asks nothing of the server and
+sends it nothing about the player; the one thing it sends, to our own servers
+only, is its error reports (see "Error reports").
 
 ## The four views
 
@@ -100,6 +102,35 @@ The memory is kept on your machine, one per server, in
 `%AppData%\SpaceEngineers\Storage\sir-holomap\Memory`. The settings (block
 thresholds of the planet view and of space, the galaxy filters, what to show) are kept in
 `settings.xml` next to it, the same for every server.
+
+## Error reports
+
+When the plugin goes wrong, the studio hears of it. Every exception the plugin
+catches and every error line it writes to the game's log becomes a report of
+kind `erreur`; the same error (same message, same top of stack) is one report
+per session, with how many times it came back and when first and last. The
+plugin also lays a mark in its folder when a session starts and takes it away
+when the game is left cleanly: a mark found at the next start means the game
+crashed. The plugin then reads the log of that session (the
+`SpaceEngineers_*.log` before the current one, in `%AppData%\SpaceEngineers`)
+and makes a report of kind `plantage`, with the game's CRASH INFO block, the
+exception that brought it down and its stack, the last 20 error lines of the
+game and the last 20 lines of the plugin.
+
+A report is a UTF-8 JSON document `{ greffon, version, genre, message, pile,
+premiere, derniere, nombre, session, lignes }` sent with
+`MyAPIGateway.Multiplayer.SendMessageToServer` on channel 5465479001 (the
+game's API addresses a message with 16 bits, so the message goes on the low 16
+bits of that number, 38745). It carries nothing about the player: a log line
+with a Steam identifier, a nickname, a grid name or a server address is
+dropped, and the Windows user's folder is written `%USERPROFILE%`.
+
+Reports only leave while you are on one of our servers (PU or PTU, recognised
+by the name the server is listed under, which holds "Sirius Immersion").
+Everywhere else (solo, a hosted game, any other server) they wait, one file
+each, in `%AppData%\SpaceEngineers\Storage\sir-holomap\reports`, and leave at
+the next connection to one of ours; the file is deleted once sent. A fault
+while preparing or sending a report is swallowed: it never reaches the game.
 
 ## Joining another server
 

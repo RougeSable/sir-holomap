@@ -308,8 +308,9 @@ namespace SirHolomap
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("MapView.OresOf", ex);
             }
             ores.Sort(StringComparer.Ordinal);
             text = string.Join(", ", ores.ToArray());

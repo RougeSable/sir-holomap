@@ -46,8 +46,9 @@ namespace SirHolomap
             {
                 return Read(stream, out r, out g, out b);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Faults.Caught("TextureColor.TryMean", ex);
                 r = g = b = 0;
                 return false;
             }

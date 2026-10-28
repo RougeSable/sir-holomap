@@ -174,8 +174,9 @@ namespace SirHolomap
                 var surface = Body.Planet.GetClosestSurfacePointGlobal(ref above);
                 return (surface - Body.Centre).Length();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("PlanetView.SurfaceRadius", ex);
                 return Body.Radius;
             }
         }

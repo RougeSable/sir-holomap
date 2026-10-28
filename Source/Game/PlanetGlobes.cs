@@ -93,19 +93,19 @@ namespace SirHolomap
                 if (method != null && method.ReturnType == typeof(MyVoxelMaterialDefinition))
                     source.Lookup = (MaterialAtPosition)Delegate.CreateDelegate(typeof(MaterialAtPosition), materials, method);
                 else
-                    HolomapPlugin.Log("planet material lookup not found: globes painted grey");
+                    HolomapPlugin.LogError("planet material lookup not found: globes painted grey");
                 if (cache != null && cache.ReturnType == typeof(void))
                     source.Cache = (PrepareShape)Delegate.CreateDelegate(typeof(PrepareShape), shape, cache);
                 else
-                    HolomapPlugin.Log("planet shape cache not found: globes may be painted grey");
+                    HolomapPlugin.LogError("planet shape cache not found: globes may be painted grey");
                 if (prepare != null && prepare.ReturnType == typeof(void))
                     source.Prime = (PrepareRules)Delegate.CreateDelegate(typeof(PrepareRules), materials, prepare);
                 else
-                    HolomapPlugin.Log("planet material rules not found: biomes may be painted with their default material");
+                    HolomapPlugin.LogError("planet material rules not found: biomes may be painted with their default material");
             }
             catch (Exception e)
             {
-                HolomapPlugin.Log("planet material lookup failed: " + e.Message);
+                HolomapPlugin.LogCaught("planet material lookup failed: " + e.Message, e);
             }
             return source;
         }
@@ -130,7 +130,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.Log("planet shape cache of " + job.Body.Name + " not ready: " + e.Message);
+                HolomapPlugin.LogCaught("planet shape cache of " + job.Body.Name + " not ready: " + e.Message, e);
                 source.Cache = null;
             }
         }
@@ -150,7 +150,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.Log("planet material rules of " + job.Body.Name + " not ready: " + e.Message);
+                HolomapPlugin.LogCaught("planet material rules of " + job.Body.Name + " not ready: " + e.Message, e);
                 source.Prime = null;
             }
         }
@@ -449,7 +449,7 @@ namespace SirHolomap
                 if (!job.SampleFailureLogged)
                 {
                     job.SampleFailureLogged = true;
-                    HolomapPlugin.Log("terrain of " + job.Body.Name + " not read: " + e.GetType().Name + " " + e.Message);
+                    HolomapPlugin.LogCaught("terrain of " + job.Body.Name + " not read: " + e.GetType().Name + " " + e.Message, e);
                 }
             }
 

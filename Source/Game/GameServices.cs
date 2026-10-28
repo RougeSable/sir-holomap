@@ -28,7 +28,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.Log("server discovery not found: " + e.Message);
+                HolomapPlugin.LogCaught("server discovery not found: " + e.Message, e);
                 return null;
             }
         }
@@ -40,8 +40,9 @@ namespace SirHolomap
                 var property = FindProperty(discovery.GetType(), name);
                 return property != null && property.GetValue(discovery, null) is bool && (bool)property.GetValue(discovery, null);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("GameServices.Flag", ex);
                 return false;
             }
         }
@@ -109,7 +110,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.Log("could not listen to " + eventName + ": " + e.Message);
+                HolomapPlugin.LogCaught("could not listen to " + eventName + ": " + e.Message, e);
                 return null;
             }
         }
@@ -124,8 +125,9 @@ namespace SirHolomap
                 if (info != null)
                     info.RemoveEventHandler(discovery, handler);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("GameServices.Unsubscribe", ex);
             }
         }
 
@@ -143,7 +145,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.Log(methodName + " failed: " + e.Message);
+                HolomapPlugin.LogCaught(methodName + " failed: " + e.Message, e);
                 return false;
             }
         }
@@ -158,8 +160,9 @@ namespace SirHolomap
                 if (method != null)
                     method.Invoke(discovery, null);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("GameServices.Call", ex);
             }
         }
 
@@ -170,8 +173,9 @@ namespace SirHolomap
                 var method = FindMethod(discovery.GetType(), methodName, 1);
                 return method != null ? method.Invoke(discovery, new object[] { index }) as MyGameServerItem : null;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("GameServices.Details", ex);
                 return null;
             }
         }
@@ -196,7 +200,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.Log("ping failed: " + e.Message);
+                HolomapPlugin.LogCaught("ping failed: " + e.Message, e);
                 return false;
             }
         }
@@ -213,8 +217,9 @@ namespace SirHolomap
                 if (ko != null && ko.EventHandlerType == typeof(EventHandler))
                     ko.RemoveEventHandler(null, failed);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("GameServices.StopPing", ex);
             }
         }
 
@@ -253,7 +258,7 @@ namespace SirHolomap
             }
             if ((leaveFirst && unload == null) || join == null)
             {
-                HolomapPlugin.Log("the game's join flow was not found");
+                HolomapPlugin.LogError("the game's join flow was not found");
                 return false;
             }
             if (leaveFirst)
@@ -285,8 +290,9 @@ namespace SirHolomap
                 }
                 return false;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("GameServices.JoinScreensOpen", ex);
                 return null;
             }
         }
@@ -312,7 +318,7 @@ namespace SirHolomap
                     var connect = field != null ? field.GetValue(screen) as Action<string> : null;
                     if (connect == null)
                     {
-                        HolomapPlugin.Log("the game's password screen could not be answered: the player types it there");
+                        HolomapPlugin.LogError("the game's password screen could not be answered: the player types it there");
                         return true;
                     }
                     var gui = screen as MyGuiScreenBase;
@@ -324,7 +330,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.Log("password not handed to the game: " + e.Message);
+                HolomapPlugin.LogCaught("password not handed to the game: " + e.Message, e);
                 return true;
             }
             return false;
@@ -361,7 +367,7 @@ namespace SirHolomap
                     }
                 }
                 if (s_screens == null)
-                    HolomapPlugin.Log("the game's screen list was not found: no way back after a failed join");
+                    HolomapPlugin.LogError("the game's screen list was not found: no way back after a failed join");
             }
             return s_screens != null ? s_screens.GetValue(null) as System.Collections.IEnumerable : null;
         }

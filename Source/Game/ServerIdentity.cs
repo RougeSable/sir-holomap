@@ -75,8 +75,9 @@ namespace SirHolomap
                     if (!string.IsNullOrEmpty(game.HostName))
                         identity.Name = game.HostName + " - " + worldName;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    HolomapPlugin.Caught("ServerIdentity.Current", ex);
                 }
                 return identity;
             }
@@ -105,8 +106,9 @@ namespace SirHolomap
                         return field.GetValue(game) as MyGameServerItem;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("ServerIdentity.DedicatedServerOf", ex);
             }
             return null;
         }

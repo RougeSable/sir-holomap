@@ -108,8 +108,9 @@ namespace SirHolomap
                     projectionFarMatrix = Matrix.CreatePerspectiveFieldOfView(fov, LastAspect, near, farFarPlane);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("RenderHooks.CameraPrefix", ex);
                 // Never break the game's frame.
             }
             return true;
@@ -123,8 +124,9 @@ namespace SirHolomap
                 if (Active && Daylight && LightAvailable)
                     data.EnvironmentLight.SunLightDirection = LightDirection;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("RenderHooks.LightPrefix", ex);
             }
             return true;
         }

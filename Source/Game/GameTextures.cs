@@ -85,7 +85,7 @@ namespace SirHolomap
             }
             catch (ArgumentException e)
             {
-                HolomapPlugin.Log("picture " + name + " not sent: " + e.Message);
+                HolomapPlugin.LogCaught("picture " + name + " not sent: " + e.Message, e);
                 return false;
             }
 
@@ -119,8 +119,9 @@ namespace SirHolomap
                 {
                     MyRenderProxy.DestroyGeneratedTexture(name);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    HolomapPlugin.Caught("GameTextures.DestroyAll", ex);
                 }
             }
             Ledger.Clear();

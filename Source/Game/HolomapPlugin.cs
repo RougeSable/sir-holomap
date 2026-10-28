@@ -49,7 +49,31 @@ namespace SirHolomap
 
         public static void Log(string text)
         {
-            MyLog.Default.WriteLine("[" + Id + "] " + text);
+            var line = "[" + Id + "] " + text;
+            MyLog.Default.WriteLine(line);
+            ErrorReporting.Note(line);
+        }
+
+        // A line that tells something went wrong: written to the game's log
+        // like the others, and reported to our servers once per session.
+        public static void LogError(string text)
+        {
+            Log(text);
+            ErrorReporting.Error(text);
+        }
+
+        // An exception the plugin caught and handled: it is reported too.
+        public static void Caught(string where, Exception e)
+        {
+            ErrorReporting.Caught(where, e);
+        }
+
+        // An exception caught, with the line the plugin writes to the game's
+        // log about it: the report carries that line and the stack.
+        public static void LogCaught(string text, Exception e)
+        {
+            Log(text);
+            ErrorReporting.CaughtLine(text, e);
         }
 
         public void Init(object gameInstance)
@@ -60,10 +84,11 @@ namespace SirHolomap
             m_folder = Path.Combine(MyFileSystem.UserDataPath, "Storage", Id);
             string problem;
             m_settings = MapSettingsFile.Load(m_folder, out problem);
-            if (problem != null)
-                Log(problem + "; using the defaults");
 
             m_world = new MapWorld(m_folder);
+            ErrorReporting.Start(m_folder, m_world.History);
+            if (problem != null)
+                LogError(problem + "; using the defaults");
             m_globes = new PlanetGlobes();
             m_servers = new ServerDirectory();
 
@@ -76,6 +101,7 @@ namespace SirHolomap
                 RenderHooks.CameraAvailable = false;
                 RenderHooks.LightAvailable = false;
                 Log("could not hook the render camera: " + e);
+                Caught("render camera hook", e);
                 m_pendingNotices.Add(() => Texts.CameraHookFailed);
             }
             Log("loaded; camera " + (RenderHooks.CameraAvailable ? "hooked" : "not hooked") + ", " + m_world.History.Count + " servers in history");
@@ -92,7 +118,7 @@ namespace SirHolomap
             if (camera == null)
             {
                 m_pendingNotices.Add(() => Texts.CameraHookFailed);
-                Log(RenderHooks.CameraStep + " not found");
+                LogError(RenderHooks.CameraStep + " not found");
             }
             else
             {
@@ -113,7 +139,7 @@ namespace SirHolomap
             if (light == null)
             {
                 m_pendingNotices.Add(() => Texts.LightHookFailed);
-                Log(RenderHooks.LightStep + " not found: the globe keeps the game's light");
+                LogError(RenderHooks.LightStep + " not found: the globe keeps the game's light");
                 return;
             }
             var lightOthers = RenderHooks.OtherOwners(light, Id);
@@ -166,6 +192,7 @@ namespace SirHolomap
                 FollowLanguage();
                 var wasInWorld = m_world.InWorld;
                 m_world.Track();
+                ErrorReporting.Tick(m_world);
                 if (wasInWorld != m_world.InWorld)
                     m_globes.Clear();
                 ServerJoiner.Update(m_world.InWorld);
@@ -223,8 +250,9 @@ namespace SirHolomap
                 if (config != null)
                     Localization.Current = Localization.FromGame((int)config.Language);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("HolomapPlugin.FollowLanguage", ex);
                 Localization.Current = GameLanguage.English;
             }
         }
@@ -272,7 +300,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                Log("settings not saved: " + e.Message);
+                LogCaught("settings not saved: " + e.Message, e);
             }
         }
 
@@ -294,7 +322,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                Log("could not save before leaving: " + e.Message);
+                LogCaught("could not save before leaving: " + e.Message, e);
             }
         }
 
@@ -303,6 +331,8 @@ namespace SirHolomap
         internal void Fault(string where, Exception e)
         {
             RenderHooks.Release();
+            // Every fault counts for the reports, which tell each one once.
+            Caught("fault in " + where, e);
             // A fault that repeats is told once in a while, not every frame.
             var now = DateTime.UtcNow;
             var repeated = (now - m_lastFault).TotalSeconds < 30;
@@ -314,8 +344,9 @@ namespace SirHolomap
                     if (MapScreen.Current != null)
                         MapScreen.Current.CloseScreen();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    HolomapPlugin.Caught("HolomapPlugin.Fault", ex);
                 }
                 return;
             }
@@ -325,8 +356,9 @@ namespace SirHolomap
                 if (MapScreen.Current != null)
                     MapScreen.Current.CloseScreen();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("HolomapPlugin.Fault", ex);
             }
             Notify(Texts.Fault);
         }
@@ -338,8 +370,9 @@ namespace SirHolomap
                 if (MyAPIGateway.Utilities != null)
                     MyAPIGateway.Utilities.ShowNotification(text, 8000, "Red");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("HolomapPlugin.Notify", ex);
             }
         }
 
@@ -348,6 +381,9 @@ namespace SirHolomap
             try
             {
                 RenderHooks.Release();
+                // Before the world is left: what waits leaves if a server of
+                // ours is still there.
+                ErrorReporting.Stop(m_world);
                 if (m_world != null)
                     m_world.Leave();
                 ServerJoiner.Reset();
@@ -360,7 +396,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                Log("incomplete shutdown: " + e.Message);
+                LogCaught("incomplete shutdown: " + e.Message, e);
             }
             m_stopped = true;
             Instance = null;

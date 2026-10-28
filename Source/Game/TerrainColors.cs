@@ -129,8 +129,9 @@ namespace SirHolomap
                 b = (float)Math.Pow(MathHelper.Clamp(far.Z, 0, 1), 1 / 2.2);
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                HolomapPlugin.Caught("TerrainColors.FarColor", ex);
                 return false;
             }
         }
@@ -165,8 +166,9 @@ namespace SirHolomap
                 {
                     contentPath = MyFileSystem.ContentPath;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    HolomapPlugin.Caught("TerrainColors.TextureFiles", ex);
                 }
                 for (var i = sets.Length - 1; i >= 0; i--)
                 {
@@ -176,7 +178,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.Log("terrain textures of " + material.Id.SubtypeName + " not found: " + e.Message);
+                HolomapPlugin.LogCaught("terrain textures of " + material.Id.SubtypeName + " not found: " + e.Message, e);
             }
             return files;
         }
@@ -214,11 +216,12 @@ namespace SirHolomap
                             return new[] { r, g, b };
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    HolomapPlugin.Caught("TerrainColors.ReadMean", ex);
                 }
             }
-            HolomapPlugin.Log("no readable colour texture for terrain " + name + ": painted with its colour key or grey");
+            HolomapPlugin.LogError("no readable colour texture for terrain " + name + ": painted with its colour key or grey");
             return null;
         }
     }

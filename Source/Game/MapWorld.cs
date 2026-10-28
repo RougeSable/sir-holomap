@@ -163,7 +163,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.Log("memory not saved: " + e.Message);
+                HolomapPlugin.LogCaught("memory not saved: " + e.Message, e);
             }
             m_lastSave = DateTime.UtcNow;
         }
@@ -176,7 +176,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.Log("server history not saved: " + e.Message);
+                HolomapPlugin.LogCaught("server history not saved: " + e.Message, e);
             }
         }
 
@@ -570,8 +570,9 @@ namespace SirHolomap
                     if (gps != null)
                         m_gps.AddRange(gps.GetGpsList(PlayerIdentityId));
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    HolomapPlugin.Caught("MapWorld.ReadGps", ex);
                 }
             }
 

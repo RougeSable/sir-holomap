@@ -55,8 +55,9 @@ namespace SirHolomap
                     return new MapMemory(serverKey);
                 return MapMemory.Load(serverKey, File.ReadAllText(path, Encoding.UTF8));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Faults.Caught("MemoryStore.Load", ex);
                 return new MapMemory(serverKey);
             }
         }

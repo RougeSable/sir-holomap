@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -22,7 +22,7 @@ namespace SirHolomap
         Enemy = 4,
     }
 
-    // What the player sees of a grid or a character at one moment.
+    // Ce que le joueur voit d'une grille ou d'un personnage à un instant.
     public struct Sighting
     {
         public long Id;
@@ -35,9 +35,9 @@ namespace SirHolomap
         public string Body;
     }
 
-    // One remembered thing. Live while the game sends it to the player, a
-    // memory otherwise: it then stays at its last known position, with the
-    // time it was last seen.
+    // Une chose retenue. Vivante tant que le jeu l'envoie au joueur, un
+    // souvenir ensuite : elle reste alors à sa dernière position connue, avec l'heure
+    // où elle a été vue pour la dernière fois.
     public sealed class MemoryContact
     {
         public long Id;
@@ -49,33 +49,33 @@ namespace SirHolomap
         public Vec3 Position;
         public DateTime LastSeenUtc;
 
-        // Empty when the contact is not near a planet.
+        // Vide quand le contact n'est pas près d'une planète.
         public string Body = "";
 
-        // Runtime state, never saved: a memory loaded from disk is never live.
+        // État d'exécution, jamais enregistré : un souvenir chargé du disque n'est jamais vivant.
         public bool IsLive;
         public DateTime? AbsentSinceUtc;
     }
 
-    // The personal memory of one server. The game sends nothing beyond the
-    // synchronisation range of the server: whatever entered that range was
-    // seen, its position and time are kept; whatever left it stays where it
-    // was last seen (the player's own grids included, the game says nothing
-    // more about them). Coming back near a place updates it: what is there is
-    // seen again, what is no longer there is forgotten.
+    // La mémoire personnelle d'un serveur. Le jeu n'envoie rien au-delà de la portée de
+    // synchronisation du serveur : tout ce qui est entré dans cette portée a été
+    // vu, sa position et l'heure sont gardées ; tout ce qui en est sorti reste où
+    // il a été vu en dernier (les grilles du joueur comprises, le jeu n'en dit rien
+    // de plus). Revenir près d'un lieu le met à jour : ce qui s'y trouve est
+    // vu de nouveau, ce qui n'y est plus est oublié.
     public sealed class MapMemory
     {
         public const string Header = "sir-holomap memory 1";
 
-        // A remembered place counts as checked only well inside the
-        // synchronisation range: at its edge, the game is still streaming.
+        // Un lieu retenu ne compte comme vérifié que bien à l'intérieur de la
+        // portée de synchronisation : à sa limite, le jeu envoie encore.
         public const double ConfirmFraction = 0.75;
 
-        // How long a remembered contact must be missing from a checked place
-        // before it is forgotten.
+        // Combien de temps un contact retenu doit manquer à un lieu vérifié
+        // avant d'être oublié.
         public static readonly TimeSpan ForgetAfter = TimeSpan.FromSeconds(20);
 
-        // Beyond that, the oldest memories go first.
+        // Au-delà, les plus vieux souvenirs partent en premier.
         public const int MaximumContacts = 20000;
 
         private readonly Dictionary<long, MemoryContact> m_contacts = new Dictionary<long, MemoryContact>();
@@ -89,7 +89,7 @@ namespace SirHolomap
 
         public string ServerKey { get; private set; }
 
-        // True when something worth saving changed since the last save.
+        // Vrai quand quelque chose qui vaut d'être enregistré a changé depuis le dernier enregistrement.
         public bool Dirty { get; set; }
 
         public int Count
@@ -107,8 +107,8 @@ namespace SirHolomap
             return m_contacts.TryGetValue(id, out contact);
         }
 
-        // A scan lists everything the game currently sends: BeginScan, See for
-        // each of them, then EndScan.
+        // Un balayage liste tout ce que le jeu envoie en ce moment : BeginScan, See pour
+        // chacun d'eux, puis EndScan.
         public void BeginScan()
         {
             m_seen.Clear();
@@ -146,10 +146,10 @@ namespace SirHolomap
             contact.AbsentSinceUtc = null;
         }
 
-        // Everything not seen in this scan is out of reach: it keeps its last
-        // known position. If its last known position is well inside the
-        // observer's range and it stays missing, it is no longer there, and
-        // the map forgets it.
+        // Tout ce qui n'est pas vu dans ce balayage est hors de portée : cela garde sa dernière
+        // position connue. Si sa dernière position connue est bien à l'intérieur de la
+        // portée de l'observateur et qu'elle continue de manquer, elle n'y est plus,
+        // et la carte l'oublie.
         public void EndScan(Vec3 observer, double syncRadius, DateTime nowUtc)
         {
             m_forget.Clear();
@@ -181,7 +181,7 @@ namespace SirHolomap
             TrimOldest();
         }
 
-        // On leaving a server, nothing is live any more.
+        // En quittant un serveur, plus rien n'est vivant.
         public void MarkAllRemembered()
         {
             foreach (var contact in m_contacts.Values)
@@ -213,7 +213,7 @@ namespace SirHolomap
             return text.Replace('\t', ' ').Replace('\r', ' ').Replace('\n', ' ');
         }
 
-        // One line per contact, tab separated, invariant culture.
+        // Une ligne par contact, séparée par des tabulations, culture invariante.
         public string Save()
         {
             var text = new StringBuilder();
@@ -235,7 +235,7 @@ namespace SirHolomap
             return text.ToString();
         }
 
-        // Unreadable lines are skipped: a damaged file never blocks the game.
+        // Les lignes illisibles sont sautées : un fichier abîmé ne bloque jamais le jeu.
         public static MapMemory Load(string serverKey, string text)
         {
             var memory = new MapMemory(serverKey);

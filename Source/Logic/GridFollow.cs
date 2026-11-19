@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 
 namespace SirHolomap
 {
-    // Following a grid in the neighbourhood view: the gestures that end it.
-    // A simple click (left on empty space, or right anywhere on the map)
-    // lets go of the grid; a drag only turns the view around it.
+    // Suivre une grille dans la vue Espace proche : les gestes qui y mettent fin.
+    // Un simple clic (gauche dans le vide, ou droit n'importe où sur la carte)
+    // lâche la grille ; un glissement ne fait que tourner la vue autour d'elle.
     public static class FollowGestures
     {
-        // A press released closer than this to where it started is a click;
-        // farther, a drag. In pixels at the reference resolution.
+        // Un appui relâché plus près que cela de son point de départ est un clic ;
+        // plus loin, un glissement. En pixels à la résolution de référence.
         public const double ClickSlopPixels = 5;
 
-        // Room around the frame drawn about the followed grid that still
-        // counts as the grid: a click there keeps the follow.
+        // La marge autour du cadre dessiné autour de la grille suivie qui compte
+        // encore comme la grille : un clic là garde le suivi.
         public const double FrameMarginPixels = 10;
 
         public static bool IsClick(double pressX, double pressY, double releaseX, double releaseY, double scale)
@@ -22,8 +22,8 @@ namespace SirHolomap
             return Math.Sqrt(dx * dx + dy * dy) <= ClickSlopPixels * Math.Max(scale, 0.01);
         }
 
-        // Inside the square frame of side `size` drawn around the followed
-        // grid, centred on it on screen.
+        // Dans le cadre carré de côté `size` dessiné autour de la grille
+        // suivie, centré sur elle à l'écran.
         public static bool InsideFrame(double x, double y, double centreX, double centreY, double size, double scale)
         {
             var half = Math.Max(size, 0) / 2 + FrameMarginPixels * Math.Max(scale, 0.01);
@@ -31,24 +31,24 @@ namespace SirHolomap
         }
     }
 
-    // The virtual plane of the neighbourhood view. It is laid through the
-    // point the view is centred on; while the camera follows a grid, it stays
-    // where it was and as it was before the double click, so that it never
-    // moves against the planets, and the height line of the followed grid
-    // grows and shrinks as the grid climbs or sinks.
+    // Le plan virtuel de la vue Espace proche. Il passe par le
+    // point sur lequel la vue est centrée ; tant que la caméra suit une grille, il reste
+    // là où il était et tel qu'il était avant le double clic, pour qu'il ne
+    // bouge jamais par rapport aux planètes, et que la ligne de hauteur de la grille suivie
+    // grandisse et rétrécisse quand la grille monte ou descend.
     public sealed class FollowPlane
     {
         public bool Kept { get; private set; }
 
-        // The centre of the plane, a point on it.
+        // Le centre du plan, un point sur lui.
         public Vec3 Origin { get; private set; }
 
-        // The camera distance the plane was drawn for: it sets the spacing of
-        // the lines and how far they reach.
+        // La distance de la caméra pour laquelle le plan a été dessiné : elle fixe l'espacement
+        // des lignes et leur portée.
         public double Distance { get; private set; }
 
-        // Keeps the plane as it is now. A plane already kept stays as it
-        // was: following another grid does not move it either.
+        // Garde le plan tel qu'il est maintenant. Un plan déjà gardé reste tel
+        // qu'il était : suivre une autre grille ne le déplace pas non plus.
         public void Keep(Vec3 origin, double distance)
         {
             if (Kept)
@@ -63,7 +63,7 @@ namespace SirHolomap
             Kept = false;
         }
 
-        // Where the plane lies this frame: kept, or through the live centre.
+        // Où le plan se trouve cette image : gardé, ou passant par le centre vivant.
         public Vec3 OriginOr(Vec3 live)
         {
             return Kept ? Origin : live;
@@ -74,8 +74,8 @@ namespace SirHolomap
             return Kept ? Distance : live;
         }
 
-        // The point of the plane straight under (or over) a position, along
-        // the plane's normal (of length one).
+        // Le point du plan juste en dessous (ou au-dessus) d'une position, le long
+        // de la normale du plan (de longueur un).
         public static Vec3 Foot(Vec3 position, Vec3 planePoint, Vec3 normal)
         {
             var d = position - planePoint;

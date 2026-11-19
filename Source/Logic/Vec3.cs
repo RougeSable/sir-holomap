@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 
 namespace SirHolomap
 {
-    // A position in the world, in metres. The pure logic of the map does not
-    // depend on the game's math library, so that it can be tested alone.
+    // Une position dans le monde, en mètres. La logique pure de la carte ne
+    // dépend pas de la bibliothèque de maths du jeu, pour pouvoir être testée seule.
     public struct Vec3
     {
         public readonly double X;

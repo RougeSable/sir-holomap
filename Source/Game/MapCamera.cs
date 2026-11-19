@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using VRageMath;
 
 namespace SirHolomap
 {
-    // The map's camera: it looks at a focus point from a distance, and glides
-    // to where the views ask it to be. Distance moves in log space, so that a
-    // dive from the whole system down to a globe is as smooth as a step of
-    // a few metres.
+    // La caméra de la carte : elle regarde un point de focalisation à distance, et glisse
+    // là où les vues lui demandent d'être. La distance se déplace en espace logarithmique, pour qu'une
+    // plongée du système entier jusqu'à un globe soit aussi douce qu'un pas de
+    // quelques mètres.
     internal sealed class MapCamera
     {
         public Vector3D Focus;
@@ -17,13 +17,13 @@ namespace SirHolomap
         public double TargetDistance = 1000;
         public QuaternionD TargetRotation = QuaternionD.Identity;
 
-        // Seconds for half of the remaining way: short while the player
-        // drags, longer for a change of view.
+        // Secondes pour la moitié du chemin restant : court pendant que le joueur
+        // glisse, plus long pour un changement de vue.
         public double HalfLife = 0.08;
         public const double QuickHalfLife = 0.06;
         public const double TransitionHalfLife = 0.22;
 
-        // Screen projection of the current frame.
+        // Projection à l'écran de l'image courante.
         public Vector3D Position;
         public Vector3D Forward = Vector3D.Forward;
         public Vector3D Up = Vector3D.Up;
@@ -46,8 +46,8 @@ namespace SirHolomap
             }
         }
 
-        // Where the camera is going: the views hand over from these, never from
-        // where it still glides.
+        // Où la caméra va : les vues prennent la main depuis cela, jamais depuis
+        // l'endroit où elle glisse encore.
         public Vector3D TargetForward
         {
             get { return Vector3D.Normalize(Vector3D.Transform(Vector3D.Forward, TargetRotation)); }
@@ -83,7 +83,7 @@ namespace SirHolomap
             Refresh();
         }
 
-        // True while the camera is still far from where it is going.
+        // Vrai tant que la caméra est encore loin d'où elle va.
         public bool Moving
         {
             get
@@ -113,8 +113,8 @@ namespace SirHolomap
             Aspect = aspect > 0.1 ? aspect : 16.0 / 9.0;
         }
 
-        // Where a world point lands on screen, in pixels. False when it is
-        // behind the camera.
+        // Où un point du monde tombe à l'écran, en pixels. Faux quand il est
+        // derrière la caméra.
         public bool Project(Vector3D world, out Vector2 screen, out double depth)
         {
             var rel = world - Position;
@@ -137,17 +137,17 @@ namespace SirHolomap
             return new Vector2((float)((nx + 1) * 0.5 * Gfx.Width), (float)((1 - ny) * 0.5 * Gfx.Height));
         }
 
-        // How many pixels a length makes at a depth.
+        // Combien de pixels fait une longueur à une profondeur.
         public double PixelsPerMetre(double depth)
         {
             return Gfx.Height * 0.5 / (Math.Max(depth, 1e-3) * TanHalfFov);
         }
 
-        // A segment, cut to what the camera sees (a little wider than the
-        // screen): a line that passes beside or behind the camera keeps the
-        // piece in view, whole and continuous, instead of vanishing or being
-        // thrown far off screen. That keeps the plane of B unbroken however
-        // the map is turned.
+        // Un segment, coupé à ce que la caméra voit (un peu plus large que
+        // l'écran) : une ligne qui passe à côté ou derrière la caméra garde le
+        // morceau en vue, entier et continu, au lieu de disparaître ou d'être
+        // jetée loin de l'écran. Cela garde le plan de B intact, quelle que soit la façon
+        // dont la carte est tournée.
         public bool ProjectSegment(Vector3D a, Vector3D b, out Vector2 sa, out Vector2 sb)
         {
             sa = sb = Vector2.Zero;
@@ -170,8 +170,8 @@ namespace SirHolomap
             return Gfx.IsFinite(sa) && Gfx.IsFinite(sb);
         }
 
-        // Keeps the part of [t0, t1] where a linear function, fa at 0 and fb
-        // at 1, is not negative.
+        // Garde la partie de [t0, t1] où une fonction linéaire, fa en 0 et fb
+        // en 1, n'est pas négative.
         private static bool Clip(double fa, double fb, ref double t0, ref double t1)
         {
             if (fa < 0 && fb < 0)
@@ -183,7 +183,7 @@ namespace SirHolomap
             return t0 <= t1;
         }
 
-        // The point under a pixel, on the plane through a point with a normal.
+        // Le point sous un pixel, sur le plan passant par un point avec une normale.
         public bool Unproject(Vector2 pixel, Vector3D planePoint, Vector3D planeNormal, out Vector3D hit)
         {
             var nx = pixel.X / Gfx.Width * 2 - 1;
@@ -201,7 +201,7 @@ namespace SirHolomap
             return true;
         }
 
-        // The direction under a pixel.
+        // La direction sous un pixel.
         public Vector3D Ray(Vector2 pixel)
         {
             var nx = pixel.X / Gfx.Width * 2 - 1;

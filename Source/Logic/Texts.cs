@@ -1,34 +1,34 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace SirHolomap
 {
-    // Everything the player reads, in one place, in the language set in the
-    // game (see Localization). The English text below is the reference; the
-    // other languages are in the Translations files, and a text missing there
-    // shows in English.
+    // Tout ce que le joueur lit, en un seul endroit, dans la langue réglée dans le
+    // jeu (voir Localization). Le texte français ci-dessous est la référence ; les
+    // autres langues sont dans les fichiers Translations, et un texte qui y manque
+    // se montre en français.
     public static class Texts
     {
 
-        // Name of the map, top left.
+        // Nom de la carte, en haut à gauche.
         public static string Title { get { return Localization.Get("Title"); } }
 
-        // View A.
+        // Vue A.
         public static string ModePlanet { get { return Localization.Get("ModePlanet"); } }
 
-        // View B.
+        // Vue B.
         public static string ModeLocal { get { return Localization.Get("ModeLocal"); } }
 
-        // View C.
+        // Vue C.
         public static string ModeSystem { get { return Localization.Get("ModeSystem"); } }
 
-        // View D.
+        // Vue D.
         public static string ModeGalaxy { get { return Localization.Get("ModeGalaxy"); } }
         public static string ModePlanetHelp { get { return Localization.Get("ModePlanetHelp"); } }
         public static string ModeLocalHelp { get { return Localization.Get("ModeLocalHelp"); } }
         public static string ModeSystemHelp { get { return Localization.Get("ModeSystemHelp"); } }
         public static string ModePlanetUnavailable { get { return Localization.Get("ModePlanetUnavailable"); } }
 
-        // Tabs of C, and the name and help of D in its menu.
+        // Onglets de C, et nom et aide de D dans son menu.
         public static string TabBodies { get { return Localization.Get("TabBodies"); } }
         public static string TabOrrery { get { return Localization.Get("TabOrrery"); } }
         public static string TabGalaxy { get { return Localization.Get("TabGalaxy"); } }
@@ -36,14 +36,14 @@ namespace SirHolomap
         public static string TabOrreryHelp { get { return Localization.Get("TabOrreryHelp"); } }
         public static string TabGalaxyHelp { get { return Localization.Get("TabGalaxyHelp"); } }
 
-        // Sections of the menu on the right.
+        // Sections du menu de droite.
         public static string SectionInfo { get { return Localization.Get("SectionInfo"); } }
         public static string SectionShow { get { return Localization.Get("SectionShow"); } }
         public static string SectionGrids { get { return Localization.Get("SectionGrids"); } }
         public static string SectionBodies { get { return Localization.Get("SectionBodies"); } }
         public static string SectionServers { get { return Localization.Get("SectionServers"); } }
 
-        // Filters.
+        // Filtres.
         public static string ShowStations { get { return Localization.Get("ShowStations"); } }
         public static string ShowShips { get { return Localization.Get("ShowShips"); } }
         public static string ShowSmallGrids { get { return Localization.Get("ShowSmallGrids"); } }
@@ -57,7 +57,7 @@ namespace SirHolomap
         public static string ThresholdSpace { get { return Localization.Get("ThresholdSpace"); } }
         public static string ThresholdHelp { get { return Localization.Get("ThresholdHelp"); } }
 
-        // Galaxy filters.
+        // Filtres de la galaxie.
         public static string Favorites { get { return Localization.Get("Favorites"); } }
         public static string Visited { get { return Localization.Get("Visited"); } }
         public static string FavoritesHelp { get { return Localization.Get("FavoritesHelp"); } }
@@ -71,7 +71,7 @@ namespace SirHolomap
         public static string RefreshHelp { get { return Localization.Get("RefreshHelp"); } }
         public static string Loading { get { return Localization.Get("Loading"); } }
 
-        // Info lines.
+        // Lignes d'infos.
         public static string Type { get { return Localization.Get("Type"); } }
         public static string Diameter { get { return Localization.Get("Diameter"); } }
         public static string Gravity { get { return Localization.Get("Gravity"); } }
@@ -127,7 +127,7 @@ namespace SirHolomap
         public static string RelationEnemy { get { return Localization.Get("RelationEnemy"); } }
         public static string RelationUnowned { get { return Localization.Get("RelationUnowned"); } }
 
-        // Help lines: groups separated by three spaces.
+        // Lignes d'aide : groupes séparés par trois espaces.
         public static string HelpPlanet { get { return Localization.Get("HelpPlanet"); } }
         public static string HelpPlanetLocked { get { return Localization.Get("HelpPlanetLocked"); } }
         public static string HelpLocal { get { return Localization.Get("HelpLocal"); } }
@@ -137,7 +137,7 @@ namespace SirHolomap
         public static string HelpGalaxy { get { return Localization.Get("HelpGalaxy"); } }
         public static string CloseHint { get { return Localization.Get("CloseHint"); } }
 
-        // Joining another server.
+        // Rejoindre un autre serveur.
         public static string JoinCaption { get { return Localization.Get("JoinCaption"); } }
         public static string JoinQuestion { get { return Localization.Get("JoinQuestion"); } }
         public static string JoinChecking { get { return Localization.Get("JoinChecking"); } }
@@ -163,7 +163,7 @@ namespace SirHolomap
         public static string LightHookFailed { get { return Localization.Get("LightHookFailed"); } }
         public static string Fault { get { return Localization.Get("Fault"); } }
 
-        // Ages of memories.
+        // Âges des souvenirs.
         public static string AgoFewSeconds { get { return Localization.Get("AgoFewSeconds"); } }
         public static string AgoMinutes { get { return Localization.Get("AgoMinutes"); } }
         public static string AgoHours { get { return Localization.Get("AgoHours"); } }
@@ -171,145 +171,145 @@ namespace SirHolomap
         public static string AgoMonths { get { return Localization.Get("AgoMonths"); } }
         public static string AgoYears { get { return Localization.Get("AgoYears"); } }
 
-        // The English texts, by key.
+        // Les textes de référence, en français, par clé.
         public static Dictionary<string, string> EnglishTable()
         {
             return new Dictionary<string, string>
             {
                 { "Title", "HOLOMAP" },
-                { "ModePlanet", "PLANET" },
-                { "ModeLocal", "NEARBY SPACE" },
-                { "ModeSystem", "SYSTEM" },
-                { "ModeGalaxy", "GALAXY" },
-                { "ModePlanetHelp", "The globe of the planet you are on, or the last one you looked at." },
-                { "ModeLocalHelp", "Your neighbourhood in space, seen from above." },
-                { "ModeSystemHelp", "The whole system: the planets and their moons, flat or in 3D." },
-                { "ModePlanetUnavailable", "No planet nearby: pick one in the System view." },
-                { "TabBodies", "System 2D" },
-                { "TabOrrery", "Orbits" },
-                { "TabGalaxy", "Galaxy" },
-                { "TabBodiesHelp", "Planets and their moons laid flat, by distance to the centre of the world." },
-                { "TabOrreryHelp", "The system in 3D: true distances, bodies enlarged so that they stay readable." },
-                { "TabGalaxyHelp", "Where this server lies in the galaxy, among the servers you know." },
-                { "SectionInfo", "INFO" },
-                { "SectionShow", "SHOW" },
-                { "SectionGrids", "GRIDS IN VIEW" },
-                { "SectionBodies", "BODIES" },
-                { "SectionServers", "SERVERS" },
+                { "ModePlanet", "PLANÈTE" },
+                { "ModeLocal", "ESPACE PROCHE" },
+                { "ModeSystem", "SYSTÈME" },
+                { "ModeGalaxy", "GALAXIE" },
+                { "ModePlanetHelp", "Le globe de la planète où vous êtes, ou de la dernière regardée." },
+                { "ModeLocalHelp", "Votre voisinage dans l'espace, vu d'en haut." },
+                { "ModeSystemHelp", "Tout le système : les planètes et leurs lunes, à plat ou en 3D." },
+                { "ModePlanetUnavailable", "Aucune planète proche : choisissez-en une dans la vue Système." },
+                { "TabBodies", "Système 2D" },
+                { "TabOrrery", "Orbites" },
+                { "TabGalaxy", "Galaxie" },
+                { "TabBodiesHelp", "Les planètes et leurs lunes à plat, par distance au centre du monde." },
+                { "TabOrreryHelp", "Le système en 3D : distances réelles, astres agrandis pour rester lisibles." },
+                { "TabGalaxyHelp", "La place de ce serveur dans la galaxie, parmi les serveurs que vous connaissez." },
+                { "SectionInfo", "INFOS" },
+                { "SectionShow", "AFFICHER" },
+                { "SectionGrids", "GRILLES EN VUE" },
+                { "SectionBodies", "ASTRES" },
+                { "SectionServers", "SERVEURS" },
                 { "ShowStations", "Bases" },
-                { "ShowShips", "Large ships" },
-                { "ShowSmallGrids", "Small grids" },
-                { "ShowPlayers", "Players" },
+                { "ShowShips", "Grands vaisseaux" },
+                { "ShowSmallGrids", "Petites grilles" },
+                { "ShowPlayers", "Joueurs" },
                 { "ShowGps", "GPS" },
-                { "ShowMemories", "Memories" },
-                { "Daylight", "Daylight globe" },
-                { "DaylightHelp", "Lights the globe from the camera while the map is open, so that the night side reads too." },
-                { "DaylightUnavailableHelp", "Not available: another plugin sets the game's light, so the globe keeps the game's light." },
-                { "ThresholdPlanet", "Min. blocks (planet)" },
-                { "ThresholdSpace", "Min. blocks (space)" },
-                { "ThresholdHelp", "Grids with fewer blocks are hidden from this view: debris of broken grids stay out of the way. Kept for every server." },
-                { "Favorites", "Favorites" },
-                { "Visited", "Visited" },
-                { "FavoritesHelp", "Only the servers in your favorites. Kept between game launches." },
-                { "VisitedHelp", "Only the servers you have played on. Kept between game launches." },
-                { "Search", "Search" },
-                { "SearchHelp", "Search a server by name or address." },
-                { "SyncRange", "Sync range" },
-                { "FilterActive", "Filter active: {0} of {1} servers shown" },
-                { "AllServers", "All known servers shown" },
-                { "Refresh", "Refresh" },
-                { "RefreshHelp", "Asks the game for the server lists again." },
-                { "Loading", "Asking the game for servers..." },
+                { "ShowMemories", "Souvenirs" },
+                { "Daylight", "Globe éclairé" },
+                { "DaylightHelp", "Éclaire le globe depuis la caméra tant que la carte est ouverte, pour lire aussi la face de nuit." },
+                { "DaylightUnavailableHelp", "Indisponible : un autre greffon règle la lumière du jeu, le globe garde la lumière du jeu." },
+                { "ThresholdPlanet", "Blocs min. (planète)" },
+                { "ThresholdSpace", "Blocs min. (espace)" },
+                { "ThresholdHelp", "Les grilles de moins de blocs sont masquées dans cette vue : les débris de grilles brisées ne gênent plus. Valable pour tous les serveurs." },
+                { "Favorites", "Favoris" },
+                { "Visited", "Visités" },
+                { "FavoritesHelp", "Seulement les serveurs de vos favoris. Conservé entre les lancements du jeu." },
+                { "VisitedHelp", "Seulement les serveurs où vous avez joué. Conservé entre les lancements du jeu." },
+                { "Search", "Rechercher" },
+                { "SearchHelp", "Chercher un serveur par nom ou adresse." },
+                { "SyncRange", "Portée de synchro" },
+                { "FilterActive", "Filtre actif : {0} serveurs sur {1} affichés" },
+                { "AllServers", "Tous les serveurs connus sont affichés" },
+                { "Refresh", "Actualiser" },
+                { "RefreshHelp", "Redemande les listes de serveurs au jeu." },
+                { "Loading", "Demande des serveurs au jeu..." },
                 { "Type", "Type" },
-                { "Diameter", "Diameter" },
-                { "Gravity", "Gravity" },
-                { "Atmosphere", "Atmosphere" },
-                { "Oxygen", "Oxygen" },
-                { "Temperature", "Temperature" },
-                { "Ores", "Ores" },
+                { "Diameter", "Diamètre" },
+                { "Gravity", "Gravité" },
+                { "Atmosphere", "Atmosphère" },
+                { "Oxygen", "Oxygène" },
+                { "Temperature", "Température" },
+                { "Ores", "Minerais" },
                 { "Distance", "Distance" },
                 { "Altitude", "Altitude" },
-                { "Speed", "Speed" },
-                { "Blocks", "Blocks" },
-                { "Owner", "Owner" },
-                { "Seen", "Seen" },
-                { "Range", "Range" },
+                { "Speed", "Vitesse" },
+                { "Blocks", "Blocs" },
+                { "Owner", "Propriétaire" },
+                { "Seen", "Vu" },
+                { "Range", "Portée" },
                 { "Position", "Position" },
-                { "Moons", "Moons" },
-                { "Planets", "Planets" },
-                { "Players", "Players" },
-                { "Address", "Address" },
+                { "Moons", "Lunes" },
+                { "Planets", "Planètes" },
+                { "Players", "Joueurs" },
+                { "Address", "Adresse" },
                 { "Ping", "Ping" },
-                { "LastVisit", "Last visit" },
-                { "Status", "Status" },
-                { "SystemSize", "Size of the system" },
-                { "None", "none" },
-                { "Breathable", "breathable" },
-                { "NotBreathable", "not breathable" },
-                { "Live", "live" },
-                { "InRange", "in sync range, live" },
-                { "OutOfRange", "out of range: last known position" },
-                { "SeenAgo", "seen {0} ago" },
-                { "LastVisitAgo", "last visit {0} ago" },
-                { "NeverVisited", "never visited" },
-                { "YouAreHere", "You are here" },
-                { "You", "You" },
-                { "Sun", "Sun" },
-                { "MoonOf", "Moon of {0}" },
-                { "LockedSubtitle", "Left drag: turn around the grid" },
-                { "TempExtremeCold", "extreme cold" },
-                { "TempCold", "cold" },
-                { "TempTemperate", "temperate" },
-                { "TempHot", "hot" },
-                { "TempExtremeHeat", "extreme heat" },
+                { "LastVisit", "Dernière visite" },
+                { "Status", "Statut" },
+                { "SystemSize", "Taille du système" },
+                { "None", "aucun" },
+                { "Breathable", "respirable" },
+                { "NotBreathable", "non respirable" },
+                { "Live", "en direct" },
+                { "InRange", "à portée, en direct" },
+                { "OutOfRange", "hors de portée : dernière position connue" },
+                { "SeenAgo", "vu il y a {0}" },
+                { "LastVisitAgo", "dernière visite il y a {0}" },
+                { "NeverVisited", "jamais visité" },
+                { "YouAreHere", "Vous êtes ici" },
+                { nameof(You), "Vous" },
+                { "Sun", "Soleil" },
+                { "MoonOf", "Lune de {0}" },
+                { "LockedSubtitle", "Clic gauche glissé : tourner autour de la grille" },
+                { "TempExtremeCold", "froid extrême" },
+                { "TempCold", "froid" },
+                { "TempTemperate", "tempéré" },
+                { "TempHot", "chaud" },
+                { "TempExtremeHeat", "chaleur extrême" },
                 { "KindStation", "Base" },
-                { "KindLargeShip", "Large ship" },
-                { "KindSmallShip", "Small grid" },
-                { "KindCharacter", "Player" },
+                { "KindLargeShip", "Grand vaisseau" },
+                { "KindSmallShip", "Petite grille" },
+                { "KindCharacter", "Joueur" },
                 { "KindGps", "GPS" },
-                { "KindPlanet", "Planet" },
-                { "KindMoon", "Moon" },
-                { "RelationOwn", "you" },
-                { "RelationFaction", "your faction" },
-                { "RelationNeutral", "neutral" },
-                { "RelationEnemy", "enemy" },
-                { "RelationUnowned", "nobody" },
-                { "HelpPlanet", "Left drag: turn the globe   Wheel: zoom   Click: select   Double click a grid: turn around it   Double click a body: go to it" },
-                { "HelpPlanetLocked", "Left drag: turn around the grid   Wheel: zoom   Middle drag or WASD: let go" },
-                { "HelpLocal", "Left drag: turn   Middle drag or WASD: move   Wheel: zoom   Double click a grid: fly around it   Double click a body: go to it" },
-                { "HelpLocked", "Left drag: turn around the grid   Click on empty space, right click or wheel: back to your neighbourhood" },
-                { "HelpOrrery", "Left drag: turn   Middle drag or WASD: move   Wheel: zoom (Ctrl: fly)   Double click: dive" },
-                { "HelpBodies", "Click: select   Double click or wheel: open the globe" },
-                { "HelpGalaxy", "Wheel: zoom   Middle drag: move   Click: details   Double click: join the server" },
-                { "CloseHint", "M or Esc: close" },
-                { "JoinCaption", "Join another server" },
-                { "JoinQuestion", "Leave this server and join \"{0}\"?" },
-                { "JoinChecking", "Checking \"{0}\"..." },
-                { "JoinOffline", "\"{0}\" does not answer. You stay on this server." },
-                { "JoinFull", "\"{0}\" is full ({1}/{2}). You stay on this server." },
-                { "JoinVersion", "\"{0}\" runs another version of the game. You stay on this server." },
-                { "JoinNoAddress", "The address of \"{0}\" is unknown. You stay on this server." },
-                { "JoinAlreadyHere", "You are already on \"{0}\"." },
-                { "JoinFailedCaption", "Could not join" },
-                { "JoinPasswordNeeded", "This server asks for a password." },
-                { "JoinPasswordLabel", "Password" },
-                { "JoinPasswordHelp", "The password of the server, handed to the game when it asks for it. It is not kept." },
-                { "JoinButton", "Join" },
-                { "StayButton", "Stay here" },
-                { "ReturnCaption", "Back to your server" },
-                { "ReturnQuestion", "\"{0}\" could not be joined.\n\nGo back to \"{1}\", the server you just left?" },
-                { "ReturnOffline", "\"{0}\" does not answer either. Join a server from the game's server list." },
-                { "CameraStepTaken", "Sir Holomap: another plugin already moves the game camera ({0}). The map paints its own globe instead of the game's 3D view." },
-                { "CameraHookFailed", "Sir Holomap: the game's camera could not be reached. The map paints its own globe instead of the game's 3D view." },
-                { "LightStepTaken", "Sir Holomap: another plugin already sets the game's light ({0}). \"Daylight globe\" stays off: the globe keeps the game's light." },
-                { "LightHookFailed", "Sir Holomap: the game's light could not be reached. \"Daylight globe\" stays off: the globe keeps the game's light." },
-                { "Fault", "Sir Holomap: a fault occurred, the map is closed. See the game log." },
-                { "AgoFewSeconds", "a few seconds" },
+                { "KindPlanet", "Planète" },
+                { "KindMoon", "Lune" },
+                { "RelationOwn", "vous" },
+                { "RelationFaction", "votre faction" },
+                { "RelationNeutral", "neutre" },
+                { "RelationEnemy", "ennemi" },
+                { "RelationUnowned", "personne" },
+                { "HelpPlanet", "Clic gauche glissé : tourner le globe   Molette : zoom   Clic : sélectionner   Double-clic sur une grille : tourner autour   Double-clic sur un astre : y aller" },
+                { "HelpPlanetLocked", "Clic gauche glissé : tourner autour de la grille   Molette : zoom   Clic molette glissé ou ZQSD : lâcher" },
+                { "HelpLocal", "Clic gauche glissé : tourner   Clic molette glissé ou ZQSD : déplacer   Molette : zoom   Double-clic sur une grille : voler autour   Double-clic sur un astre : y aller" },
+                { "HelpLocked", "Clic gauche glissé : tourner autour de la grille   Clic dans le vide, clic droit ou molette : retour à votre voisinage" },
+                { "HelpOrrery", "Clic gauche glissé : tourner   Clic molette glissé ou ZQSD : déplacer   Molette : zoom (Ctrl : avancer)   Double-clic : plonger" },
+                { "HelpBodies", "Clic : sélectionner   Double-clic ou molette : ouvrir le globe" },
+                { "HelpGalaxy", "Molette : zoom   Clic molette glissé : déplacer   Clic : détails   Double-clic : rejoindre le serveur" },
+                { "CloseHint", "M ou Échap : fermer" },
+                { "JoinCaption", "Rejoindre un autre serveur" },
+                { "JoinQuestion", "Quitter ce serveur et rejoindre « {0} » ?" },
+                { "JoinChecking", "Vérification de « {0} »..." },
+                { "JoinOffline", "« {0} » ne répond pas. Vous restez sur ce serveur." },
+                { "JoinFull", "« {0} » est plein ({1}/{2}). Vous restez sur ce serveur." },
+                { "JoinVersion", "« {0} » utilise une autre version du jeu. Vous restez sur ce serveur." },
+                { "JoinNoAddress", "L'adresse de « {0} » est inconnue. Vous restez sur ce serveur." },
+                { "JoinAlreadyHere", "Vous êtes déjà sur « {0} »." },
+                { "JoinFailedCaption", "Connexion impossible" },
+                { "JoinPasswordNeeded", "Ce serveur demande un mot de passe." },
+                { "JoinPasswordLabel", "Mot de passe" },
+                { "JoinPasswordHelp", "Le mot de passe du serveur, transmis au jeu quand il le demande. Il n'est pas conservé." },
+                { "JoinButton", "Rejoindre" },
+                { "StayButton", "Rester ici" },
+                { "ReturnCaption", "Retour à votre serveur" },
+                { "ReturnQuestion", "« {0} » n'a pas pu être rejoint.\n\nRevenir sur « {1} », le serveur que vous venez de quitter ?" },
+                { "ReturnOffline", "« {0} » ne répond pas non plus. Rejoignez un serveur depuis la liste des serveurs du jeu." },
+                { "CameraStepTaken", "Sir Holomap : un autre greffon déplace déjà la caméra du jeu ({0}). La carte peint son propre globe au lieu de la vue 3D du jeu." },
+                { "CameraHookFailed", "Sir Holomap : la caméra du jeu est inaccessible. La carte peint son propre globe au lieu de la vue 3D du jeu." },
+                { "LightStepTaken", "Sir Holomap : un autre greffon règle déjà la lumière du jeu ({0}). « Globe éclairé » reste éteint : le globe garde la lumière du jeu." },
+                { "LightHookFailed", "Sir Holomap : la lumière du jeu est inaccessible. « Globe éclairé » reste éteint : le globe garde la lumière du jeu." },
+                { "Fault", "Sir Holomap : une erreur est survenue, la carte est fermée. Voir le journal du jeu." },
+                { "AgoFewSeconds", "quelques secondes" },
                 { "AgoMinutes", "{0} min" },
                 { "AgoHours", "{0} h" },
-                { "AgoDays", "{0} days" },
-                { "AgoMonths", "{0} months" },
-                { "AgoYears", "{0} years" },
+                { "AgoDays", "{0} jours" },
+                { "AgoMonths", "{0} mois" },
+                { "AgoYears", "{0} ans" },
             };
         }
     }

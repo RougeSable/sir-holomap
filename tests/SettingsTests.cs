@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using Xunit;
 
@@ -36,17 +36,17 @@ namespace SirHolomap.Tests
                 first.ShowGps = false;
                 MapSettingsFile.Save(directory, first);
 
-                // A new game launch: a new instance read from the disk.
+                // Un nouveau lancement du jeu : une nouvelle instance relue depuis le disque.
                 var next = MapSettingsFile.Load(directory, out problem);
                 Assert.Null(problem);
                 Assert.True(next.GalaxyFavoritesOnly);
                 Assert.False(next.GalaxyVisitedOnly);
                 Assert.Equal("sirius", next.GalaxySearch);
                 Assert.False(next.ShowGps);
-                // The preferred filter is still active, so it is shown.
+                // Le filtre préféré est toujours actif, donc il se montre.
                 Assert.True(next.GalaxyFilterActive);
 
-                // A damaged file falls back to the defaults, never a crash.
+                // Un fichier abîmé retombe sur les valeurs par défaut, jamais un plantage.
                 File.WriteAllText(Path.Combine(directory, MapSettingsFile.FileName), "<oops");
                 var damaged = MapSettingsFile.Load(directory, out problem);
                 Assert.NotNull(problem);
@@ -65,14 +65,14 @@ namespace SirHolomap.Tests
                 first.SpaceBlockThreshold = 100;
                 MapSettingsFile.Save(directory, first);
 
-                // A new game launch, any server: the same thresholds, one for
-                // A and one for B.
+                // Un nouveau lancement du jeu, n'importe quel serveur : les mêmes seuils, un pour
+                // A et un pour B.
                 var next = MapSettingsFile.Load(directory, out problem);
                 Assert.Null(problem);
                 Assert.Equal(3, next.PlanetBlockThreshold);
                 Assert.Equal(100, next.SpaceBlockThreshold);
 
-                // Out of range values are brought back in range.
+                // Les valeurs hors de portée sont ramenées dans la portée.
                 next.SpaceBlockThreshold = -5;
                 MapSettingsFile.Save(directory, next);
                 Assert.Equal(MapSettings.ThresholdMin, MapSettingsFile.Load(directory, out problem).SpaceBlockThreshold);

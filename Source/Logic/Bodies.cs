@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace SirHolomap
 {
-    // A planet or a moon, as the system view knows it.
+    // Une planète ou une lune, telle que la vue Système la connaît.
     public sealed class BodyInfo
     {
         public long Id;
@@ -12,7 +12,7 @@ namespace SirHolomap
         public double Radius;
     }
 
-    // A planet and the moons that follow it, in the flat system view.
+    // Une planète et les lunes qui la suivent, dans la vue Système à plat.
     public sealed class BodyRow
     {
         public BodyInfo Planet;
@@ -22,13 +22,13 @@ namespace SirHolomap
 
     public static class BodyOrdering
     {
-        // A body is the moon of a planet when it is clearly smaller and close
-        // to it, a few planet radii away.
+        // Un astre est la lune d'une planète quand il est nettement plus petit et
+        // proche d'elle, à quelques rayons de planète.
         public const double MoonSizeRatio = 0.6;
         public const double MoonDistanceRadii = 6.0;
 
-        // Planets by distance to the centre of the world, each followed by its
-        // moons, closest moon first.
+        // Les planètes par distance au centre du monde, chacune suivie de ses
+        // lunes, la plus proche en premier.
         public static List<BodyRow> Order(IList<BodyInfo> bodies)
         {
             var parents = new Dictionary<BodyInfo, BodyInfo>();
@@ -51,7 +51,7 @@ namespace SirHolomap
                     parents[body] = best;
             }
 
-            // A moon of a moon is listed with the planet at the top.
+            // Une lune de lune est listée avec la planète du dessus.
             var rows = new List<BodyRow>();
             var byPlanet = new Dictionary<BodyInfo, BodyRow>();
             foreach (var body in bodies)

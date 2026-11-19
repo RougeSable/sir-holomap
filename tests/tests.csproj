@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Tests of Sir Holomap. They cover the plugin's pure logic (Source/Logic),
-    whose sources are included here: they run without the game and without
+    Tests de Sir Holomap. Ils couvrent la logique pure du greffon (Source/Logic),
+    dont les sources sont incluses ici : ils tournent sans le jeu et sans
     Pulsar.
 
       dotnet test tests/tests.csproj

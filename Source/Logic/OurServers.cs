@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 
 namespace SirHolomap
 {
-    // Which servers listen to the reports: ours, PU and PTU. Nowhere else
-    // does a report leave the machine.
+    // Quels serveurs écoutent les rapports : les nôtres, PU et PTU. Nulle part ailleurs
+    // un rapport ne quitte la machine.
     public static class OurServers
     {
-        // A server of ours has this in the name it is listed under.
+        // Un serveur à nous porte ceci dans le nom sous lequel il est listé.
         public static readonly string[] NameMarkers = { "sirius immersion" };
 
         public static bool IsOurs(string serverName, bool isDedicated)

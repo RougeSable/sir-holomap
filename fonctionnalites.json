@@ -1,0 +1,21 @@
+﻿{
+  "produit": "holomap",
+  "fonctionnalites": [
+    {
+      "cle": "holomap.carte",
+      "libelle": "Ouvrir la carte"
+    },
+    {
+      "cle": "holomap.systeme",
+      "libelle": "Vue Système"
+    },
+    {
+      "cle": "holomap.galaxie",
+      "libelle": "Vue Galaxie"
+    },
+    {
+      "cle": "holomap.suivi_grille",
+      "libelle": "Suivi d'une grille"
+    }
+  ]
+}

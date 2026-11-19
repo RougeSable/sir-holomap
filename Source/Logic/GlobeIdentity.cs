@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 
 namespace SirHolomap
 {
-    // What makes a painted globe still right for a body: the same planet
-    // entity, of the same kind, the same size, at the same place. A globe
-    // painted before the player left a world is shown again at once when
-    // they join it back, instead of a grey disc while it is painted anew.
+    // Ce qui garde un globe peint juste pour un astre : la même entité de
+    // planète, du même genre, de la même taille, au même endroit. Un globe
+    // peint avant que le joueur quitte un monde se montre de nouveau tout de suite quand
+    // il y revient, au lieu d'un disque gris pendant qu'il est repeint.
     public struct GlobeIdentity
     {
-        // A planet does not move: a metre is room enough for rounding.
+        // Une planète ne bouge pas : un mètre laisse assez de place aux arrondis.
         public const double Tolerance = 1.0;
 
         public readonly long Id;
@@ -33,9 +33,9 @@ namespace SirHolomap
         }
     }
 
-    // The scale a label is drawn at so that it fits a width: its own scale
-    // when it fits, smaller when it does not, never below a floor (a label
-    // still too wide at the floor is then cut by the caller).
+    // L'échelle à laquelle on dessine une étiquette pour qu'elle tienne dans une largeur : la sienne
+    // quand elle tient, plus petite sinon, jamais sous un plancher (une étiquette
+    // encore trop large au plancher est alors coupée par l'appelant).
     public static class TextFit
     {
         public static float Scale(float widthAtScale, float scale, float width, float floor)

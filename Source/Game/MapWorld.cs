@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Sandbox.Game.Entities;
 using Sandbox.Game.World;
@@ -10,7 +10,7 @@ using VRageMath;
 
 namespace SirHolomap
 {
-    // A planet or a moon, read from the real planet entity.
+    // Une planète ou une lune, lue depuis la vraie entité de planète.
     internal sealed class Body
     {
         public MyPlanet Planet;
@@ -37,8 +37,8 @@ namespace SirHolomap
         }
     }
 
-    // Something shown on the map: a grid, a player, a GPS point, live or
-    // remembered.
+    // Quelque chose de montré sur la carte : une grille, un joueur, un point GPS, vivant ou
+    // retenu.
     internal sealed class Marker
     {
         public long Id;
@@ -62,9 +62,9 @@ namespace SirHolomap
         }
     }
 
-    // What the map knows of the world: what the game sends to the player now,
-    // what the player saw before (the memory of this server), the planets,
-    // the GPS points. Read on the game thread only.
+    // Ce que la carte sait du monde : ce que le jeu envoie au joueur maintenant,
+    // ce que le joueur a vu avant (la mémoire de ce serveur), les planètes,
+    // les points GPS. Lu sur le fil du jeu seulement.
     internal sealed class MapWorld
     {
         public const string StorageFolder = "Memory";
@@ -109,7 +109,7 @@ namespace SirHolomap
             get { return Memory != null; }
         }
 
-        // A world was loaded, or left.
+        // Un monde a été chargé, ou quitté.
         public void Track()
         {
             var session = MyAPIGateway.Session;
@@ -131,7 +131,7 @@ namespace SirHolomap
                 SaveHistory();
             }
             m_lastBodies = DateTime.MinValue;
-            HolomapPlugin.Log("world joined, memory " + Identity.Key + ": " + Memory.Count + " contacts");
+            HolomapPlugin.Log("monde rejoint, mémoire " + Identity.Key + " : " + Memory.Count + " contacts");
         }
 
         public void Leave()
@@ -163,7 +163,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.LogCaught("memory not saved: " + e.Message, e);
+                HolomapPlugin.LogCaught("mémoire non enregistrée : " + e.Message, e);
             }
             m_lastSave = DateTime.UtcNow;
         }
@@ -176,7 +176,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.LogCaught("server history not saved: " + e.Message, e);
+                HolomapPlugin.LogCaught("historique des serveurs non enregistré : " + e.Message, e);
             }
         }
 
@@ -213,9 +213,9 @@ namespace SirHolomap
             DirectionToSun = MySector.DirectionToSunNormalized;
         }
 
-        // Everything the game sends now is seen: its position and the time
-        // are written to the memory. Called a few times a second, map open
-        // or not.
+        // Tout ce que le jeu envoie maintenant est vu : sa position et l'heure
+        // sont écrites dans la mémoire. Appelé plusieurs fois par seconde, carte ouverte
+        // ou non.
         public void Scan()
         {
             if (Memory == null)
@@ -280,7 +280,7 @@ namespace SirHolomap
                         break;
                     }
                 }
-                // Only players: animals and robots are not worth remembering.
+                // Seulement les joueurs : les animaux et les robots ne valent pas d'être retenus.
                 if (owner == null || owner.IsBot)
                     return false;
                 sighting.Id = character.EntityId;
@@ -329,9 +329,9 @@ namespace SirHolomap
             return new Vector3D(v.X, v.Y, v.Z);
         }
 
-        // The planets are read again every few seconds, but each keeps its
-        // own Body for as long as it exists: what the map selected, hovered or
-        // dived into stays the same object, so its highlight never drops.
+        // Les planètes sont relues toutes les quelques secondes, mais chacune garde son
+        // propre Body aussi longtemps qu'elle existe : ce que la carte a sélectionné, survolé ou
+        // plongé reste le même objet, si bien que sa surbrillance ne tombe jamais.
         private void ReadBodies()
         {
             m_lastBodies = DateTime.UtcNow;
@@ -345,8 +345,8 @@ namespace SirHolomap
                     m_planets.Add(planet);
             }
             m_entities.Clear();
-            // Always in the same order, so that two planets of the same name
-            // keep their numbers.
+            // Toujours dans le même ordre, pour que deux planètes du même nom
+            // gardent leurs numéros.
             m_planets.Sort((a, b) => a.EntityId.CompareTo(b.EntityId));
 
             Bodies.Clear();
@@ -374,10 +374,10 @@ namespace SirHolomap
             }
             m_planets.Clear();
 
-            // Planets gone from the world are forgotten.
+            // Les planètes disparues du monde sont oubliées.
             m_bodyCache.EndRefresh();
 
-            // Moons follow their planet, the same way the flat view lists them.
+            // Les lunes suivent leur planète, comme la vue à plat les liste.
             var infos = new List<BodyInfo>();
             var byInfo = new Dictionary<BodyInfo, Body>();
             foreach (var body in Bodies)
@@ -398,7 +398,7 @@ namespace SirHolomap
             }
         }
 
-        // "EarthLike-123456d120000" is shown "EarthLike".
+        // « EarthLike-123456d120000 » se montre « EarthLike ».
         private static string PlanetName(MyPlanet planet)
         {
             var name = planet.StorageName ?? "";
@@ -454,14 +454,14 @@ namespace SirHolomap
             return null;
         }
 
-        // A body the map holds on to (selected, hovered, dived into), as it
-        // is now: the same object while the planet exists, null once gone.
+        // Un astre que la carte retient (sélectionné, survolé, plongé), tel qu'il
+        // est maintenant : le même objet tant que la planète existe, null une fois disparue.
         public Body Follow(Body body)
         {
             return m_bodyCache.Follow(body, b => b.Id);
         }
 
-        // The planet whose gravity holds the player, if any.
+        // La planète dont la gravité retient le joueur, s'il y en a une.
         public Body PlanetUnderPlayer()
         {
             float interference;
@@ -489,8 +489,8 @@ namespace SirHolomap
             return best;
         }
 
-        // The markers of this frame: live ones where the game has them now,
-        // memories where they were last seen, the player, the GPS points.
+        // Les repères de cette image : les vivants là où le jeu les a maintenant,
+        // les souvenirs là où ils ont été vus en dernier, le joueur, les points GPS.
         public void Refresh()
         {
             if (Memory == null)
@@ -523,8 +523,8 @@ namespace SirHolomap
                 marker.Position = ToVector(contact.Position);
                 marker.Velocity = Vector3.Zero;
 
-                // Live: where it is at this very frame, so that ships move
-                // smoothly on the map.
+                // Vivant : là où il est à cette image même, pour que les vaisseaux bougent
+                // doucement sur la carte.
                 if (contact.IsLive)
                 {
                     IMyEntity entity;

@@ -1,23 +1,23 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using VRage.Utils;
 using VRageMath;
 
 namespace SirHolomap
 {
-    // D, the galaxy: where this server lies among the others. Every server
-    // has a fixed place, computed from its address: every player sees it at
-    // the same spot, and the view always comes to rest on the whole galaxy,
-    // so that a server is found at the same spot on the screen from one
-    // opening of the map to the next. Icons too close to be told apart
-    // spread around the middle of their group, a thin line to their true
-    // place: none covers another, each can be hovered and clicked. The
-    // current server shines with "You are here". A double click on a server
-    // asks, naming it, before leaving for it. Zooming out of the system
-    // leads here; zooming in leads back.
+    // D, la galaxie : où ce serveur se trouve parmi les autres. Chaque serveur
+    // a une place fixe, calculée à partir de son adresse : chaque joueur la voit au
+    // même endroit, et la vue vient toujours se poser sur la galaxie entière,
+    // si bien qu'un serveur se retrouve au même endroit de l'écran d'une
+    // ouverture de la carte à l'autre. Les icônes trop proches pour se distinguer
+    // s'étalent autour du milieu de leur groupe, un trait fin vers leur vraie
+    // place : aucune n'en couvre une autre, chacune peut être survolée et cliquée. Le
+    // serveur actuel brille avec « Vous êtes ici ». Un double clic sur un serveur
+    // demande, en le nommant, avant d'y partir. Dézoomer du système
+    // mène ici ; zoomer ramène en arrière.
     internal sealed class GalaxyView : MapView
     {
-        // Rows of the servers shown with their name, and plain dots.
+        // Les lignes des serveurs montrés avec leur nom, et les points simples.
         private const float RowHeight = 38;
         private const float IconHalf = 8;
         private const float DotSpacing = 11;
@@ -25,27 +25,27 @@ namespace SirHolomap
         private const float HereScale = 0.56f;
         private const float NameRoom = 260;
 
-        // Up to this many servers shown, every one carries its name.
+        // Jusqu'à ce nombre de serveurs montrés, chacun porte son nom.
         private const int NamedWhenFewer = 60;
 
-        // What the view shows and where it glides to; the zoom grows and
-        // shrinks around the cursor, softly, at every notch.
+        // Ce que la vue montre et où elle glisse ; le zoom grandit et
+        // rétrécit autour du curseur, doucement, à chaque cran.
         private readonly GalaxyCamera m_camera = new GalaxyCamera();
         private double m_enteredAt;
         private bool m_arriving;
-        // Zoomed in past the way back: the galaxy fades as the view glides on
-        // to the system, from this zoom.
+        // Zoomé au-delà du chemin du retour : la galaxie s'efface pendant que la vue glisse
+        // vers le système, depuis ce zoom.
         private bool m_leaving;
         private double m_leaveFrom;
 
-        // The sky: a far layer of small dim stars and a near one of a few
-        // larger ones, drifting at their own pace for depth.
+        // Le ciel : une couche lointaine de petites étoiles ternes et une proche de quelques
+        // plus grandes, dérivant à leur propre allure pour la profondeur.
         private static readonly SkyStar[] FarSky = StarSky.Layer(StarSky.FarStars, 1);
         private static readonly SkyStar[] NearSky = StarSky.Layer(StarSky.NearStars, 2);
 
-        // How far each icon is drawn from its true place, as shown: when the
-        // zoom gathers or spreads a group, its icons glide to their new
-        // places instead of jumping there.
+        // De combien chaque icône est dessinée loin de sa vraie place, telle que montrée : quand le
+        // zoom rassemble ou écarte un groupe, ses icônes glissent vers leurs nouvelles
+        // places au lieu d'y sauter.
         private Dictionary<ulong, Vector2> m_shifts = new Dictionary<ulong, Vector2>();
         private Dictionary<ulong, Vector2> m_nextShifts = new Dictionary<ulong, Vector2>();
         private double m_lastDraw;
@@ -58,8 +58,8 @@ namespace SirHolomap
         private PlacedIcon[] m_plainAt = new PlacedIcon[0];
         private readonly List<RectangleF> m_namedRects = new List<RectangleF>();
 
-        // Names cut to their room, and their widths, for the scale and the
-        // language they were measured in.
+        // Les noms coupés à leur place, et leurs largeurs, pour l'échelle et la
+        // langue dans lesquelles ils ont été mesurés.
         private readonly Dictionary<string, string> m_fitted = new Dictionary<string, string>();
         private readonly Dictionary<string, float> m_widths = new Dictionary<string, float>();
         private float m_measuredScale;
@@ -89,8 +89,8 @@ namespace SirHolomap
             get { return Texts.HelpGalaxy; }
         }
 
-        // continuous: zoomed out of the system. The view starts close on the
-        // current server and glides out to the whole galaxy, where it rests.
+        // continuous : dézoomé du système. La vue commence près du
+        // serveur actuel et glisse vers la galaxie entière, où elle se pose.
         public void Enter(bool continuous)
         {
             m_enteredAt = Map.Time;
@@ -119,9 +119,9 @@ namespace SirHolomap
         {
             var halfLife = Map.Time < m_enteredAt + 1.2 ? MapCamera.TransitionHalfLife : GalaxyCamera.HalfLife;
             m_camera.Update(dt, halfLife);
-            // Zoomed in past the way back: the view glides on, the galaxy
-            // fading, then the system takes over. A notch back out before
-            // that keeps the galaxy.
+            // Zoomé au-delà du chemin du retour : la vue glisse plus loin, la galaxie
+            // s'efface, puis le système prend la main. Un cran en arrière avant
+            // cela garde la galaxie.
             if (!m_camera.BackToSystem)
             {
                 m_leaving = false;
@@ -136,8 +136,8 @@ namespace SirHolomap
                 Map.GoSystem(Map.Tab, true);
         }
 
-        // The galaxy as it shows: fading in when it arrives from the system,
-        // fading out when it leaves for it.
+        // La galaxie telle qu'elle se montre : en fondu à l'arrivée depuis le système,
+        // en fondu à la sortie vers lui.
         private float Shown
         {
             get { return Fade * (m_leaving ? (float)m_camera.LeaveFade(m_leaveFrom) : 1f); }
@@ -152,7 +152,7 @@ namespace SirHolomap
             }
         }
 
-        // Pixels for half the galaxy at zoom 1.
+        // Pixels pour la moitié de la galaxie au zoom 1.
         private float HalfSize
         {
             get
@@ -162,7 +162,7 @@ namespace SirHolomap
             }
         }
 
-        // Where a galaxy point shows now.
+        // Où un point de la galaxie se montre maintenant.
         private Vector2 ToScreen(GalaxyPoint point)
         {
             double u, v;
@@ -173,7 +173,7 @@ namespace SirHolomap
 
         public override void Wheel(double notches, bool ctrl)
         {
-            // Zoom around the cursor: the point under it stays there.
+            // Zoom autour du curseur : le point dessous y reste.
             var at = (Gfx.Mouse - AreaCentre) / HalfSize;
             m_camera.Wheel(notches, at.X, at.Y);
         }
@@ -195,7 +195,7 @@ namespace SirHolomap
             Pan(-step);
         }
 
-        // Back to the whole galaxy, as it rests.
+        // Retour à la galaxie entière, comme elle se pose.
         public override void Recentre()
         {
             m_camera.Home();
@@ -211,7 +211,7 @@ namespace SirHolomap
 
         public override object Pick(Vector2 mouse)
         {
-            // The named rows are drawn over the dots, the last on top.
+            // Les lignes nommées sont dessinées sur les points, la dernière au-dessus.
             for (var i = Math.Min(m_namedRects.Count, m_named.Count) - 1; i >= 0; i--)
             {
                 if (m_namedRects[i].Contains(mouse))
@@ -238,7 +238,7 @@ namespace SirHolomap
                 ServerJoiner.Ask(server);
         }
 
-        // The names are measured once per scale and language.
+        // Les noms sont mesurés une fois par échelle et par langue.
         private string Fitted(string name, out float width)
         {
             var s = Gfx.Scale;
@@ -283,11 +283,11 @@ namespace SirHolomap
                 if (ServerDirectory.Passes(server, Settings))
                     m_shown.Add(server);
             }
-            // The order of the list: the current server, favorites, visited,
-            // the rest. The places on the map never depend on it.
+            // L'ordre de la liste : le serveur actuel, les favoris, les visités,
+            // le reste. Les places sur la carte n'en dépendent jamais.
             m_shown.Sort(Compare);
 
-            // Servers with their name, and plain dots.
+            // Les serveurs avec leur nom, et les points simples.
             m_named.Clear();
             m_plain.Clear();
             var everyName = m_shown.Count <= NamedWhenFewer;
@@ -309,9 +309,9 @@ namespace SirHolomap
             m_plainAt = GalaxyLayout.Dots(m_icons, DotSpacing * s);
             Soften(m_plainAt, m_plain, glide);
 
-            // Every named row has the same height and the room of its name,
-            // whichever server is the current one: the current server never
-            // pushes the others around.
+            // Chaque ligne nommée a la même hauteur et la place de son nom,
+            // quel que soit le serveur actuel : le serveur actuel ne
+            // pousse jamais les autres.
             m_icons.Clear();
             for (var i = 0; i < m_named.Count; i++)
             {
@@ -329,14 +329,14 @@ namespace SirHolomap
             DrawNamed(area);
             if (floating != null)
             {
-                // The name of a hovered or selected dot, over everything.
+                // Le nom d'un point survolé ou sélectionné, par-dessus tout.
                 float width;
                 var name = Fitted(ServerNames.Name(floating), out width);
                 Gfx.Rect(floatingAt.X + 8 * s, floatingAt.Y - 11 * s, width + 9 * s, 22 * s, new Color(0, 0, 0, 200));
                 Gfx.Text(name, floatingAt.X + 11 * s, floatingAt.Y - 10 * s, NameScale, Gfx.Alpha(Style.Text, 0.95f));
             }
 
-            // A filter that hides servers always says so, and names itself.
+            // Un filtre qui cache des serveurs le dit toujours, et se nomme.
             var active = Settings.GalaxyFilterActive;
             var notice = FilterNotice();
             Gfx.Rect(area.X + 16 * s, area.Y + 14 * s, Gfx.Measure(notice, 0.62f).X + 20 * s, 28 * s, new Color(0, 0, 0, 170));
@@ -345,8 +345,8 @@ namespace SirHolomap
             Gfx.Text(notice, area.X + 26 * s, area.Y + 18 * s, 0.62f, active ? Style.Selection : Style.Dim);
         }
 
-        // Plain dots first, beneath the named rows. Returns the hovered or
-        // selected dot, whose name shows over everything.
+        // Les points simples d'abord, sous les lignes nommées. Rend le point survolé ou
+        // sélectionné, dont le nom se montre par-dessus tout.
         private GalaxyServer DrawPlain(RectangleF area, out Vector2 floatingAt)
         {
             var s = Gfx.Scale;
@@ -376,8 +376,8 @@ namespace SirHolomap
             return floating;
         }
 
-        // Named rows, each in its own place in its column, its name on a
-        // dark band so that it reads over the stars and the dots.
+        // Les lignes nommées, chacune à sa place dans sa colonne, son nom sur
+        // une bande sombre pour qu'il se lise sur les étoiles et les points.
         private void DrawNamed(RectangleF area)
         {
             var s = Gfx.Scale;
@@ -414,7 +414,7 @@ namespace SirHolomap
             }
         }
 
-        // From where an icon is drawn to its true place in the galaxy.
+        // D'où une icône est dessinée jusqu'à sa vraie place dans la galaxie.
         private static void Leader(PlacedIcon placed, float alpha)
         {
             var s = Gfx.Scale;
@@ -424,7 +424,7 @@ namespace SirHolomap
             Gfx.Sprite(GameTextures.Shape(Images.Shape.Disc), from, 4 * s, Gfx.Alpha(Style.Accent, alpha));
         }
 
-        // The filter in force, by name, with how many servers it lets through.
+        // Le filtre en vigueur, par son nom, avec le nombre de serveurs qu'il laisse passer.
         private string FilterNotice()
         {
             if (!Settings.GalaxyFilterActive)
@@ -439,7 +439,7 @@ namespace SirHolomap
             return string.Format(Texts.FilterActive, m_shown.Count, Map.Servers.Count) + "  -  " + string.Join(", ", names.ToArray());
         }
 
-        // How much of the way the shown shifts of the icons go this frame.
+        // Quelle part du chemin les décalages montrés des icônes font cette image.
         private float ShiftGlide()
         {
             var dt = MathHelper.Clamp(Map.Time - m_lastDraw, 0, 0.1);
@@ -447,8 +447,8 @@ namespace SirHolomap
             return (float)(1 - Math.Pow(0.5, dt / GalaxyCamera.HalfLife));
         }
 
-        // The icons glide from where they were drawn to where the layout
-        // puts them now, around their true places that follow the zoom.
+        // Les icônes glissent d'où elles étaient dessinées vers où la disposition
+        // les met maintenant, autour de leurs vraies places qui suivent le zoom.
         private void Soften(PlacedIcon[] placed, List<GalaxyServer> servers, float glide)
         {
             for (var i = 0; i < placed.Length && i < servers.Count; i++)
@@ -472,7 +472,7 @@ namespace SirHolomap
             }
         }
 
-        // Only the icons drawn this frame are remembered.
+        // Seules les icônes dessinées cette image sont retenues.
         private void SwapShifts()
         {
             var old = m_shifts;
@@ -481,11 +481,11 @@ namespace SirHolomap
             m_nextShifts.Clear();
         }
 
-        // The night sky the galaxy lies on: black, with stars to the edges of
-        // the view however far the galaxy is zoomed out. Few of them, soft
-        // and round with a light halo, in gentle colours, in two layers that
-        // drift and spread at their own pace as the galaxy moves and zooms,
-        // so that the sky has depth and the galaxy stays what the eye reads.
+        // Le ciel de nuit sur lequel repose la galaxie : noir, avec des étoiles jusqu'aux bords de
+        // la vue quelle que soit la distance du dézoom de la galaxie. Peu nombreuses, douces
+        // et rondes avec un halo léger, aux couleurs douces, en deux couches qui
+        // dérivent et s'étalent à leur propre allure quand la galaxie bouge et zoome,
+        // pour que le ciel ait de la profondeur et que la galaxie reste ce que l'œil lit.
         private void DrawSky()
         {
             var s = Gfx.Scale;
@@ -495,9 +495,9 @@ namespace SirHolomap
             StarLayer(NearSky, 1150 * s, 0.25, 0.35, 12 * s, 1f);
         }
 
-        // One layer: a tile of stars repeated over the view. parallax: how
-        // much of the galaxy's motion it follows; spread: how much of its
-        // zoom (as a power).
+        // Une couche : une tuile d'étoiles répétée sur la vue. parallax : quelle
+        // part du mouvement de la galaxie elle suit ; spread : quelle part de son
+        // zoom (en puissance).
         private void StarLayer(SkyStar[] stars, float tile, double parallax, double spread, float starSize, float alpha)
         {
             var top = Map.TopBarHeight;
@@ -508,7 +508,7 @@ namespace SirHolomap
             var layerY = (float)(m_camera.ShownY * half * parallax);
             var grow = (float)Math.Sqrt(Math.Min(zoom, 1.6f));
             var margin = starSize * 2.5f;
-            // The part of the layer in view, in its own pixels.
+            // La partie de la couche en vue, dans ses propres pixels.
             var minX = layerX + (0 - margin - centre.X) / zoom;
             var maxX = layerX + (Gfx.Width + margin - centre.X) / zoom;
             var minY = layerY + (top - margin - centre.Y) / zoom;
@@ -538,7 +538,7 @@ namespace SirHolomap
             }
         }
 
-        // The current server stands out: a pulsing glow and ring.
+        // Le serveur actuel se détache : une lueur et un anneau qui pulsent.
         private void Here(Vector2 at)
         {
             var s = Gfx.Scale;
@@ -607,8 +607,8 @@ namespace SirHolomap
                 : Texts.NeverVisited, server.Visited ? Style.Text : Style.Dim);
         }
 
-        // The filters, kept between game launches and for every server. The
-        // one in force is named under the boxes, and in the corner of the map.
+        // Les filtres, gardés d'un lancement du jeu à l'autre et pour chaque serveur. Celui
+        // en vigueur est nommé sous les cases, et dans le coin de la carte.
         public override void Filters(Panel panel)
         {
             panel.Checkbox(Texts.Favorites, Texts.FavoritesHelp, Settings.GalaxyFavoritesOnly, v => Settings.GalaxyFavoritesOnly = v, 0);

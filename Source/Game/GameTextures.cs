@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VRageRender;
@@ -6,11 +6,11 @@ using VRageRender.Messages;
 
 namespace SirHolomap
 {
-    // The map's pictures, handed to the game's renderer as generated
-    // textures: computed on the player's machine, nothing shipped. Every
-    // picture goes through the ledger: a new array of exactly the size the
-    // renderer reads, premultiplied as the game's sprites expect, never
-    // touched again once sent (see TexturePixels).
+    // Les images de la carte, remises au moteur de rendu du jeu comme des
+    // textures générées : calculées sur la machine du joueur, rien n'est livré. Chaque
+    // image passe par le registre : un nouveau tableau de la taille exacte que le
+    // moteur lit, prémultiplié comme les sprites du jeu l'attendent, jamais
+    // retouché une fois envoyé (voir TexturePixels).
     internal static class GameTextures
     {
         public const string White = "SirHolomapWhite";
@@ -54,8 +54,8 @@ namespace SirHolomap
             Send(Sun, SunSize, SunSize, Images.SunImage(SunSize));
         }
 
-        // The galaxy takes a moment to paint: done off the game thread, shown
-        // when ready. Nothing is drawn with it before.
+        // La galaxie met un moment à se peindre : faite hors du fil du jeu, montrée
+        // quand elle est prête. Rien n'est dessiné avec elle avant.
         public static bool GalaxyReady()
         {
             if (s_galaxyReady)
@@ -74,8 +74,8 @@ namespace SirHolomap
             return ok;
         }
 
-        // Creates the texture, or replaces its picture. False when the picture
-        // was refused (wrong size): the renderer is then left alone.
+        // Crée la texture, ou remplace son image. Faux quand l'image
+        // a été refusée (mauvaise taille) : le moteur est alors laissé tranquille.
         public static bool Send(string name, int width, int height, byte[] straight)
         {
             TextureUpload upload;
@@ -85,7 +85,7 @@ namespace SirHolomap
             }
             catch (ArgumentException e)
             {
-                HolomapPlugin.LogCaught("picture " + name + " not sent: " + e.Message, e);
+                HolomapPlugin.LogCaught("image " + name + " non envoyée : " + e.Message, e);
                 return false;
             }
 

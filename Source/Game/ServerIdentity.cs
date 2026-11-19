@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.ModAPI;
@@ -6,18 +6,18 @@ using VRage.GameServices;
 
 namespace SirHolomap
 {
-    // Which server the player is on: the key of its memory, its name and the
-    // address the galaxy places it with.
+    // Sur quel serveur le joueur se trouve : la clé de sa mémoire, son nom et
+    // l'adresse avec laquelle la galaxie le place.
     internal sealed class ServerIdentity
     {
         public string Key = "";
         public string Name = "";
 
-        // As the game writes it ("steam://1.2.3.4:27016"): what the game
-        // needs to ping and join it again.
+        // Tel que le jeu l'écrit (« steam://1.2.3.4:27016 ») : ce dont le jeu
+        // a besoin pour le sonder et le rejoindre de nouveau.
         public string ConnectionString = "";
 
-        // Dedicated servers only can be joined again from the galaxy.
+        // Seuls les serveurs dédiés peuvent être rejoints de nouveau depuis la galaxie.
         public bool IsDedicated;
 
         public string Normalized
@@ -25,8 +25,8 @@ namespace SirHolomap
             get { return ServerAddress.Normalize(ConnectionString); }
         }
 
-        // A server played on, kept in the history and on the galaxy: a
-        // dedicated server, or a game joined through the game's lobby.
+        // Un serveur où l'on a joué, gardé dans l'historique et sur la galaxie : un
+        // serveur dédié, ou une partie rejointe par le salon du jeu.
         public bool IsRemembered
         {
             get { return IsDedicated || Key.StartsWith(LobbyPrefix, StringComparison.Ordinal); }
@@ -86,9 +86,9 @@ namespace SirHolomap
             return identity;
         }
 
-        // The client of a dedicated server keeps the server item it joined in
-        // an internal class: found by its type, never by a name that could
-        // change.
+        // Le client d'un serveur dédié garde l'élément de serveur qu'il a rejoint dans
+        // une classe interne : retrouvé par son type, jamais par un nom qui pourrait
+        // changer.
         private static MyGameServerItem DedicatedServerOf(object game)
         {
             if (game == null)

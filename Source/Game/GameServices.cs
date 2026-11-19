@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -10,10 +10,10 @@ using VRage.GameServices;
 
 namespace SirHolomap
 {
-    // The game's server browser and its join flow, reached by name at run
-    // time: these parts of the game change between versions, and a name that
-    // is no longer there must only switch off the matching feature (with a
-    // line in the log), never stop the plugin from loading.
+    // Le navigateur de serveurs du jeu et sa connexion, atteints par leur nom à
+    // l'exécution : ces parties du jeu changent d'une version à l'autre, et un nom qui
+    // n'y est plus doit seulement éteindre la fonction correspondante (avec une
+    // ligne dans le journal), jamais empêcher le greffon de se charger.
     internal static class GameServices
     {
         private const BindingFlags Static = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
@@ -28,7 +28,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.LogCaught("server discovery not found: " + e.Message, e);
+                HolomapPlugin.LogCaught("découverte des serveurs introuvable : " + e.Message, e);
                 return null;
             }
         }
@@ -47,8 +47,8 @@ namespace SirHolomap
             }
         }
 
-        // The game's discovery is often an interface over several services:
-        // members are looked up on the class and on every interface it has.
+        // La découverte du jeu est souvent une interface sur plusieurs services :
+        // les membres sont cherchés sur la classe et sur chaque interface qu'elle a.
         private static PropertyInfo FindProperty(Type type, string name)
         {
             var property = type.GetProperty(name, Instance);
@@ -95,8 +95,8 @@ namespace SirHolomap
             return null;
         }
 
-        // Subscribes a handler "void (object sender, int index)" to an event of
-        // the discovery. Returns the delegate to unsubscribe with.
+        // Abonne un gestionnaire « void (object sender, int index) » à un événement de
+        // la découverte. Rend le délégué avec lequel se désabonner.
         public static Delegate Subscribe(object discovery, string eventName, Action<object, int> handler)
         {
             try
@@ -110,7 +110,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.LogCaught("could not listen to " + eventName + ": " + e.Message, e);
+                HolomapPlugin.LogCaught("impossible d'écouter " + eventName + " : " + e.Message, e);
                 return null;
             }
         }
@@ -131,7 +131,7 @@ namespace SirHolomap
             }
         }
 
-        // Asks for a list with an empty search filter.
+        // Demande une liste avec un filtre de recherche vide.
         public static bool Request(object discovery, string methodName)
         {
             try
@@ -180,8 +180,8 @@ namespace SirHolomap
             }
         }
 
-        // Pinging a server, as the game does for "+connect": the answer comes
-        // as an event.
+        // Sonder un serveur, comme le fait le jeu pour « +connect » : la réponse arrive
+        // sous forme d'événement.
         public static bool Ping(string connectionString, EventHandler<MyGameServerItem> responded, EventHandler failed)
         {
             try
@@ -200,7 +200,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.LogCaught("ping failed: " + e.Message, e);
+                HolomapPlugin.LogCaught("sondage échoué : " + e.Message, e);
                 return false;
             }
         }
@@ -223,9 +223,9 @@ namespace SirHolomap
             }
         }
 
-        // Leaves the current server for the main menu, then joins the other
-        // one, the way the game's own server browser does.
-        // leaveFirst: false when already at the main menu (the way back).
+        // Quitte le serveur actuel pour le menu principal, puis rejoint l'autre,
+        // comme le fait le navigateur de serveurs du jeu.
+        // leaveFirst : faux quand on est déjà au menu principal (le chemin du retour).
         public static bool Join(MyGameServerItem server, bool leaveFirst = true)
         {
             var unload = typeof(MySessionLoader).GetMethod("UnloadAndExitToMenu", Static, null, Type.EmptyTypes, null);
@@ -236,7 +236,7 @@ namespace SirHolomap
                 var parameters = method.GetParameters();
                 if (parameters.Length == 0 || parameters[0].ParameterType != typeof(MyGameServerItem))
                     continue;
-                // The overload that first asks the server for its rules.
+                // La surcharge qui demande d'abord ses règles au serveur.
                 if (parameters.Length >= 2 && parameters[1].ParameterType == typeof(bool))
                 {
                     join = method;
@@ -258,7 +258,7 @@ namespace SirHolomap
             }
             if ((leaveFirst && unload == null) || join == null)
             {
-                HolomapPlugin.LogError("the game's join flow was not found");
+                HolomapPlugin.LogError("la connexion du jeu est introuvable");
                 return false;
             }
             if (leaveFirst)
@@ -267,9 +267,9 @@ namespace SirHolomap
             return true;
         }
 
-        // Is the game busy joining or loading a world? Read from the screens
-        // it shows (its progress and loading screens). Null when the game's
-        // screen list cannot be read.
+        // Le jeu est-il occupé à rejoindre ou à charger un monde ? Lu d'après les écrans
+        // qu'il montre (ses écrans de progression et de chargement). Null quand la liste
+        // des écrans du jeu ne peut pas être lue.
         public static bool? JoinScreensOpen()
         {
             try
@@ -297,12 +297,12 @@ namespace SirHolomap
             }
         }
 
-        // The game's own join asks for the password of a protected server in
-        // a screen of its own (MyGuiScreenServerPassword). When the player
-        // already typed it in the map's confirmation, it is handed to that
-        // screen the way its connect button does, and the screen closes.
-        // True once answered; false while the screen is not there (or cannot
-        // be reached: the game's screen then simply stays for the player).
+        // La connexion du jeu demande le mot de passe d'un serveur protégé dans
+        // un écran à elle (MyGuiScreenServerPassword). Quand le joueur l'a déjà
+        // tapé dans la confirmation de la carte, il est remis à cet écran
+        // comme le fait son bouton de connexion, et l'écran se ferme.
+        // Vrai une fois répondu ; faux tant que l'écran n'est pas là (ou ne peut pas
+        // être atteint : l'écran du jeu reste alors simplement au joueur).
         public static bool AnswerPasswordPrompt(string password)
         {
             try
@@ -318,7 +318,7 @@ namespace SirHolomap
                     var connect = field != null ? field.GetValue(screen) as Action<string> : null;
                     if (connect == null)
                     {
-                        HolomapPlugin.LogError("the game's password screen could not be answered: the player types it there");
+                        HolomapPlugin.LogError("l'écran de mot de passe du jeu n'a pas pu être rempli : le joueur le tape là");
                         return true;
                     }
                     var gui = screen as MyGuiScreenBase;
@@ -330,7 +330,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.LogCaught("password not handed to the game: " + e.Message, e);
+                HolomapPlugin.LogCaught("mot de passe non remis au jeu : " + e.Message, e);
                 return true;
             }
             return false;
@@ -367,7 +367,7 @@ namespace SirHolomap
                     }
                 }
                 if (s_screens == null)
-                    HolomapPlugin.LogError("the game's screen list was not found: no way back after a failed join");
+                    HolomapPlugin.LogError("la liste des écrans du jeu est introuvable : pas de retour après une connexion échouée");
             }
             return s_screens != null ? s_screens.GetValue(null) as System.Collections.IEnumerable : null;
         }

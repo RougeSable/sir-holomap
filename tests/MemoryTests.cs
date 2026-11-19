@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using Xunit;
 
@@ -52,7 +52,7 @@ namespace SirHolomap.Tests
             var basePosition = new Vec3(100, 0, 0);
             Scan(memory, new Vec3(0, 0, 0), T0, Base(basePosition));
 
-            // The player flies 50 km away: the game stops sending the base.
+            // Le joueur s'éloigne de 50 km : le jeu cesse d'envoyer la base.
             for (var minute = 1; minute <= 30; minute++)
                 Scan(memory, new Vec3(50000, 0, 0), T0.AddMinutes(minute));
 
@@ -73,10 +73,10 @@ namespace SirHolomap.Tests
             ship.Kind = ContactKind.LargeShip;
             Scan(memory, new Vec3(0, 0, 0), T0, ship);
 
-            // Away: still remembered where it was.
+            // Loin : toujours retenue là où elle était.
             Scan(memory, new Vec3(80000, 0, 0), T0.AddHours(1));
 
-            // The ship moved during the absence; the player meets it again.
+            // Le vaisseau a bougé pendant l'absence ; le joueur le rencontre de nouveau.
             var moved = ship;
             moved.Position = new Vec3(81000, 500, 0);
             var back = T0.AddHours(2);
@@ -88,8 +88,8 @@ namespace SirHolomap.Tests
             Assert.Equal(81000, contact.Position.X);
             Assert.Equal(back, contact.LastSeenUtc);
 
-            // Something remembered at a place the player checks again, but no
-            // longer there: it is forgotten once it has been missing a while.
+            // Quelque chose de retenu à un endroit que le joueur vérifie de nouveau, mais qui n'y est
+            // plus : c'est oublié une fois qu'il a manqué un moment.
             var wreck = Base(new Vec3(200, 0, 0));
             wreck.Id = 7;
             Scan(memory, new Vec3(0, 0, 0), back, wreck);
@@ -112,12 +112,12 @@ namespace SirHolomap.Tests
                 Scan(first, new Vec3(0, 0, 0), T0, Base(new Vec3(100, 0, 0)));
                 store.Save(first);
 
-                // Another server, even one on the same machine: nothing.
+                // Un autre serveur, même sur la même machine : rien.
                 var other = store.Load("steam://1.2.3.4:27017");
                 Assert.Equal(0, other.Count);
 
-                // The same server after a reconnection: the memory is back,
-                // as a memory.
+                // Le même serveur après une reconnexion : la mémoire est de retour,
+                // comme une mémoire.
                 var again = store.Load("steam://1.2.3.4:27016");
                 MemoryContact contact;
                 Assert.True(again.TryGet(42, out contact));

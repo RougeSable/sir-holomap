@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using Xunit;
 
 namespace SirHolomap.Tests
 {
-    // The wheel glides from the planet (A) to the neighbourhood (B) to the
-    // system (C). The switches depend on the scale only, with a gap between
-    // the way up and the way down, and every notch multiplies the distance.
+    // La molette glisse de la planète (A) au voisinage (B) puis au
+    // système (C). Les passages ne dépendent que de l'échelle, avec un écart entre
+    // la montée et la descente, et chaque cran multiplie la distance.
     public class ZoomLadderTests
     {
         [Fact]
         public void EachNotchMultipliesDistance()
         {
-            // Every notch multiplies the distance by the same factor, at every
-            // scale.
+            // Chaque cran multiplie la distance par le même facteur, à toutes les
+            // échelles.
             var near = ZoomSteps.Apply(100, -1) / 100;
             var far = ZoomSteps.Apply(1000000, -1) / 1000000;
             Assert.Equal(ZoomSteps.Factor, near, 9);
@@ -20,31 +20,31 @@ namespace SirHolomap.Tests
             Assert.Equal(1.0 / ZoomSteps.Factor, ZoomSteps.Apply(500, 1) / 500, 9);
             Assert.Equal(1.0, ZoomSteps.NotchesFromWheel(ZoomSteps.WheelUnitsPerNotch), 9);
 
-            // Ten notches out then ten in: back where it started.
+            // Dix crans vers l'extérieur puis dix vers l'intérieur : de retour au départ.
             Assert.Equal(250.0, ZoomSteps.Apply(ZoomSteps.Apply(250, -10), 10), 6);
 
-            // From the lowest point above the ground of a planet to the
-            // system view: twenty notches at most, for a small planet and for
-            // a large one.
+            // Du point le plus bas au-dessus du sol d'une planète à la
+            // vue Système : vingt crans au plus, pour une petite planète et pour
+            // une grande.
             foreach (var radius in new[] { 19000.0, 60000.0, 120000.0 })
             {
                 var notches = NotchesFromGroundToSystem(radius);
-                Assert.True(notches <= 20, notches + " notches for a planet of " + radius + " m");
+                Assert.True(notches <= 20, notches + " crans pour une planète de " + radius + " m");
             }
 
-            // In space, from a grid filling the screen to the system view.
+            // Dans l'espace, d'une grille qui remplit l'écran à la vue Système.
             Assert.True(ZoomSteps.NotchesBetween(50, MapScales.SystemAbove) <= 20);
 
-            // The smoothing moves in log space and lands on the target.
+            // Le lissage se déplace en espace logarithmique et atterrit sur la cible.
             var d = 100.0;
             for (var i = 0; i < 200; i++)
                 d = ZoomSteps.Smooth(d, 10000, 1 / 60.0, 0.12);
             Assert.Equal(10000, d, 3);
         }
 
-        // Turns the wheel out one notch at a time, the way the views do: A
-        // zooms its altitude above the ground, B and C their distance to the
-        // centre of what they look at.
+        // Tourne la molette vers l'extérieur un cran à la fois, comme le font les vues : A
+        // zoome sur son altitude au-dessus du sol, B et C sur leur distance au
+        // centre de ce qu'elles regardent.
         private static int NotchesFromGroundToSystem(double radius)
         {
             var ladder = new ZoomLadder(radius, ZoomRung.Planet);
@@ -70,8 +70,8 @@ namespace SirHolomap.Tests
             return notches;
         }
 
-        // Both switches, A to B and B to C, depend on the scale only and keep
-        // a gap between the way up and the way down.
+        // Les deux passages, A vers B et B vers C, ne dépendent que de l'échelle et gardent
+        // un écart entre la montée et la descente.
         [Fact]
         public void SwitchesDependOnScaleWithHysteresis()
         {
@@ -86,22 +86,22 @@ namespace SirHolomap.Tests
             var change = ladder.PlanetSwitch;
             Assert.True(change.DownBelow < change.UpAbove);
 
-            // Zooming out of the globe: the neighbourhood past the limit.
+            // Dézoomer du globe : le voisinage au-delà de la limite.
             Assert.Equal(ZoomRung.Planet, ladder.Update(change.UpAbove * 0.99));
             Assert.Equal(ZoomRung.Local, ladder.Update(change.UpAbove * 1.01));
 
-            // Stopping right at the limit, wobbling around it: no flicker.
+            // S'arrêter juste à la limite, en oscillant autour : pas de clignotement.
             Assert.Equal(ZoomRung.Local, ladder.Update(change.UpAbove * 0.98));
             Assert.Equal(ZoomRung.Local, ladder.Update(change.UpAbove * 1.02));
             Assert.Equal(ZoomRung.Local, ladder.Update(change.DownBelow * 1.01));
 
-            // Only well below the limit does the globe come back.
+            // Seulement bien en dessous de la limite le globe revient.
             Assert.Equal(ZoomRung.Planet, ladder.Update(change.DownBelow * 0.99));
             Assert.Equal(ZoomRung.Planet, ladder.Update(change.DownBelow * 1.05));
 
-            // A view entered from its neighbour starts inside the gap: the
-            // next look at the same distance keeps it, so two views never
-            // take turns while the camera glides.
+            // Une vue entrée depuis sa voisine commence dans l'écart : le
+            // regard suivant à la même distance la garde, si bien que deux vues n'alternent jamais
+            // pendant que la caméra glisse.
             var entered = ladder.Entry(ZoomRung.Planet, change.DownBelow * 0.999);
             Assert.True(entered < change.DownBelow);
             Assert.Equal(ZoomRung.Planet, ladder.Update(entered));
@@ -111,8 +111,8 @@ namespace SirHolomap.Tests
             Assert.True(back > change.UpAbove);
             Assert.Equal(ZoomRung.Local, ladder.Update(back));
 
-            // The wheel turned out then in, notch after notch, around the
-            // limit: exactly one change each way.
+            // La molette tournée vers l'extérieur puis vers l'intérieur, cran après cran, autour de la
+            // limite : exactement un changement dans chaque sens.
             var fresh = new ZoomLadder(radius, ZoomRung.Planet);
             var distance = radius * 1.5;
             var changes = 0;
@@ -125,7 +125,7 @@ namespace SirHolomap.Tests
             Assert.Equal(ZoomRung.Planet, fresh.Rung);
             Assert.Equal(4, changes);
 
-            // Without a planet there is no globe to go down to.
+            // Sans planète il n'y a pas de globe où descendre.
             var space = new ZoomLadder(0, ZoomRung.Planet);
             Assert.Equal(ZoomRung.Local, space.Rung);
             Assert.False(space.HasPlanet);
@@ -150,25 +150,25 @@ namespace SirHolomap.Tests
             var change = ladder.SystemSwitch;
             Assert.True(change.DownBelow < change.UpAbove);
 
-            // Zooming out past the limit: system view.
+            // Dézoomer au-delà de la limite : la vue Système.
             Assert.Equal(ZoomRung.Local, ladder.Update(change.UpAbove * 0.99));
             Assert.Equal(ZoomRung.System, ladder.Update(change.UpAbove * 1.01));
 
-            // Stopping right at the limit, wobbling around it: no flicker.
+            // S'arrêter juste à la limite, en oscillant autour : pas de clignotement.
             Assert.Equal(ZoomRung.System, ladder.Update(change.UpAbove * 0.98));
             Assert.Equal(ZoomRung.System, ladder.Update(change.UpAbove * 1.02));
             Assert.Equal(ZoomRung.System, ladder.Update(change.UpAbove * 0.9));
 
-            // Only well below the limit does the neighbourhood come back.
+            // Seulement bien en dessous de la limite le voisinage revient.
             Assert.Equal(ZoomRung.Local, ladder.Update(change.DownBelow * 0.99));
             Assert.Equal(ZoomRung.Local, ladder.Update(change.DownBelow * 1.05));
 
-            // Entering C from B, or B from C, starts inside the gap.
+            // Entrer en C depuis B, ou en B depuis C, commence dans l'écart.
             Assert.True(ladder.Entry(ZoomRung.System, change.UpAbove) > change.UpAbove);
             Assert.True(ladder.Entry(ZoomRung.Local, change.UpAbove) < change.DownBelow);
 
-            // It depends on the scale, not on what the server sends: a planet
-            // as focus moves the limit out with its size.
+            // Cela dépend de l'échelle, pas de ce que le serveur envoie : une planète
+            // comme point de focalisation repousse la limite avec sa taille.
             var aroundPlanet = new ZoomLadder(120000, ZoomRung.Local);
             Assert.True(aroundPlanet.SystemSwitch.UpAbove > change.UpAbove);
             Assert.True(aroundPlanet.SystemSwitch.DownBelow > aroundPlanet.PlanetSwitch.UpAbove);
@@ -177,9 +177,9 @@ namespace SirHolomap.Tests
         [Fact]
         public void LeavingPlanetCentreKeepsSystemThreshold()
         {
-            // B centred on a planet, just past the way out of A: moving the
-            // camera off the planet's centre drops the way down to A but
-            // never sends the view to C by itself.
+            // B centré sur une planète, juste au-delà du chemin de sortie de A : éloigner la
+            // caméra du centre de la planète supprime la descente vers A mais
+            // n'envoie jamais la vue en C toute seule.
             const double radius = 60000;
             var ladder = new ZoomLadder(radius, ZoomRung.Local);
             var distance = ladder.Entry(ZoomRung.Local, radius * (MapScales.PlanetLeaveRadii + 0.3));
@@ -193,15 +193,15 @@ namespace SirHolomap.Tests
             Assert.Equal(ZoomRung.Local, ladder.Update(distance));
             Assert.Equal(ZoomRung.Local, ladder.Update(distance * 1.01));
 
-            // Zooming in never drops to A any more; out, C as before.
+            // Zoomer ne retombe plus jamais en A ; dézoomer, C comme avant.
             Assert.Equal(ZoomRung.Local, ladder.Update(10));
             Assert.Equal(ZoomRung.System, ladder.Update(up * 1.01));
         }
 
-        // Zoomed all the way out, the system (C) gives way to the galaxy (D)
-        // in a few notches; zoomed in, the galaxy gives way to the system in a
-        // few notches too, and the system comes back inside the gap so that
-        // the two never take turns.
+        // Tout dézoomé, le système (C) cède la place à la galaxie (D)
+        // en quelques crans ; zoomé, la galaxie cède la place au système en
+        // quelques crans aussi, et le système revient dans l'écart pour que
+        // les deux n'alternent jamais.
         [Fact]
         public void SystemAndGalaxyAreAFewNotchesApart()
         {
@@ -212,16 +212,16 @@ namespace SirHolomap.Tests
                 var notches = ZoomSteps.NotchesBetween(opened, change.UpAbove);
                 Assert.InRange(notches, 2, 6);
 
-                // Back from the galaxy, inside the gap: no way straight out.
+                // De retour de la galaxie, dans l'écart : pas de sortie directe.
                 var back = change.DownBelow * 0.9;
-                Assert.True(back > opened, "the system comes back closer than it opens for " + size);
+                Assert.True(back > opened, "le système revient plus près qu'il ne s'ouvre pour " + size);
                 change.Reset(false);
                 Assert.False(change.Update(back));
                 Assert.True(change.Update(change.UpAbove * 1.01));
                 Assert.True(change.IsUp);
             }
 
-            // The galaxy rests on its whole; three notches in, the system.
+            // La galaxie repose sur son entier ; trois crans vers l'intérieur, le système.
             var zoom = new GalaxyZoom();
             Assert.Equal(MapScales.GalaxyHomeZoom, zoom.Target);
             var inward = 0;
@@ -232,7 +232,7 @@ namespace SirHolomap.Tests
             }
             Assert.InRange(inward, 2, 4);
 
-            // Zoomed all the way out first, still a few notches.
+            // Tout dézoomé d'abord, encore quelques crans.
             zoom.Home();
             for (var i = 0; i < 10; i++)
                 zoom.Wheel(-1);
@@ -245,8 +245,8 @@ namespace SirHolomap.Tests
             }
             Assert.InRange(inward, 2, 6);
 
-            // Entered again, the galaxy is back on its whole: every server at
-            // the same spot.
+            // Entrée de nouveau, la galaxie est de retour sur son entier : chaque serveur au
+            // même endroit.
             zoom.Home();
             Assert.False(zoom.BackToSystem);
             Assert.Equal(MapScales.GalaxyHomeZoom, zoom.Target);

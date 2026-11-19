@@ -1,20 +1,20 @@
-using System;
+﻿using System;
 
 namespace SirHolomap
 {
-    // What hides the lines of the map drawn over the game's picture: the map
-    // draws its plane over the scene, so whatever part of it lies inside a
-    // solid thing, or behind it from the camera, is left out. A body is a
-    // sphere; a character is a capsule, a segment from its feet to its head
-    // with a radius around it, close to the shape of a standing person.
+    // Ce qui cache les lignes de la carte dessinées sur l'image du jeu : la carte
+    // dessine son plan sur la scène, donc toute partie qui se trouve à l'intérieur d'une
+    // chose solide, ou derrière elle depuis la caméra, est laissée de côté. Un astre est une
+    // sphère ; un personnage est une capsule, un segment de ses pieds à sa tête
+    // avec un rayon autour, proche de la forme d'une personne debout.
     public static class Occlusion
     {
-        // Height and radius of a character when the game gives nothing
-        // better.
+        // Hauteur et rayon d'un personnage quand le jeu ne donne rien
+        // de mieux.
         public const double CharacterHeight = 1.85;
         public const double CharacterRadius = 0.38;
 
-        // Inside the sphere, or behind it from the eye.
+        // À l'intérieur de la sphère, ou derrière elle depuis l'œil.
         public static bool HiddenBySphere(Vec3 eye, Vec3 point, Vec3 centre, double radius)
         {
             var r2 = radius * radius;
@@ -23,8 +23,8 @@ namespace SirHolomap
             return SegmentPointDistanceSquared(eye, point, centre) < r2;
         }
 
-        // Inside the capsule, or behind it from the eye. An eye inside the
-        // capsule sees through it: the camera never hides the whole map.
+        // À l'intérieur de la capsule, ou derrière elle depuis l'œil. Un œil à l'intérieur de la
+        // capsule voit à travers : la caméra ne cache jamais toute la carte.
         public static bool HiddenByCapsule(Vec3 eye, Vec3 point, Vec3 bottom, Vec3 top, double radius)
         {
             var r2 = radius * radius;
@@ -33,8 +33,8 @@ namespace SirHolomap
             return SegmentDistanceSquared(eye, point, bottom, top) < r2;
         }
 
-        // The capsule of a standing character: its feet, the way up its body,
-        // and its height. A height out of reason falls back to a person's.
+        // La capsule d'un personnage debout : ses pieds, le chemin vers le haut de son corps,
+        // et sa hauteur. Une hauteur déraisonnable retombe sur celle d'une personne.
         public static void CharacterCapsule(Vec3 feet, Vec3 up, double height, double width,
             out Vec3 bottom, out Vec3 top, out double radius)
         {
@@ -42,19 +42,19 @@ namespace SirHolomap
             up = length > 1e-9 ? up * (1 / length) : new Vec3(0, 1, 0);
             if (double.IsNaN(height) || height < 0.8 || height > 4)
                 height = CharacterHeight;
-            // The game's box of a character is as wide as its collision,
-            // wider than the body itself: a little less, for a slim shape.
+            // La boîte du personnage donnée par le jeu est aussi large que sa collision,
+            // plus large que le corps lui-même : un peu moins, pour une forme mince.
             radius = double.IsNaN(width) || width < 0.3 || width > 3 ? CharacterRadius : Math.Max(0.3, Math.Min(width / 2, 0.42));
             radius = Math.Min(radius, height / 2);
             bottom = feet + up * radius;
             top = feet + up * (height - radius);
         }
 
-        // The part of a segment [a, b] seen from the eye within an angle of a
-        // direction (a cone around it, cosine given): only there can a small
-        // thing in that direction hide the segment, so only there need the
-        // segment be looked at closely. t0 and t1 along the segment, 0 at a
-        // and 1 at b; false when the segment stays out of the cone.
+        // La partie d'un segment [a, b] vue de l'œil dans un angle autour d'une
+        // direction (un cône autour d'elle, cosinus donné) : c'est là seulement qu'une petite
+        // chose dans cette direction peut cacher le segment, donc là seulement qu'il faut
+        // regarder le segment de près. t0 et t1 le long du segment, 0 en a
+        // et 1 en b ; faux quand le segment reste hors du cône.
         public static bool ConeInterval(Vec3 eye, Vec3 a, Vec3 b, Vec3 direction, double cosine, out double t0, out double t1)
         {
             t0 = 0;
@@ -72,8 +72,8 @@ namespace SirHolomap
             var beta = 2 * dw * dab - 2 * c2 * Dot(w0, ab);
             var gamma = dw * dw - c2 * Dot(w0, w0);
 
-            // Where the answer may change: the ends, where the segment crosses
-            // the cone, where it passes the eye's side.
+            // Où la réponse peut changer : les extrémités, là où le segment croise
+            // le cône, là où il passe du côté de l'œil.
             var cuts = new double[6];
             var count = 0;
             cuts[count++] = 0;
@@ -120,7 +120,7 @@ namespace SirHolomap
             return found;
         }
 
-        // Squared distance from a point to a segment.
+        // Distance au carré d'un point à un segment.
         public static double SegmentPointDistanceSquared(Vec3 a, Vec3 b, Vec3 point)
         {
             var ab = b - a;
@@ -129,7 +129,7 @@ namespace SirHolomap
             return DistanceSquared(a + ab * t, point);
         }
 
-        // Squared distance between two segments.
+        // Distance au carré entre deux segments.
         public static double SegmentDistanceSquared(Vec3 p1, Vec3 q1, Vec3 p2, Vec3 q2)
         {
             var d1 = q1 - p1;
@@ -193,9 +193,9 @@ namespace SirHolomap
         }
     }
 
-    // When the map gives way to the game: the world left, or the player's
-    // character dead (or gone, waiting to be born again). The game's own
-    // screen of respawn must then show and work as without the map.
+    // Quand la carte cède la place au jeu : le monde quitté, ou le
+    // personnage du joueur mort (ou parti, attendant de renaître). L'écran
+    // de réapparition du jeu doit alors se montrer et marcher comme sans la carte.
     public static class MapLife
     {
         public static bool MustClose(bool inWorld, bool hasCharacter, bool characterDead)

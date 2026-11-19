@@ -1,20 +1,20 @@
-using System;
+﻿using System;
 
 namespace SirHolomap
 {
-    // The mouse wheel zooms the same way everywhere: each notch multiplies
-    // the camera distance by the same factor instead of adding to it. From a
-    // few metres above the ground to the whole system takes a reasonable
-    // number of notches.
+    // La molette de la souris zoome partout de la même façon : chaque cran multiplie
+    // la distance de la caméra par le même facteur au lieu de lui ajouter. De
+    // quelques mètres au-dessus du sol jusqu'au système entier, il faut un
+    // nombre raisonnable de crans.
     public static class ZoomSteps
     {
-        // One notch towards the focus divides the distance by this factor.
+        // Un cran vers le point de focalisation divise la distance par ce facteur.
         public const double Factor = 1.65;
 
-        // The game reports this much wheel value per notch.
+        // Le jeu rapporte cette valeur de molette par cran.
         public const int WheelUnitsPerNotch = 120;
 
-        // Positive notches zoom in, negative zoom out.
+        // Les crans positifs zooment avant, les négatifs zooment arrière.
         public static double Apply(double distance, double notches)
         {
             return distance * Math.Pow(Factor, -notches);
@@ -25,7 +25,7 @@ namespace SirHolomap
             return wheelDelta / (double)WheelUnitsPerNotch;
         }
 
-        // How many notches it takes to go from one distance to another.
+        // Combien de crans il faut pour aller d'une distance à une autre.
         public static int NotchesBetween(double from, double to)
         {
             if (from <= 0 || to <= 0)
@@ -33,8 +33,8 @@ namespace SirHolomap
             return (int)Math.Ceiling(Math.Abs(Math.Log(to / from)) / Math.Log(Factor) - 1e-9);
         }
 
-        // Moves a distance towards its target in log space: the motion looks
-        // the same at every scale. halfLife in seconds.
+        // Rapproche une distance de sa cible en espace logarithmique : le mouvement paraît
+        // le même à toutes les échelles. halfLife en secondes.
         public static double Smooth(double current, double target, double dt, double halfLife)
         {
             if (current <= 0 || target <= 0)
@@ -46,9 +46,9 @@ namespace SirHolomap
         }
     }
 
-    // A switch between two views that depends on the scale only, with a gap
-    // between the way up and the way down: stopping the wheel right at the
-    // limit never makes the view flicker between the two.
+    // Un passage entre deux vues qui ne dépend que de l'échelle, avec un écart
+    // entre la montée et la descente : arrêter la molette juste à la
+    // limite ne fait jamais clignoter la vue entre les deux.
     public sealed class ScaleSwitch
     {
         private readonly double m_upAbove;
@@ -57,7 +57,7 @@ namespace SirHolomap
         public ScaleSwitch(double upAbove, double downBelow)
         {
             if (downBelow >= upAbove)
-                throw new ArgumentException("The way down must start below the way up.");
+                throw new ArgumentException("La descente doit commencer sous la montée.");
             m_upAbove = upAbove;
             m_downBelow = downBelow;
         }
@@ -79,7 +79,7 @@ namespace SirHolomap
             IsUp = up;
         }
 
-        // True when the view changes.
+        // Vrai quand la vue change.
         public bool Update(double distance)
         {
             if (!IsUp && distance > m_upAbove)
@@ -96,22 +96,22 @@ namespace SirHolomap
         }
     }
 
-    // The scales of the map, shared by the views and the tests.
+    // Les échelles de la carte, partagées par les vues et les tests.
     public static class MapScales
     {
-        // Neighbourhood (B) to system (C): grids are a pixel or two beyond this.
+        // Espace proche (B) vers système (C) : les grilles font un pixel ou deux au-delà.
         public const double SystemAbove = 60000;
         public const double SystemHysteresis = 0.7;
 
-        // B centred on a planet goes to C past a few planet radii.
+        // B centré sur une planète passe à C au-delà de quelques rayons de planète.
         public static ScaleSwitch NeighbourhoodToSystem(double focusRadius)
         {
             var up = Math.Max(SystemAbove, focusRadius * 4.5);
             return new ScaleSwitch(up, up * SystemHysteresis);
         }
 
-        // Planet (A) to neighbourhood (B): the camera distance to the centre of
-        // the planet, in planet radii.
+        // Planète (A) vers Espace proche (B) : la distance de la caméra au centre de
+        // la planète, en rayons de planète.
         public const double PlanetLeaveRadii = 2.6;
         public const double PlanetReturnRadii = 2.2;
 
@@ -120,14 +120,14 @@ namespace SirHolomap
             return new ScaleSwitch(planetRadius * PlanetLeaveRadii, planetRadius * PlanetReturnRadii);
         }
 
-        // System (C) to galaxy (D): past this many times the size of the
-        // system, the whole system is a dot and the galaxy takes over. The
-        // system view opens at 1.6 sizes: a few notches away.
+        // Système (C) vers galaxie (D) : au-delà de ce nombre de fois la taille du
+        // système, le système entier est un point et la galaxie prend la main. La vue
+        // Système s'ouvre à 1,6 fois : à quelques crans de là.
         public const double GalaxySystemSizes = 12;
         public const double GalaxyHysteresis = 0.5;
 
-        // Below this size the system is counted as this size: a lone base or
-        // a world without planets still has a way out to the galaxy.
+        // En dessous de cette taille le système compte pour cette taille : une base seule ou
+        // un monde sans planètes a quand même une sortie vers la galaxie.
         public const double SmallestSystem = 200000;
 
         public static ScaleSwitch SystemToGalaxy(double systemSize)
@@ -136,16 +136,16 @@ namespace SirHolomap
             return new ScaleSwitch(up, up * GalaxyHysteresis);
         }
 
-        // The galaxy's own zoom, 1 showing the whole galaxy. It rests there
-        // whenever it is entered, so that every server is always found at the
-        // same spot. Zoomed in past the way back, the system returns: a few
-        // notches.
+        // Le zoom propre de la galaxie, 1 montrant toute la galaxie. Elle repose là
+        // chaque fois qu'on y entre, pour que chaque serveur se retrouve toujours au
+        // même endroit. Zoomé au-delà du chemin du retour, le système revient : à quelques
+        // crans.
         public const double GalaxyHomeZoom = 1;
         public const double GalaxySmallestZoom = 0.6;
         public const double GalaxyBackToSystem = 3.2;
 
-        // The galaxy entered from the system starts this close on the
-        // current server, then glides out to its whole.
+        // La galaxie entrée depuis le système commence aussi près sur le
+        // serveur actuel, puis glisse vers sa vue entière.
         public const double GalaxyArrivalZoom = 5;
 
         public static double GalaxyLargestZoom
@@ -153,16 +153,16 @@ namespace SirHolomap
             get { return GalaxyBackToSystem * ZoomSteps.Factor; }
         }
 
-        // Notches of the 2D system view out to the galaxy: it has no zoom of
-        // its own.
+        // Crans de la vue Système 2D jusqu'à la galaxie : elle n'a pas de zoom
+        // propre.
         public const double FlatSystemNotchesOut = 2;
 
-        // Closest the camera comes to the ground in A, and to a grid in B.
+        // Au plus près la caméra vient du sol en A, et d'une grille en B.
         public const double LowestAltitude = 25;
         public const double ClosestToGrid = 4;
 
-        // Highest the camera goes above the ground in A: just past the way
-        // out to B.
+        // Au plus haut la caméra monte au-dessus du sol en A : juste au-delà du chemin
+        // de sortie vers B.
         public static double HighestAltitude(double planetRadius)
         {
             return planetRadius * (PlanetLeaveRadii + 0.6);
@@ -176,8 +176,8 @@ namespace SirHolomap
         System,
     }
 
-    // The galaxy's zoom, without the screen: where it rests, how far it goes,
-    // and when the wheel takes the map back to the system.
+    // Le zoom de la galaxie, sans l'écran : où il repose, jusqu'où il va,
+    // et quand la molette ramène la carte au système.
     public sealed class GalaxyZoom
     {
         public double Target { get; private set; }
@@ -192,7 +192,7 @@ namespace SirHolomap
             Target = MapScales.GalaxyHomeZoom;
         }
 
-        // Returns the factor the zoom was multiplied by.
+        // Rend le facteur par lequel le zoom a été multiplié.
         public double Wheel(double notches)
         {
             var before = Target;
@@ -207,14 +207,14 @@ namespace SirHolomap
         }
     }
 
-    // The three rungs of the wheel: the planet (A), the neighbourhood (B),
-    // the system (C). The rung depends on the scale only: the camera
-    // distance to what the view is centred on (the centre of the planet in
-    // A, and in B when B is centred on a planet). Each switch has a gap
-    // between the way up and the way down, and a view entered from its
-    // neighbour starts inside that gap, never on the far side of the limit
-    // it just crossed: a wheel that stops on a limit, or a camera still
-    // gliding, never makes two views take turns.
+    // Les trois barreaux de la molette : la planète (A), l'Espace proche (B),
+    // le système (C). Le barreau ne dépend que de l'échelle : la distance de la
+    // caméra à ce sur quoi la vue est centrée (le centre de la planète en
+    // A, et en B quand B est centré sur une planète). Chaque passage a un écart
+    // entre la montée et la descente, et une vue entrée depuis sa
+    // voisine commence dans cet écart, jamais de l'autre côté de la limite
+    // qu'elle vient de franchir : une molette qui s'arrête sur une limite, ou une caméra encore
+    // en glissement, ne fait jamais alterner deux vues.
     public sealed class ZoomLadder
     {
         private ScaleSwitch m_planet;
@@ -243,7 +243,7 @@ namespace SirHolomap
             get { return m_planet != null; }
         }
 
-        // planetRadius: the planet the views are centred on, 0 for none.
+        // planetRadius : la planète sur laquelle les vues sont centrées, 0 pour aucune.
         public void Configure(double planetRadius, ZoomRung rung)
         {
             PlanetRadius = Math.Max(0, planetRadius);
@@ -255,11 +255,11 @@ namespace SirHolomap
             m_system.Reset(Rung == ZoomRung.System);
         }
 
-        // The view stops being centred on the planet (the camera moved away,
-        // or went back over the player): there is no globe to go down to any
-        // more, but the way up to the system keeps the scale of the planet
-        // and its state. The camera, still far from the planet's centre,
-        // never finds itself past a limit it did not cross.
+        // La vue cesse d'être centrée sur la planète (la caméra s'est éloignée,
+        // ou est revenue sur le joueur) : il n'y a plus de globe où descendre,
+        // mais la montée vers le système garde l'échelle de la planète
+        // et son état. La caméra, encore loin du centre de la planète,
+        // ne se retrouve jamais au-delà d'une limite qu'elle n'a pas franchie.
         public void LeavePlanet()
         {
             m_planet = null;
@@ -267,9 +267,9 @@ namespace SirHolomap
                 Rung = ZoomRung.Local;
         }
 
-        // The distance a view should start at when it is entered on this
-        // rung from a camera at this distance: inside the gap of the switch
-        // just crossed.
+        // La distance à laquelle une vue doit commencer quand on entre sur ce
+        // barreau depuis une caméra à cette distance : dans l'écart du passage
+        // qu'on vient de franchir.
         public double Entry(ZoomRung rung, double distance)
         {
             switch (rung)
@@ -285,8 +285,8 @@ namespace SirHolomap
             }
         }
 
-        // Called with the distance the camera is going to (not the one it is
-        // still gliding through). Returns the rung, changed or not.
+        // Appelé avec la distance où la caméra va (pas celle qu'elle
+        // traverse encore). Rend le barreau, changé ou non.
         public ZoomRung Update(double distance)
         {
             switch (Rung)

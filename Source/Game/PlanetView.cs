@@ -1,30 +1,30 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using VRageMath;
 
 namespace SirHolomap
 {
-    // A: the globe of a planet, drawn by the game itself from orbit: the real
-    // relief and colours of the planet, any planet. The player sees
-    // themselves on it from above, with the grids and the bases. The wheel
-    // brings the ground closer, and the game sharpens the relief as the
-    // camera comes down; out far enough, the view leaves the globe for the
-    // neighbourhood (B), or back to the system (C) when it was opened from
-    // there.
+    // A : le globe d'une planète, dessiné par le jeu lui-même depuis l'orbite : le vrai
+    // relief et les vraies couleurs de la planète, n'importe laquelle. Le joueur s'y voit
+    // d'en haut, avec les grilles et les bases. La molette
+    // rapproche le sol, et le jeu affine le relief à mesure que la
+    // caméra descend ; assez loin, la vue quitte le globe pour le
+    // voisinage (B), ou retourne au système (C) quand elle a été ouverte depuis
+    // là.
     //
-    // The camera looks at a point: the ground under it, or a grid the camera
-    // is fastened to (a double click on a grid, here or in B). Fastened, the
-    // left drag turns around the grid as in B; the wheel zooms the same way
-    // in both cases, and the tilt fades out as the camera rises, so that
-    // far out it looks straight down on the globe.
+    // La caméra regarde un point : le sol dessous, ou une grille à laquelle la caméra
+    // est attachée (un double clic sur une grille, ici ou en B). Attaché, le
+    // glissement gauche tourne autour de la grille comme en B ; la molette zoome de la même façon
+    // dans les deux cas, et l'inclinaison s'efface à mesure que la caméra monte, si bien
+    // que de loin elle regarde droit vers le bas sur le globe.
     internal sealed class PlanetView : MapView
     {
         public Body Body;
         public bool ReturnToSystem;
         private SystemTab m_returnTab;
 
-        // The ground point looked at, seen from the centre of the planet, and
-        // which way is up on screen.
+        // Le point du sol regardé, vu depuis le centre de la planète, et
+        // le sens du haut à l'écran.
         private Vector3D m_direction = Vector3D.Up;
         private Vector3D m_up = Vector3D.Forward;
         private double m_altitude = 100000;
@@ -36,8 +36,8 @@ namespace SirHolomap
         private readonly List<Marker> m_visible = new List<Marker>();
         private readonly List<Vector2> m_visibleAt = new List<Vector2>();
 
-        // The other bodies in sight (a moon, a neighbour planet): a double
-        // click glides the globe over to them.
+        // Les autres astres en vue (une lune, une planète voisine) : un double
+        // clic y fait glisser le globe.
         private readonly List<Body> m_others = new List<Body>();
         private readonly List<Vector2> m_othersAt = new List<Vector2>();
         private readonly List<float> m_othersRadius = new List<float>();
@@ -77,7 +77,7 @@ namespace SirHolomap
             get { return Camera.Distance + (Body != null ? Body.MaxRadius * 2.5 : 100000); }
         }
 
-        // grid: a grid to keep in the middle, the camera turning around it.
+        // grid : une grille à garder au milieu, la caméra tournant autour d'elle.
         public void Enter(Body body, bool fromSystem, bool continuous, Marker grid)
         {
             Body = body;
@@ -90,8 +90,8 @@ namespace SirHolomap
 
             if (continuous)
             {
-                // From where the camera is going, never from where it still
-                // glides: entering from B never lands beyond the way back.
+                // Depuis l'endroit où la caméra va, jamais depuis celui où elle glisse
+                // encore : entrer depuis B n'atterrit jamais au-delà du chemin du retour.
                 var forward = Camera.TargetForward;
                 var up = Camera.TargetUp;
                 var eye = Camera.TargetEye;
@@ -133,10 +133,10 @@ namespace SirHolomap
 
         private const double MaxTilt = 1.35;
 
-        // Another body seen from this globe: the view glides over to it and
-        // stays a planet view, the whole new globe in sight, turned the way
-        // the camera came from. The wheel out then leaves it as it would
-        // leave any globe.
+        // Un autre astre vu depuis ce globe : la vue glisse vers lui et
+        // reste une vue Planète, le nouveau globe entier en vue, tourné du côté
+        // d'où la caméra est venue. La molette vers l'extérieur le quitte alors comme
+        // elle quitterait n'importe quel globe.
         private void GlideTo(Body body)
         {
             if (body == null || body.Planet == null || body.Planet.Closed)
@@ -191,8 +191,8 @@ namespace SirHolomap
             return m_grid;
         }
 
-        // The tilt fades out as the camera rises: from high up, the globe is
-        // seen from straight above.
+        // L'inclinaison s'efface à mesure que la caméra monte : de haut, le globe est
+        // vu d'à-plomb.
         private double EffectiveTilt
         {
             get
@@ -202,7 +202,7 @@ namespace SirHolomap
             }
         }
 
-        // Where the camera goes, and its distance to the centre of the planet.
+        // Où la caméra va, et sa distance au centre de la planète.
         private double Aim()
         {
             Vector3D focus;
@@ -247,8 +247,8 @@ namespace SirHolomap
             }
             var distance = Aim();
 
-            // Zoomed out past the globe: the neighbourhood, or the system the
-            // dive started from.
+            // Dézoomé au-delà du globe : le voisinage, ou le système d'où la
+            // plongée est partie.
             var before = m_ladder.Rung;
             if (m_ladder.Update(distance) != before && m_ladder.Rung != ZoomRung.Planet)
             {
@@ -265,8 +265,8 @@ namespace SirHolomap
             m_altitude = MathHelper.Clamp(ZoomSteps.Apply(m_altitude, notches), lowest, MapScales.HighestAltitude(Body.Radius));
         }
 
-        // Left drag: around the fastened grid, as in B; otherwise the ground
-        // follows the cursor.
+        // Glissement gauche : autour de la grille attachée, comme en B ; sinon le sol
+        // suit le curseur.
         public override void Rotate(Vector2 delta)
         {
             if (m_grid != null)
@@ -288,7 +288,7 @@ namespace SirHolomap
             m_up = Vector3D.Normalize(Vector3D.Reject(m_up, m_direction));
         }
 
-        // Middle drag or WASD move over the ground, letting go of a grid.
+        // Le glissement milieu ou WASD se déplacent sur le sol, en lâchant une grille.
         public override void Pan(Vector2 delta)
         {
             Release();
@@ -329,7 +329,7 @@ namespace SirHolomap
             return Body.Contains(marker.Position, 2);
         }
 
-        // Hidden behind the globe?
+        // Caché derrière le globe ?
         private bool Hidden(Vector3D point)
         {
             var origin = Camera.Position;
@@ -375,7 +375,7 @@ namespace SirHolomap
                     labelAll++;
             }
 
-            // Bases first, ships over them, the player on top.
+            // Les bases d'abord, les vaisseaux dessus, le joueur par-dessus tout.
             for (var pass = 0; pass < 3; pass++)
             {
                 for (var i = 0; i < m_visible.Count; i++)
@@ -386,8 +386,8 @@ namespace SirHolomap
                         continue;
                     if (m_grid != null && marker.Id == m_gridId && RenderHooks.Active)
                     {
-                        // Fastened: the game draws the grid, thin corners
-                        // around it.
+                        // Attaché : le jeu dessine la grille, de fins coins
+                        // autour d'elle.
                         var size = (float)(marker.Radius * 2 * Camera.PixelsPerMetre(Math.Max(Camera.Distance, 1)));
                         if (size > 40 * Gfx.Scale)
                         {
@@ -403,11 +403,11 @@ namespace SirHolomap
             }
         }
 
-        // When the game's camera cannot be borrowed (another plugin holds it,
-        // or it could not be reached), the game does not draw the globe: the
-        // map paints it itself, from the same samples of the real planet as
-        // the globes of the system view, seen through the map's camera so
-        // that it turns and zooms under the markers.
+        // Quand la caméra du jeu ne peut pas être empruntée (un autre greffon la tient,
+        // ou elle n'a pas pu être atteinte), le jeu ne dessine pas le globe : la
+        // carte le peint elle-même, à partir des mêmes échantillons de la vraie planète que
+        // les globes de la vue Système, vu par la caméra de la carte pour
+        // qu'il tourne et zoome sous les repères.
         private void DrawOwnGlobe()
         {
             var toLight = Settings.DaylightGlobe ? -(Vector3D)RenderHooks.LightDirection : World.DirectionToSun;
@@ -418,8 +418,8 @@ namespace SirHolomap
                 return;
             }
 
-            // While the first picture is painted: the small globe, at the
-            // size the planet takes on screen.
+            // Pendant que la première image est peinte : le petit globe, à la
+            // taille que la planète prend à l'écran.
             Vector2 at;
             double depth;
             var distance = Vector3D.Distance(Camera.Position, Body.Centre);
@@ -430,9 +430,9 @@ namespace SirHolomap
             OrreryView.DrawGlobe(Map, Body, at, r, false, false);
         }
 
-        // The other bodies in sight, named under their disc. The game draws
-        // them when it draws the scene; otherwise their small painted globe
-        // stands in.
+        // Les autres astres en vue, nommés sous leur disque. Le jeu les dessine
+        // quand il dessine la scène ; sinon leur petit globe peint
+        // les remplace.
         private void DrawOtherBodies()
         {
             m_others.Clear();
@@ -480,7 +480,7 @@ namespace SirHolomap
             return other != null && other.Id == body.Id;
         }
 
-        // Which way the player looks, as a small arrow.
+        // Où le joueur regarde, comme une petite flèche.
         private void DrawHeading(Vector2 at)
         {
             Vector2 ahead;
@@ -509,7 +509,7 @@ namespace SirHolomap
             }
             if (best != null)
                 return best;
-            // Markers first; then the other bodies in sight.
+            // Les repères d'abord ; puis les autres astres en vue.
             var closest = double.MaxValue;
             for (var i = 0; i < m_others.Count; i++)
             {
@@ -523,10 +523,10 @@ namespace SirHolomap
             return best;
         }
 
-        // A double click goes down to what is under the cursor: a grid in
-        // range is fastened, the camera then turns around it; a remembered
-        // one is only centred, as there is nothing to draw there; another
-        // body takes the place of the globe.
+        // Un double clic descend vers ce qui est sous le curseur : une grille à
+        // portée est attachée, la caméra tourne alors autour d'elle ; une grille retenue
+        // est seulement centrée, car il n'y a rien à dessiner ; un autre
+        // astre prend la place du globe.
         public override void DoubleClick(object target)
         {
             var other = target as Body;

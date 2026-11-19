@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace SirHolomap
 {
-    // Cuts a text into lines no wider than a width, as measured by the
-    // caller (the game's font). Lines break between words; a word wider than
-    // the whole width (a long server name, an address, a sentence in a
-    // language written without spaces) breaks between its letters. Line
-    // breaks of the text are kept, empty lines included.
+    // Coupe un texte en lignes pas plus larges qu'une largeur, mesurée par
+    // l'appelant (la police du jeu). Les lignes se coupent entre les mots ; un mot plus large que
+    // toute la largeur (un long nom de serveur, une adresse, une phrase dans une
+    // langue écrite sans espaces) se coupe entre ses lettres. Les retours à la
+    // ligne du texte sont gardés, lignes vides comprises.
     public static class TextWrap
     {
         public static List<string> Wrap(string text, Func<string, float> measure, float width)
@@ -45,7 +45,7 @@ namespace SirHolomap
                         line.Append(word);
                         continue;
                     }
-                    // Too wide on its own: letter by letter.
+                    // Trop large à lui seul : lettre par lettre.
                     foreach (var letter in word)
                     {
                         if (line.Length > 0 && measure(line.ToString() + letter) > width)

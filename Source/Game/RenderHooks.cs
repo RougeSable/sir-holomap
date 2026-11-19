@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
@@ -7,26 +7,26 @@ using VRageRender;
 
 namespace SirHolomap
 {
-    // While the map is open, the game keeps drawing its own world, from the
-    // map's camera: the real planet, its relief and colours, the sun, the
-    // grids and the sky, all by the game's own renderer. The character and
-    // the game's camera never move: only what is handed to the renderer
-    // changes, just before it leaves the game thread.
+    // Pendant que la carte est ouverte, le jeu continue de dessiner son propre monde, depuis la
+    // caméra de la carte : la vraie planète, son relief et ses couleurs, le soleil, les
+    // grilles et le ciel, le tout par le moteur de rendu du jeu. Le personnage et
+    // la caméra du jeu ne bougent jamais : seul ce qui est remis au moteur de rendu
+    // change, juste avant de quitter le fil du jeu.
     //
-    // Two prefixes, on the two calls the game makes every frame
-    // (MyGuiScreenGamePlay.Draw): MyRenderProxy.SetCameraViewMatrix, whose
-    // view and position become the map's, and
-    // MyRenderProxy.UpdateRenderEnvironment, whose sun is turned towards the
-    // globe when the player wants it lit from the camera. The voxel level of
-    // detail follows the render camera, so the ground sharpens as the map
-    // zooms in.
+    // Deux préfixes, sur les deux appels que le jeu fait à chaque image
+    // (MyGuiScreenGamePlay.Draw) : MyRenderProxy.SetCameraViewMatrix, dont la
+    // vue et la position deviennent celles de la carte, et
+    // MyRenderProxy.UpdateRenderEnvironment, dont le soleil est tourné vers le
+    // globe quand le joueur le veut éclairé depuis la caméra. Le niveau de détail
+    // des voxels suit la caméra de rendu, si bien que le sol s'affine quand la carte
+    // zoome.
     internal static class RenderHooks
     {
         public const string CameraStep = "MyRenderProxy.SetCameraViewMatrix";
         public const string LightStep = "MyRenderProxy.UpdateRenderEnvironment";
 
-        // Written on the game thread by the map, read on the game thread by
-        // the prefixes: no locking needed.
+        // Écrit sur le fil du jeu par la carte, lu sur le fil du jeu par
+        // les préfixes : aucun verrou nécessaire.
         public static bool Active;
         public static MatrixD View = MatrixD.Identity;
         public static Vector3D Position;
@@ -35,13 +35,13 @@ namespace SirHolomap
         public static bool Daylight;
         public static Vector3 LightDirection = Vector3.Forward;
 
-        // What the game itself last asked for.
+        // Ce que le jeu lui-même a demandé en dernier.
         public static float LastFov = MathHelper.ToRadians(70);
         public static float LastAspect = 16f / 9f;
         public static Vector3 GameLightDirection = Vector3.Forward;
 
-        // False when another plugin holds one of the steps: the map then
-        // opens without the 3D view.
+        // Faux quand un autre greffon tient l'une des étapes : la carte
+        // s'ouvre alors sans la vue 3D.
         public static bool CameraAvailable;
         public static bool LightAvailable;
 
@@ -55,7 +55,7 @@ namespace SirHolomap
             get { return typeof(MyRenderProxy).GetMethod("UpdateRenderEnvironment", BindingFlags.Public | BindingFlags.Static); }
         }
 
-        // Owners of a step other than us.
+        // Les propriétaires d'une étape autres que nous.
         public static List<string> OtherOwners(MethodBase method, string ownId)
         {
             var others = new List<string>();
@@ -93,8 +93,8 @@ namespace SirHolomap
                     Jump = false;
                 }
 
-                // Planets and grids farther than the game's planes would be
-                // culled: the planes follow the map's camera.
+                // Les planètes et les grilles plus loin que les plans du jeu seraient
+                // éliminées : les plans suivent la caméra de la carte.
                 var near = Math.Min(4f, Math.Max(nearPlane, 0.01f));
                 var needed = (float)Math.Min(NeededFar, 1e9);
                 if (needed > farPlane)
@@ -111,7 +111,7 @@ namespace SirHolomap
             catch (Exception ex)
             {
                 HolomapPlugin.Caught("RenderHooks.CameraPrefix", ex);
-                // Never break the game's frame.
+                // Ne jamais casser l'image du jeu.
             }
             return true;
         }

@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using Xunit;
 
 namespace SirHolomap.Tests
 {
-    // The galaxy zooms softly around the cursor, lies on a sparse sky of
-    // gentle stars; the plane of the nearby space is hidden by the players'
-    // characters as by the bodies; the map gives way when the player dies.
+    // La galaxie zoome doucement autour du curseur, repose sur un ciel clairsemé
+    // d'étoiles douces ; le plan de l'espace proche est caché par les personnages
+    // des joueurs comme par les astres ; la carte cède la place quand le joueur meurt.
     public class GalaxySkyAndOcclusionTests
     {
         private const double Frame = 1 / 60.0;
@@ -16,15 +16,15 @@ namespace SirHolomap.Tests
             var camera = new GalaxyCamera();
             Assert.False(camera.Gliding);
 
-            // One notch in, around a point off the middle.
+            // Un cran avant, autour d'un point hors du milieu.
             const double u = 0.4, v = -0.25;
             var x = camera.ShownX + u / camera.ShownZoom;
             var y = camera.ShownY + v / camera.ShownZoom;
             camera.Wheel(1, u, v);
             Assert.Equal(ZoomSteps.Factor, camera.TargetZoom, 9);
 
-            // Every frame the picture grows a little, never all at once, and
-            // the point under the cursor stays under it.
+            // À chaque image l'image grandit un peu, jamais d'un coup, et
+            // le point sous le curseur reste dessous.
             var previous = camera.ShownZoom;
             var frames = 0;
             var largest = 0.0;
@@ -41,10 +41,10 @@ namespace SirHolomap.Tests
                 Assert.Equal(v, sv, 6);
             }
             Assert.True(frames >= 10, frames + " frames");
-            Assert.True(largest < 1.15, "a frame grew the picture by " + largest);
+            Assert.True(largest < 1.15, "une image a agrandi l'image de " + largest);
             Assert.Equal(camera.TargetZoom, camera.ShownZoom, 9);
 
-            // And back out, one notch, around the same point: where it was.
+            // Et en arrière, un cran, autour du même point : là où il était.
             camera.Wheel(-1, u, v);
             for (var i = 0; i < 600; i++)
                 camera.Update(Frame, GalaxyCamera.HalfLife);
@@ -59,8 +59,8 @@ namespace SirHolomap.Tests
             var camera = new GalaxyCamera();
             camera.Wheel(-1, 0.1, 0.2);
             camera.Update(Frame, GalaxyCamera.HalfLife);
-            // A quick turn of the wheel at another place, mid glide: the
-            // shown view goes on from where it is.
+            // Un tour rapide de molette à un autre endroit, en plein glissement : la
+            // vue montrée continue depuis là où elle est.
             double beforeX = camera.ShownX, beforeY = camera.ShownY, beforeZoom = camera.ShownZoom;
             camera.Wheel(2, -0.5, 0.3);
             camera.Update(Frame, GalaxyCamera.HalfLife);
@@ -78,7 +78,7 @@ namespace SirHolomap.Tests
             Assert.False(camera.Gliding);
             Assert.Equal(camera.TargetX, camera.ShownX, 9);
 
-            // Dragged mid glide: the picture follows the cursor at once.
+            // Tirée en plein glissement : l'image suit le curseur tout de suite.
             camera.Wheel(1, 0.2, 0.2);
             camera.Update(Frame, GalaxyCamera.HalfLife);
             double pu, pv;
@@ -106,8 +106,8 @@ namespace SirHolomap.Tests
             Assert.Equal(MapScales.GalaxyHomeZoom, camera.ShownZoom, 9);
             Assert.Equal(0, camera.ShownX, 9);
 
-            // Zoomed in past the way back: the view glides on towards the
-            // system, the galaxy fading softly, and hands over once there.
+            // Zoomé au-delà du chemin du retour : la vue glisse plus loin vers le
+            // système, la galaxie s'effaçant doucement, et passe la main une fois là.
             Assert.Equal(1, camera.LeaveFade(1), 9);
             while (!camera.BackToSystem)
                 camera.Wheel(1, 0, 0);
@@ -136,7 +136,7 @@ namespace SirHolomap.Tests
         {
             var far = StarSky.Layer(StarSky.FarStars, 1);
             var near = StarSky.Layer(StarSky.NearStars, 2);
-            // Far fewer stars than a dense field: a hundred or so on screen.
+            // Bien moins d'étoiles qu'un champ dense : une centaine à l'écran.
             Assert.InRange(far.Length + near.Length, 40, 120);
             Assert.Equal(far[5].X, StarSky.Layer(StarSky.FarStars, 1)[5].X);
 
@@ -147,16 +147,16 @@ namespace SirHolomap.Tests
                 Assert.InRange(star.Y, 0, 1);
                 Assert.InRange(star.Size, 1, 2.3);
                 Assert.InRange(star.Alpha, 0.3, 0.95);
-                // Gentle: no channel far below the others, never a loud hue.
+                // Douces : aucun canal très en dessous des autres, jamais de teinte criarde.
                 var lowest = Math.Min(star.R, Math.Min(star.G, star.B));
                 var highest = Math.Max(star.R, Math.Max(star.G, star.B));
                 Assert.True(lowest >= 170 && highest - lowest <= 85, star.R + "," + star.G + "," + star.B);
                 tints.Add(star.R << 16 | star.G << 8 | star.B);
             }
-            // White, pale blue, orange, rose: several colours show.
+            // Blanc, bleu pâle, orange, rose : plusieurs couleurs se montrent.
             Assert.True(tints.Count >= 4, tints.Count + " colours");
 
-            // Most stars are small and dim, a few larger.
+            // La plupart des étoiles sont petites et ternes, quelques-unes plus grandes.
             var small = 0;
             foreach (var star in far)
             {
@@ -177,24 +177,24 @@ namespace SirHolomap.Tests
             Assert.Equal(1.4, top.Y, 9);
 
             var eye = new Vec3(0, 1, 10);
-            // Behind the character, from the camera: hidden.
+            // Derrière le personnage, depuis la caméra : caché.
             Assert.True(Occlusion.HiddenByCapsule(eye, new Vec3(0, 1, -5), bottom, top, radius));
             Assert.True(Occlusion.HiddenByCapsule(eye, new Vec3(0, 0.3, -20), bottom, top, radius));
-            // Inside it: hidden.
+            // À l'intérieur : caché.
             Assert.True(Occlusion.HiddenByCapsule(eye, new Vec3(0.1, 1, 0), bottom, top, radius));
-            // In front of it, or beside it: drawn.
+            // Devant lui, ou à côté : dessiné.
             Assert.False(Occlusion.HiddenByCapsule(eye, new Vec3(0, 1, 2), bottom, top, radius));
             Assert.False(Occlusion.HiddenByCapsule(eye, new Vec3(3, 1, -5), bottom, top, radius));
             Assert.False(Occlusion.HiddenByCapsule(eye, new Vec3(0, 3, -1), bottom, top, radius));
-            // A camera inside the character never hides the whole map.
+            // Une caméra à l'intérieur du personnage ne cache jamais toute la carte.
             Assert.False(Occlusion.HiddenByCapsule(new Vec3(0, 1, 0), new Vec3(0, 1, -5), bottom, top, radius));
 
-            // A height out of reason: a person's.
+            // Une hauteur déraisonnable : celle d'une personne.
             Occlusion.CharacterCapsule(new Vec3(0, 0, 0), new Vec3(0, 2, 0), 40, double.NaN, out bottom, out top, out radius);
             Assert.Equal(Occlusion.CharacterRadius, radius, 9);
             Assert.Equal(Occlusion.CharacterHeight - radius, top.Y, 9);
 
-            // The bodies keep hiding the plane as before.
+            // Les astres continuent de cacher le plan comme avant.
             Assert.True(Occlusion.HiddenBySphere(eye, new Vec3(0, 1, -50), new Vec3(0, 1, -20), 5));
             Assert.False(Occlusion.HiddenBySphere(eye, new Vec3(0, 1, -10), new Vec3(0, 1, -20), 5));
         }
@@ -205,17 +205,17 @@ namespace SirHolomap.Tests
             var eye = new Vec3(0, 10, 10);
             var towards = new Vec3(0, -10, -10);
             var cosine = Math.Cos(0.05);
-            // A long line of the plane passing under the character.
+            // Une longue ligne du plan passant sous le personnage.
             double t0, t1;
             Assert.True(Occlusion.ConeInterval(eye, new Vec3(-1000, 0, 0), new Vec3(1000, 0, 0), towards, cosine, out t0, out t1));
             Assert.True(t0 < 0.5 && t1 > 0.5);
             Assert.True(t1 - t0 < 0.01, (t1 - t0).ToString());
-            // A line far aside: nothing to look at.
+            // Une ligne loin sur le côté : rien à regarder.
             Assert.False(Occlusion.ConeInterval(eye, new Vec3(-1000, 0, 300), new Vec3(1000, 0, 300), towards, cosine, out t0, out t1));
-            // A line behind the camera: nothing either.
+            // Une ligne derrière la caméra : rien non plus.
             Assert.False(Occlusion.ConeInterval(eye, new Vec3(-1000, 20, 20), new Vec3(1000, 20, 20), towards, cosine, out t0, out t1));
 
-            // The segment distance the capsule relies on.
+            // La distance de segments dont la capsule dépend.
             Assert.Equal(1, Occlusion.SegmentDistanceSquared(new Vec3(0, 0, 0), new Vec3(2, 0, 0), new Vec3(1, 1, -1), new Vec3(1, 1, 1)), 9);
             Assert.Equal(4, Occlusion.SegmentPointDistanceSquared(new Vec3(0, 0, 0), new Vec3(2, 0, 0), new Vec3(4, 0, 0)), 9);
         }

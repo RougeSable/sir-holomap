@@ -1,9 +1,9 @@
-using Xunit;
+﻿using Xunit;
 
 namespace SirHolomap.Tests
 {
-    // A painted globe is shown again at once when the player joins the same
-    // world back, and only for the very planet it was painted from.
+    // Un globe peint est montré de nouveau tout de suite quand le joueur rejoint le même
+    // monde, et seulement pour la planète même d'où il a été peint.
     public class GlobeIdentityTests
     {
         private static GlobeIdentity Earth()
@@ -31,15 +31,15 @@ namespace SirHolomap.Tests
         [Fact]
         public void TabNameShrinksToFitItsButton()
         {
-            // Fits: its own scale.
+            // Tient : sa propre échelle.
             Assert.Equal(0.66f, TextFit.Scale(80, 0.66f, 120, 0.5f));
-            // Too wide: just small enough to fit.
+            // Trop large : juste assez petit pour tenir.
             var scale = TextFit.Scale(160, 0.66f, 120, 0.4f);
             Assert.Equal(0.66f * 120 / 160, scale, 4);
             Assert.True(160 * scale / 0.66f <= 120.001f);
-            // Far too wide: never below the floor.
+            // Beaucoup trop large : jamais sous le plancher.
             Assert.Equal(0.5f, TextFit.Scale(1000, 0.66f, 120, 0.5f));
-            // Nothing measured: left alone.
+            // Rien mesuré : laissé tel quel.
             Assert.Equal(0.66f, TextFit.Scale(0, 0.66f, 120, 0.5f));
         }
     }

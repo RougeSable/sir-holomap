@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -8,32 +8,32 @@ using VRageMath;
 
 namespace SirHolomap
 {
-    // The small globes of the system view, painted from the real planet: its
-    // relief, read from the planet's own shape, and the terrain material the
-    // game itself puts at each place, coloured as seen from far away (see
-    // TerrainColors). Any planet works, modded ones included: nothing is
-    // prepared in advance.
+    // Les petits globes de la vue Système, peints d'après la vraie planète : son
+    // relief, lu dans la forme propre de la planète, et le matériau de terrain que le
+    // jeu lui-même met à chaque endroit, coloré comme vu de loin (voir
+    // TerrainColors). Toute planète marche, celles des mods comprises : rien n'est
+    // préparé d'avance.
     //
-    // They are painted as soon as a world is joined, map open or not, a few
-    // milliseconds per frame so that the game never stalls: a coarse globe
-    // first, ready within a few frames, then the full one. By the time the
-    // player opens the system view the bodies are painted, never grey discs.
-    // The picture itself is composed off the game thread.
+    // Ils sont peints dès qu'un monde est rejoint, carte ouverte ou non, quelques
+    // millisecondes par image pour que le jeu ne se fige jamais : un globe grossier
+    // d'abord, prêt en quelques images, puis le complet. Le temps que le
+    // joueur ouvre la vue Système, les astres sont peints, jamais des disques gris.
+    // L'image elle-même est composée hors du fil du jeu.
     internal sealed class PlanetGlobes
     {
         public const int Columns = 96;
         public const int Rows = 48;
         public const int ImageSize = 256;
 
-        // Every fourth sample in each direction makes the coarse globe.
+        // Un échantillon sur quatre dans chaque direction fait le globe grossier.
         private const int CoarseStep = 4;
 
-        // Time given to the sampling per frame, in milliseconds.
+        // Temps donné à l'échantillonnage par image, en millisecondes.
         private const double BudgetClosed = 1.5;
         private const double BudgetOpen = 5.0;
 
-        // A single sample slower than this rests the sampling while the map
-        // is closed, for this many frames.
+        // Un seul échantillon plus lent que cela met l'échantillonnage au repos pendant que la carte
+        // est fermée, pour ce nombre d'images.
         private const double SlowSample = 1.0;
         private const int RestFrames = 30;
         private int m_rest;
@@ -42,22 +42,22 @@ namespace SirHolomap
         private delegate void PrepareRules(ref BoundingBox storageBox);
         private delegate void PrepareShape();
 
-        // The planet's own material lookup, found by name: when a version of
-        // the game renames it, the globes keep their relief, painted grey.
+        // La recherche de matériau propre à la planète, trouvée par son nom : quand une version du
+        // jeu la renomme, les globes gardent leur relief, peints en gris.
         private static readonly MaterialAtPosition MissingLookup = (ref Vector3 p, float l) => null;
 
-        // The planet's materials, as the game reads them for its own terrain.
-        // The game keeps the rules of the biomes per thread, in one list
-        // shared by every planet, and only the threads that build the terrain
-        // fill it: on the game thread it is missing, and every lookup of a
-        // biome's material fails. The heights the lookup reads go through
-        // the shape's coefficient cache, also kept per thread and only set up
-        // by MyPlanetShapeProvider.PrepareCache, which the game calls itself
-        // before reading materials (MyPlanetEnvironmentComponent): without
-        // it every lookup fails on the game thread, and a cache left by
-        // another planet would give that planet's heights. Prime sets up the
-        // cache for this planet, then fills the rules with every rule of
-        // this planet, before the samples of a frame are taken.
+        // Les matériaux de la planète, tels que le jeu les lit pour son propre terrain.
+        // Le jeu garde les règles des biomes par fil, dans une liste
+        // partagée par toutes les planètes, et seuls les fils qui construisent le terrain
+        // la remplissent : sur le fil du jeu elle manque, et chaque recherche du
+        // matériau d'un biome échoue. Les hauteurs que la recherche lit passent par
+        // le cache de coefficients de la forme, lui aussi gardé par fil et préparé seulement
+        // par MyPlanetShapeProvider.PrepareCache, que le jeu appelle lui-même
+        // avant de lire les matériaux (MyPlanetEnvironmentComponent) : sans
+        // lui chaque recherche échoue sur le fil du jeu, et un cache laissé par
+        // une autre planète donnerait les hauteurs de cette planète-là. Prime prépare le
+        // cache de cette planète, puis remplit les règles avec chaque règle de
+        // cette planète, avant que les échantillons d'une image soient pris.
         private sealed class MaterialSource
         {
             public MyPlanet Planet;
@@ -93,19 +93,19 @@ namespace SirHolomap
                 if (method != null && method.ReturnType == typeof(MyVoxelMaterialDefinition))
                     source.Lookup = (MaterialAtPosition)Delegate.CreateDelegate(typeof(MaterialAtPosition), materials, method);
                 else
-                    HolomapPlugin.LogError("planet material lookup not found: globes painted grey");
+                    HolomapPlugin.LogError("recherche de matériau de planète introuvable : globes peints en gris");
                 if (cache != null && cache.ReturnType == typeof(void))
                     source.Cache = (PrepareShape)Delegate.CreateDelegate(typeof(PrepareShape), shape, cache);
                 else
-                    HolomapPlugin.LogError("planet shape cache not found: globes may be painted grey");
+                    HolomapPlugin.LogError("cache de forme de planète introuvable : les globes peuvent être peints en gris");
                 if (prepare != null && prepare.ReturnType == typeof(void))
                     source.Prime = (PrepareRules)Delegate.CreateDelegate(typeof(PrepareRules), materials, prepare);
                 else
-                    HolomapPlugin.LogError("planet material rules not found: biomes may be painted with their default material");
+                    HolomapPlugin.LogError("règles de matériaux de planète introuvables : les biomes peuvent être peints avec leur matériau par défaut");
             }
             catch (Exception e)
             {
-                HolomapPlugin.LogCaught("planet material lookup failed: " + e.Message, e);
+                HolomapPlugin.LogCaught("recherche de matériau de planète échouée : " + e.Message, e);
             }
             return source;
         }
@@ -118,8 +118,8 @@ namespace SirHolomap
             return job.Materials;
         }
 
-        // The shape's cache of this planet first, as the game does before
-        // its own lookups. Cheap when it is already this planet's.
+        // Le cache de forme de cette planète d'abord, comme le fait le jeu avant
+        // ses propres recherches. Peu coûteux quand c'est déjà celui de cette planète.
         private static void PrimeShape(Job job, MaterialSource source)
         {
             if (source.Cache == null)
@@ -130,13 +130,13 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.LogCaught("planet shape cache of " + job.Body.Name + " not ready: " + e.Message, e);
+                HolomapPlugin.LogCaught("cache de forme de la planète " + job.Body.Name + " pas prêt : " + e.Message, e);
                 source.Cache = null;
             }
         }
 
-        // A box this small asks the game for every rule of the planet, not
-        // only those of a region (MyPlanetMaterialProvider.PrepareRulesForBox).
+        // Une boîte aussi petite demande au jeu chaque règle de la planète, pas
+        // seulement celles d'une région (MyPlanetMaterialProvider.PrepareRulesForBox).
         private static void Prime(Job job)
         {
             var source = SourceOf(job);
@@ -150,7 +150,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.LogCaught("planet material rules of " + job.Body.Name + " not ready: " + e.Message, e);
+                HolomapPlugin.LogCaught("règles de matériaux de la planète " + job.Body.Name + " pas prêtes : " + e.Message, e);
                 source.Prime = null;
             }
         }
@@ -174,7 +174,7 @@ namespace SirHolomap
             public GlobeIdentity Identity;
         }
 
-        // The order samples are taken in: the coarse lattice first.
+        // L'ordre où les échantillons sont pris : le réseau grossier d'abord.
         private static readonly int[] Order = BuildOrder();
 
         private static int[] BuildOrder()
@@ -202,7 +202,7 @@ namespace SirHolomap
         private readonly TerrainColors m_terrain = new TerrainColors();
         private readonly System.Diagnostics.Stopwatch m_watch = new System.Diagnostics.Stopwatch();
 
-        // The texture of a body's globe, or null while it is being painted.
+        // La texture du globe d'un astre, ou null pendant qu'il est peint.
         public string TextureOf(Body body)
         {
             return JobOf(body).Texture;
@@ -225,8 +225,8 @@ namespace SirHolomap
             return new GlobeIdentity(body.Id, body.Type, body.Radius, new Vec3(body.Centre.X, body.Centre.Y, body.Centre.Z));
         }
 
-        // A globe painted before the player left the world, still right for
-        // this body: shown again at once, its texture never left the game.
+        // Un globe peint avant que le joueur quitte le monde, encore juste pour
+        // cet astre : montré de nouveau tout de suite, sa texture n'a jamais quitté le jeu.
         private Job Kept(Body body)
         {
             Job job;
@@ -240,16 +240,16 @@ namespace SirHolomap
             return job;
         }
 
-        // Every body of the world gets its globe started, nearest first.
+        // Chaque astre du monde voit son globe lancé, les plus proches d'abord.
         public void Prepare(IList<Body> bodies)
         {
             foreach (var body in bodies)
                 JobOf(body);
         }
 
-        // Leaving or joining a world: the globes being painted start again,
-        // but the finished ones are kept, to be shown at once if the player
-        // joins the same world back.
+        // En quittant ou rejoignant un monde : les globes en cours de peinture repartent
+        // de zéro, mais les terminés sont gardés, pour être montrés tout de suite si le joueur
+        // rejoint le même monde.
         public void Clear()
         {
             foreach (var pair in m_jobs)
@@ -265,11 +265,11 @@ namespace SirHolomap
             m_terrain.Clear();
         }
 
-        // The globe of view A painted by the map itself, as the map's camera
-        // sees it, when the game's camera cannot be borrowed. Painted off the
-        // game thread, again only when the camera or the light moved; null
-        // until the first picture of this body is ready. The picture covers
-        // the whole screen.
+        // Le globe de la vue A peint par la carte elle-même, tel que la caméra de la carte
+        // le voit, quand la caméra du jeu ne peut pas être empruntée. Peint hors du
+        // fil du jeu, de nouveau seulement quand la caméra ou la lumière a bougé ; null
+        // jusqu'à ce que la première image de cet astre soit prête. L'image couvre
+        // tout l'écran.
         public const string ViewTexture = "SirHolomapGlobeView";
         public const int ViewWidth = 512;
         public const int ViewHeight = 288;
@@ -322,7 +322,7 @@ namespace SirHolomap
                 m_viewTask = null;
             }
 
-            // Into the planet's own frame, the one the samples were taken in.
+            // Dans le repère propre de la planète, celui où les échantillons ont été pris.
             var world = body.Planet.WorldMatrix;
             var toLocal = MatrixD.Transpose(world.GetOrientation());
             var radius = Math.Max(body.Radius, 1);
@@ -357,17 +357,17 @@ namespace SirHolomap
             return new Vec3(v.X, v.Y, v.Z);
         }
 
-        // A little work every frame, for the globes still unpainted: the
-        // coarse globes of every body first, then the full ones. A globe is
-        // painted once the colour of every terrain it shows is known.
+        // Un peu de travail à chaque image, pour les globes pas encore peints : les
+        // globes grossiers de chaque astre d'abord, puis les complets. Un globe est
+        // peint une fois que la couleur de chaque terrain qu'il montre est connue.
         public void Work(bool mapOpen)
         {
             foreach (var job in m_jobs.Values)
                 Collect(job);
 
-            // A sample that took long (the ground of a far planet not loaded
-            // yet) rests the sampling a few frames while the map is closed:
-            // the game never stutters for a globe nobody looks at.
+            // Un échantillon qui a pris du temps (le sol d'une planète lointaine pas encore chargé)
+            // met l'échantillonnage au repos quelques images pendant que la carte est fermée :
+            // le jeu ne saccade jamais pour un globe que personne ne regarde.
             if (m_rest > 0 && !mapOpen)
             {
                 m_rest--;
@@ -434,9 +434,9 @@ namespace SirHolomap
                 var surface = planet.GetClosestSurfacePointGlobal(ref above);
                 height = (surface - centre).Length() - planet.AverageRadius;
 
-                // Just under the ground, in the planet's storage frame, read
-                // as the game reads its terrain from a little way off: the
-                // surface material, not the rock below it.
+                // Juste sous le sol, dans le repère de stockage de la planète, lu
+                // comme le jeu lit son terrain d'un peu loin : le matériau
+                // de surface, pas la roche dessous.
                 var inside = surface - direction * 0.25;
                 var storage = (Vector3)(inside - planet.PositionLeftBottomCorner);
                 var source = SourceOf(job);
@@ -449,7 +449,7 @@ namespace SirHolomap
                 if (!job.SampleFailureLogged)
                 {
                     job.SampleFailureLogged = true;
-                    HolomapPlugin.LogCaught("terrain of " + job.Body.Name + " not read: " + e.GetType().Name + " " + e.Message, e);
+                    HolomapPlugin.LogCaught("terrain de " + job.Body.Name + " non lu : " + e.GetType().Name + " " + e.Message, e);
                 }
             }
 
@@ -458,8 +458,8 @@ namespace SirHolomap
             job.Done[index] = true;
         }
 
-        // The picture is composed off the game thread, from a copy of the
-        // samples: the coarse one fills every cell from its nearest sample.
+        // L'image est composée hors du fil du jeu, à partir d'une copie des
+        // échantillons : la grossière remplit chaque cellule depuis son échantillon le plus proche.
         private void Paint(Job job, bool full)
         {
             for (var i = 0; i < Columns * Rows; i++)
@@ -480,7 +480,7 @@ namespace SirHolomap
             job.Identity = IdentityOf(job.Body);
             if (!full)
                 job.Coarse = true;
-            // Seen from the side the sun lights, at the start.
+            // Vu du côté que le soleil éclaire, au début.
             job.Painting = Task.Run(() => Images.GlobeImage(ImageSize, Columns, Rows, colors, heights, radius, 0.3, atmosphere));
         }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,8 +7,9 @@ using Xunit;
 
 namespace SirHolomap.Tests
 {
-    // The plugin speaks the language set in the game, for every language the
-    // game offers; a text missing in a language shows in English.
+    // Le greffon parle la langue réglée dans le jeu, pour chaque langue que le
+    // jeu offre ; un texte absent d'une langue se montre en français, la langue
+    // de référence.
     public class LocalizationTests
     {
         private static readonly Regex Placeholder = new Regex(@"\{\d+\}");
@@ -28,120 +29,131 @@ namespace SirHolomap.Tests
             return string.Join(",", found);
         }
 
+        // Le français est la référence : il n'a pas de table à lui, et sert aussi
+        // à la langue « English » de l'énumération, qui est celle de la référence.
+        private static bool EstLaReference(GameLanguage language)
+        {
+            return language == GameLanguage.English || language == GameLanguage.French;
+        }
+
         [Fact]
         public void EveryKeyExistsInEveryGameLanguage()
         {
             var keys = TextKeys();
-            Assert.True(keys.Count > 100, keys.Count + " texts");
-            var english = Texts.EnglishTable();
-            var catalog = new TextCatalog(english, Translations.All());
+            Assert.True(keys.Count > 100, keys.Count + " textes");
+            var reference = Texts.EnglishTable();
+            var catalog = new TextCatalog(reference, Translations.All());
 
-            // Every text the plugin shows has its English reference.
+            // Chaque texte que le greffon montre a sa référence en français.
             foreach (var key in keys)
             {
-                Assert.True(english.ContainsKey(key), "no English text for " + key);
-                Assert.False(string.IsNullOrWhiteSpace(english[key]), "empty English text for " + key);
+                Assert.True(reference.ContainsKey(key), "pas de texte de référence pour " + key);
+                Assert.False(string.IsNullOrWhiteSpace(reference[key]), "texte de référence vide pour " + key);
             }
-            Assert.Equal(keys.Count, english.Count);
+            Assert.Equal(keys.Count, reference.Count);
 
-            // Every language of the game's list has its own text for each of
-            // them, with the same blanks to fill in.
+            // Chaque langue de la liste du jeu a son propre texte pour chacun
+            // d'eux, avec les mêmes trous à remplir.
             var languages = Enum.GetValues(typeof(GameLanguage)).Cast<GameLanguage>().ToList();
             Assert.Equal(27, languages.Count);
             var tables = Translations.All();
             foreach (var language in languages)
             {
-                if (language == GameLanguage.English)
+                if (EstLaReference(language))
                     continue;
-                Assert.True(tables.ContainsKey(language), "no texts in " + language);
+                Assert.True(tables.ContainsKey(language), "pas de textes en " + language);
                 foreach (var key in keys)
                 {
-                    Assert.True(catalog.Has(language, key), key + " missing in " + language);
-                    Assert.Equal(Placeholders(english[key]), Placeholders(catalog.Get(language, key)));
+                    Assert.True(catalog.Has(language, key), key + " manque en " + language);
+                    Assert.Equal(Placeholders(reference[key]), Placeholders(catalog.Get(language, key)));
                 }
                 foreach (var key in tables[language].Keys)
-                    Assert.True(english.ContainsKey(key), language + " has an unknown text " + key);
+                    Assert.True(reference.ContainsKey(key), language + " a un texte inconnu " + key);
             }
 
-            // The numbers of the game's own list (VRage.MyLanguagesEnum).
+            // Les numéros de la liste propre au jeu (VRage.MyLanguagesEnum).
             Assert.Equal(GameLanguage.French, Localization.FromGame(6));
             Assert.Equal(GameLanguage.German, Localization.FromGame(3));
             Assert.Equal(GameLanguage.Japanese, Localization.FromGame(26));
 
-            // Translated, not copied: a few texts that differ in every
-            // language with Latin letters.
-            Assert.NotEqual(english["JoinPasswordLabel"], catalog.Get(GameLanguage.French, "JoinPasswordLabel"));
-            Assert.NotEqual(english["StayButton"], catalog.Get(GameLanguage.German, "StayButton"));
+            // Le joueur dont le jeu est en français lit la référence.
+            Assert.Equal(reference["JoinPasswordLabel"], catalog.Get(GameLanguage.French, "JoinPasswordLabel"));
+
+            // Traduits, pas copiés : quelques textes qui diffèrent dans chaque
+            // langue à lettres latines.
+            Assert.NotEqual(reference["StayButton"], catalog.Get(GameLanguage.German, "StayButton"));
+            Assert.NotEqual(reference["JoinPasswordLabel"], catalog.Get(GameLanguage.German, "JoinPasswordLabel"));
         }
 
-        // The first tab of the system view keeps its name, "System 2D".
+        // Le premier onglet de la vue Système garde son nom, « Système 2D ».
         [Fact]
         public void FlatSystemTabKeepsItsName()
         {
-            var english = Texts.EnglishTable();
-            var catalog = new TextCatalog(english, Translations.All());
-            Assert.Equal("System 2D", english["TabBodies"]);
-            Assert.Equal("Syst\u00e8me 2D", catalog.Get(GameLanguage.French, "TabBodies"));
+            var reference = Texts.EnglishTable();
+            var catalog = new TextCatalog(reference, Translations.All());
+            Assert.Equal("Système 2D", reference["TabBodies"]);
+            Assert.Equal("Système 2D", catalog.Get(GameLanguage.French, "TabBodies"));
         }
 
-        // The second tab of the system view is no longer "System 3D": it is
-        // "Orbits", translated in every language, with no "3D" left in it,
-        // and never the same name as its neighbours.
+        // Le second onglet de la vue Système n'est plus « Système 3D » : c'est
+        // « Orbites », traduit dans chaque langue, sans « 3D » dedans, et jamais
+        // du même nom que ses voisins.
         [Fact]
         public void OrbitsTabReplacesSystem3D()
         {
-            var english = Texts.EnglishTable();
-            var catalog = new TextCatalog(english, Translations.All());
-            Assert.Equal("Orbits", english["TabOrrery"]);
+            var reference = Texts.EnglishTable();
+            var catalog = new TextCatalog(reference, Translations.All());
+            Assert.Equal("Orbites", reference["TabOrrery"]);
             Assert.Equal("Orbites", catalog.Get(GameLanguage.French, "TabOrrery"));
             Assert.Equal("Umlaufbahnen", catalog.Get(GameLanguage.German, "TabOrrery"));
             foreach (GameLanguage language in Enum.GetValues(typeof(GameLanguage)))
             {
                 var name = catalog.Get(language, "TabOrrery");
-                Assert.True(catalog.Has(language, "TabOrrery") || language == GameLanguage.English, "no Orbits tab in " + language);
+                Assert.True(catalog.Has(language, "TabOrrery") || EstLaReference(language), "pas d'onglet Orbites en " + language);
                 Assert.DoesNotContain("3D", name);
                 Assert.DoesNotContain("3B", name);
                 Assert.DoesNotContain("2D", name);
                 Assert.NotEqual(catalog.Get(language, "TabBodies"), name);
                 Assert.NotEqual(catalog.Get(language, "TabGalaxy"), name);
-                if (language != GameLanguage.English)
-                    Assert.NotEqual("Orbits", name);
+                if (!EstLaReference(language))
+                    Assert.NotEqual("Orbites", name);
             }
         }
 
         [Fact]
         public void MissingTranslationFallsBackToEnglish()
         {
-            var english = new Dictionary<string, string>
+            var reference = new Dictionary<string, string>
             {
-                { "Close", "Close" },
-                { "Seen", "seen {0} ago" },
-                { "Empty", "nothing" },
+                { "Close", "Fermer" },
+                { "Seen", "vu il y a {0}" },
+                { "Empty", "rien" },
             };
             var languages = new Dictionary<GameLanguage, Dictionary<string, string>>
             {
-                { GameLanguage.French, new Dictionary<string, string> { { "Close", "Fermer" }, { "Empty", "" } } },
+                { GameLanguage.German, new Dictionary<string, string> { { "Close", "Schließen" }, { "Empty", "" } } },
             };
-            var catalog = new TextCatalog(english, languages);
+            var catalog = new TextCatalog(reference, languages);
 
-            Assert.Equal("Fermer", catalog.Get(GameLanguage.French, "Close"));
-            // Missing in French, or left empty: the English text.
-            Assert.Equal("seen {0} ago", catalog.Get(GameLanguage.French, "Seen"));
-            Assert.Equal("nothing", catalog.Get(GameLanguage.French, "Empty"));
-            Assert.False(catalog.Has(GameLanguage.French, "Seen"));
-            // A language without any text: English everywhere.
-            Assert.Equal("Close", catalog.Get(GameLanguage.Japanese, "Close"));
-            Assert.Equal("Close", catalog.Get(GameLanguage.English, "Close"));
-            // A key nobody knows shows as itself, never a crash.
-            Assert.Equal("Unknown", catalog.Get(GameLanguage.French, "Unknown"));
+            Assert.Equal("Schließen", catalog.Get(GameLanguage.German, "Close"));
+            // Absent en allemand, ou laissé vide : le texte de référence.
+            Assert.Equal("vu il y a {0}", catalog.Get(GameLanguage.German, "Seen"));
+            Assert.Equal("rien", catalog.Get(GameLanguage.German, "Empty"));
+            Assert.False(catalog.Has(GameLanguage.German, "Seen"));
+            // Une langue sans aucun texte : la référence partout.
+            Assert.Equal("Fermer", catalog.Get(GameLanguage.Japanese, "Close"));
+            Assert.Equal("Fermer", catalog.Get(GameLanguage.English, "Close"));
+            // Une clé que personne ne connaît se montre telle quelle, jamais un plantage.
+            Assert.Equal("Inconnue", catalog.Get(GameLanguage.German, "Inconnue"));
 
-            // A language number the plugin does not know speaks English.
+            // Un numéro de langue que le greffon ne connaît pas parle la référence.
             Assert.Equal(GameLanguage.English, Localization.FromGame(200));
             Assert.Equal(GameLanguage.English, Localization.FromGame(-1));
             Assert.Equal(GameLanguage.English, Localization.FromGame(1000));
 
-            // The plugin's own texts, by default, are the English ones.
+            // Les textes du greffon, par défaut, sont ceux de la référence, en français.
             Assert.Equal(Texts.EnglishTable()["Title"], Localization.Catalog.Get(GameLanguage.English, "Title"));
+            Assert.Equal("Système 2D", Localization.Catalog.Get(GameLanguage.English, "TabBodies"));
         }
     }
 }

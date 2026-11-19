@@ -1,175 +1,191 @@
-# Sir Holomap
+﻿# Sir Holomap
 
-An in-game map for Space Engineers, as a client-side plugin loaded by Pulsar.
-Press **M** to open and close it. With a block in hand, M keeps the game's own
-symmetry key. Should the character die while the map is open, the map closes
-by itself and the game shows its own respawn screen; M opens the map again
-once the player is back.
+Une carte en jeu pour Space Engineers, sous la forme d'un greffon côté joueur chargé par Pulsar.
+Appuyez sur **M** pour l'ouvrir et la fermer. Avec un bloc en main, M garde la
+touche de symétrie du jeu. Si le personnage meurt pendant que la carte est ouverte, la carte se ferme
+toute seule et le jeu montre son propre écran de réapparition ; M ouvre de nouveau la carte
+une fois le joueur revenu.
 
-A player without the plugin plays as usual, and everything the map remembers,
-the player saw with their own eyes. The map asks nothing of the server and
-sends it nothing about the player; the one thing it sends, to our own servers
-only, is its error reports (see "Error reports").
+Un joueur sans le greffon joue normalement, et tout ce que la carte retient,
+le joueur l'a vu de ses propres yeux. La carte ne demande rien au serveur et ne lui envoie rien sur le joueur ;
+ce qu'elle envoie, à nos serveurs seulement, ce sont ses rapports d'erreurs (voir « Rapports d'erreurs »)
+et un point par fonctionnalité utilisée (voir « Suivi des fonctionnalités »).
 
-## The four views
+## Les quatre vues
 
-The buttons **Planet**, **Nearby space**, **System** and **Galaxy** at the
-top switch between them; the mouse wheel also glides from one to the next. Every view has the same menu on the
-right (info, what to show, the list of what is in view) and answers the same
-gestures:
+Les boutons **Planète**, **Espace proche**, **Système** et **Galaxie** en haut
+passent de l'une à l'autre ; la molette de la souris glisse aussi de l'une à la suivante. Chaque vue a le même menu à
+droite (infos, ce qu'il faut montrer, liste de ce qui est en vue) et répond aux mêmes
+gestes :
 
-| Gesture | Everywhere |
+| Geste | Partout |
 | --- | --- |
-| Left drag | turn |
-| Middle drag, or WASD | move |
-| Wheel | zoom; every notch multiplies the distance (Ctrl + wheel flies forward in the 3D system) |
-| Click | select, the info shows on the right |
-| Double click | dive into what is under the cursor |
-| Space | back to you |
-| M or Esc | close |
+| Glissement gauche | tourner |
+| Glissement milieu, ou WASD | déplacer |
+| Molette | zoomer ; chaque cran multiplie la distance (Ctrl + molette avance dans le système 3D) |
+| Clic | sélectionner, les infos se montrent à droite |
+| Double clic | plonger dans ce qui est sous le curseur |
+| Espace | retour vers vous |
+| M ou Échap | fermer |
 
-- **Planet.** The globe of the planet you are on, drawn by the game's own
-  renderer from orbit: its real relief and colours, for any planet, modded
-  ones included. You, your grids and the bases are in place, ships move as
-  they move. Wheel in: the ground comes closer and the game sharpens the
-  relief down to a few dozen metres. Wheel out: the neighbourhood. A double
-  click on a grid in range fastens the camera to it: the left drag then
-  turns around the grid, the wheel still zooms over the globe. A double click
-  on another body in sight (a moon, a neighbour planet) glides the globe over
-  to it, still in the planet view, and the menu shows that body.
-- **Nearby space.** Your neighbourhood seen from above a virtual plane, over
-  the sky of the world. Each grid hangs over the plane by a line telling its
-  height. The planets and moons hide the plane, and so do the characters of
-  the players, yours included: whatever part of it passes inside a body or a
-  character, or behind it, is not drawn. The menu lists the grids in
-  view; a click highlights one. A click on a planet or a moon in sight shows
-  it in the menu; a double click glides the camera over to its globe, in the
-  planet view, and the menu presents that body. A double
-  click on a grid in range fastens the camera to it, and the game draws it
-  filling the screen; on a remembered grid, the view centres on its marker
-  and its info says it is out of range. While the camera follows a grid,
-  the plane stays where it was before the double click, and the grid's
-  height line grows and shrinks as it climbs or sinks. A simple click on
-  empty space outside the grid's frame, a right click or the wheel lets go,
-  back over you; a left drag only turns around the grid. The Planet button
-  keeps a grid near a planet in the middle of its globe.
-- **System.** Two tabs: **System 2D**, the planets and their moons laid
-  flat by distance to the centre of the world; **Orbits**, the system in 3D
-  with true distances and enlarged bodies, the sun marked on the edge of the
-  screen in its true direction. A dive from the system view (double click on
-  a body or a grid) comes straight back to it when you zoom out. The globes of the bodies are painted
-  from the real planets as soon as you join a world, a coarse picture within
-  a few frames, then the full one, so they are ready when the map opens. Each
-  one shows its own relief and the terrain the game puts at each place, in
-  the colour the game paints it with from far away, or else the mean colour
-  of the terrain's own texture: green and blue for EarthLike, red for Mars,
-  and the same for the planets of a world mod. A globe once painted stays
-  painted when you close and reopen the map, and when you leave and join the
-  same world again. The names of the tabs shrink to fit their buttons in
-  every language.
-- **Galaxy.** Every server has a fixed place computed from its address,
-  lying on a black, starry sky that fills the view however far you zoom out.
-  Wheel out of the system to its end (or two notches out of System 2D) and
-  the map glides out to the galaxy; wheel in and it glides back to the
-  system. The galaxy always comes to rest on its whole, so every server is
-  found at the same spot from one opening of the map to the next, whichever
-  server you are on. Each notch of the wheel makes the picture grow or shrink
-  softly around the cursor, the point under it staying there. The sky behind
-  is sparse: a few soft, round stars with a light halo, in gentle colours
-  (white, pale blue, orange, rose), in two layers drifting at their own pace,
-  so that the arms of the galaxy and the names of the servers read first. The server you play on shines with "You are here".
-  Servers you visited or keep in your favorites carry their name; when
-  several lie close together, their rows stack in a column next to their
-  places, a thin line to each true place, so that no icon and no name covers
-  another and each one can be hovered and clicked. The other servers are dots
-  that spread on rings around the middle of their group in the same way.
-  The filters of the menu (favorites, visited, search) are kept between game
-  launches and for every server; the filter in force is named in the menu and
-  in the corner of the map.
+- **Planète.** Le globe de la planète où vous êtes, dessiné par le moteur de rendu
+  du jeu depuis l'orbite : son vrai relief et ses vraies couleurs, pour n'importe quelle planète, celles
+  des mods comprises. Vous, vos grilles et les bases sont à leur place, les vaisseaux bougent
+  comme ils bougent. Molette vers l'avant : le sol se rapproche et le jeu affine le
+  relief jusqu'à quelques dizaines de mètres. Molette vers l'arrière : le voisinage. Un double
+  clic sur une grille à portée attache la caméra à elle : le glissement gauche
+  tourne alors autour de la grille, la molette zoome toujours sur le globe. Un double clic
+  sur un autre astre en vue (une lune, une planète voisine) fait glisser le globe
+  vers lui, toujours dans la vue Planète, et le menu montre cet astre.
+- **Espace proche.** Votre voisinage vu d'au-dessus d'un plan virtuel, sur
+  le ciel du monde. Chaque grille pend au-dessus du plan par une ligne qui dit sa
+  hauteur. Les planètes et les lunes cachent le plan, et les personnages
+  des joueurs aussi, le vôtre compris : toute partie du plan qui passe à l'intérieur d'un astre ou d'un
+  personnage, ou derrière lui, n'est pas dessinée. Le menu liste les grilles
+  en vue ; un clic en surligne une. Un clic sur une planète ou une lune en vue la montre
+  dans le menu ; un double clic fait glisser la caméra vers son globe, dans
+  la vue Planète, et le menu présente cet astre. Un double
+  clic sur une grille à portée attache la caméra à elle, et le jeu la dessine
+  en plein écran ; sur une grille retenue, la vue se centre sur son repère et ses infos disent qu'elle est hors de portée.
+  Tant que la caméra suit une grille, le plan reste où il était avant le double clic,
+  et la ligne de hauteur de la grille grandit et rétrécit quand elle monte ou descend.
+  Un simple clic dans le vide hors du cadre de la grille, un clic droit ou la molette lâchent
+  la grille, de retour au-dessus de vous ; un glissement gauche ne fait que tourner autour de la grille.
+  Le bouton Planète garde une grille proche d'une planète au milieu de son globe.
+- **Système.** Deux onglets : **Système 2D**, les planètes et leurs lunes mises
+  à plat par distance au centre du monde ; **Orbites**, le système en 3D
+  avec les vraies distances et les astres agrandis, le soleil marqué sur le bord de
+  l'écran dans sa vraie direction. Une plongée depuis la vue Système (double clic sur
+  un astre ou une grille) y revient tout droit quand vous dézoomez. Les globes des astres sont peints
+  d'après les vraies planètes dès que vous rejoignez un monde, une image grossière
+  en quelques images, puis la complète, pour qu'ils soient prêts quand la carte s'ouvre. Chacun
+  montre son propre relief et le terrain que le jeu met à chaque endroit, de la
+  couleur dont le jeu le peint de loin, ou sinon de la couleur moyenne de la propre texture du terrain :
+  vert et bleu pour EarthLike, rouge pour Mars, et pareil pour les planètes d'un mod de monde.
+  Un globe une fois peint reste peint quand vous fermez et rouvrez la carte, et quand
+  vous quittez puis rejoignez le même monde. Les noms des onglets rétrécissent pour tenir dans leurs boutons dans
+  toutes les langues.
+- **Galaxie.** Chaque serveur a une place fixe calculée à partir de son adresse,
+  sur un ciel noir et étoilé qui remplit la vue, aussi loin que vous dézoomiez. Dézoomez
+  du système jusqu'au bout (ou deux crans depuis Système 2D) et la carte glisse
+  vers la galaxie ; zoomez et elle revient au système. La galaxie
+  se pose toujours sur son entier, si bien que chaque serveur se retrouve au même endroit d'une
+  ouverture de la carte à l'autre, quel que soit le serveur où vous êtes. Chaque cran de la molette fait
+  grandir ou rétrécir l'image doucement autour du curseur, le point dessous y restant. Le ciel
+  derrière est clairsemé : quelques étoiles douces et rondes avec un halo léger, aux couleurs
+  douces (blanc, bleu pâle, orange, rose), en deux couches qui dérivent à leur propre allure,
+  pour que les bras de la galaxie et les noms des serveurs se lisent d'abord. Le serveur sur lequel vous jouez
+  brille avec « Vous êtes ici ». Les serveurs que vous avez visités ou gardés en favoris portent leur nom ; quand
+  plusieurs sont proches, leurs lignes s'empilent dans une colonne à côté de leurs
+  places, un trait fin vers chaque vraie place, si bien qu'aucune icône ni aucun nom n'en couvre
+  un autre et que chacun peut être survolé et cliqué. Les autres serveurs sont des points
+  qui s'étalent sur des anneaux autour du milieu de leur groupe de la même façon.
+  Les filtres du menu (favoris, visités, recherche) sont gardés d'un lancement du jeu à l'autre
+  et pour chaque serveur ; le filtre en vigueur est nommé dans le menu et
+  dans le coin de la carte.
 
-The switches between the views depend on the scale only, with a gap
-between the way out and the way back, so the views never take turns when
-the wheel stops on a limit.
+Les passages entre les vues ne dépendent que de l'échelle, avec un écart
+entre la sortie et le retour, si bien que les vues n'alternent jamais quand
+la molette s'arrête sur une limite.
 
-## Memory
+## Mémoire
 
-Whatever enters your synchronisation range is seen: its position and the time
-are recorded. Beyond that range the game sends nothing more, so a marker stays
-at the last place it was seen, greyed, with "seen ... ago". Coming back near a
-place updates it: what is there is seen again, what is gone is forgotten.
+Tout ce qui entre dans votre portée de synchronisation est vu : sa position et l'heure
+sont enregistrées. Au-delà de cette portée le jeu n'envoie plus rien, donc un repère reste
+au dernier endroit où il a été vu, grisé, avec « vu il y a ... ». Revenir près d'un
+lieu le met à jour : ce qui s'y trouve est vu de nouveau, ce qui n'y est plus est oublié.
 
-The memory is kept on your machine, one per server, in
-`%AppData%\SpaceEngineers\Storage\sir-holomap\Memory`. The settings (block
-thresholds of the planet view and of space, the galaxy filters, what to show) are kept in
-`settings.xml` next to it, the same for every server.
+La mémoire est gardée sur votre machine, une par serveur, dans
+`%AppData%\SpaceEngineers\Storage\sir-holomap\Memory`. Les réglages (seuils de blocs
+de la vue Planète et de l'espace, filtres de la galaxie, ce qu'il faut montrer) sont gardés dans
+`settings.xml` à côté, les mêmes pour tous les serveurs.
 
-## Error reports
+## Suivi des fonctionnalités
 
-When the plugin goes wrong, the studio hears of it. Every exception the plugin
-catches and every error line it writes to the game's log becomes a report of
-kind `erreur`; the same error (same message, same top of stack) is one report
-per session, with how many times it came back and when first and last. The
-plugin also lays a mark in its folder when a session starts and takes it away
-when the game is left cleanly: a mark found at the next start means the game
-crashed. The plugin then reads the log of that session (the
-`SpaceEngineers_*.log` before the current one, in `%AppData%\SpaceEngineers`)
-and makes a report of kind `plantage`, with the game's CRASH INFO block, the
-exception that brought it down and its stack, the last 20 error lines of the
-game and the last 20 lines of the plugin.
+Le greffon déclare dans `fonctionnalites.json` ce que les joueurs peuvent utiliser à part, et le
+dit à Sir Studio Torch, qui compte **1 point par joueur, par jour et par fonctionnalité** et le
+montre dans l'onglet Statistiques de chaque univers (carte « Fonctionnalités »). Il en déclare quatre :
 
-A report is a UTF-8 JSON document `{ greffon, version, genre, message, pile,
-premiere, derniere, nombre, session, lignes }` sent with
-`MyAPIGateway.Multiplayer.SendMessageToServer` on channel 5465479001 (the
-game's API addresses a message with 16 bits, so the message goes on the low 16
-bits of that number, 38745). It carries nothing about the player: a log line
-with a Steam identifier, a nickname, a grid name or a server address is
-dropped, and the Windows user's folder is written `%USERPROFILE%`.
+| Clé | Libellé | Un point quand le joueur… |
+| --- | --- | --- |
+| `holomap.carte` | Ouvrir la carte | ouvre la carte (M) |
+| `holomap.systeme` | Vue Système | passe en vue Système, en 2D ou en 3D |
+| `holomap.galaxie` | Vue Galaxie | passe à l'onglet Galaxie |
+| `holomap.suivi_grille` | Suivi d'une grille | suit une grille en Espace proche |
 
-Reports only leave while you are on one of our servers (PU or PTU, recognised
-by the name the server is listed under, which holds "Sirius Immersion").
-Everywhere else (solo, a hosted game, any other server) they wait, one file
-each, in `%AppData%\SpaceEngineers\Storage\sir-holomap\reports`, and leave at
-the next connection to one of ours; the file is deleted once sent. A fault
-while preparing or sending a report is swallowed: it never reaches the game.
+Un point ne se note que par un geste du joueur : cocher ou décocher une case du
+greffon n'en envoie jamais. Une clé ne change jamais ; son libellé peut changer. Le point est mis en
+file au geste, sans rien lire, écrire ni envoyer sur le fil du jeu ; il part ensuite, au plus
+une fois par clé et par jour (heure de Paris, comme Sir Studio Torch) et par session, par un message réseau sur le canal
+commun du suivi (`SendMessageToServer`, canal 46481), dont le texte UTF-8 est
+`<identifiant Steam>;<clé>` (par exemple `76561198000000001;holomap.carte`). Il ne part que
+quand le joueur est sur l'un de nos serveurs (PU ou PTU) ; ailleurs, il est jeté. Une faute d'envoi
+est avalée : elle n'atteint jamais le jeu.
 
-## Joining another server
+## Rapports d'erreurs
 
-A double click on a server of the galaxy first asks the server whether it
-answers, has room and runs this version of the game; on any of these failures
-you stay where you are, with a message telling why. Then a confirmation names
-the server; when the server asks for a password, it holds a box to type it. Its
-text is cut to the width of the box and the box grows to hold it, in every
-language and for the longest server names.
-The password is handed to the game's own join when it asks for it, and is not
-kept. Only then does the game leave the current server. Should the other
-server still refuse once the current one is left (a wrong password, for
-instance), the game is back at its main menu and the map offers to return to
-the server you just left.
+Quand le greffon va mal, le studio le sait. Chaque exception que le greffon rattrape
+et chaque ligne d'erreur qu'il écrit au journal du jeu devient un rapport de genre `erreur` ; la même erreur
+(même message, même haut de pile) fait un seul rapport par session, avec le nombre de fois où elle
+est revenue et sa première et sa dernière heure. Le greffon pose aussi une marque dans son dossier quand une session
+commence et la retire quand le jeu est quitté proprement : une marque trouvée au
+démarrage suivant veut dire que le jeu a planté. Le greffon relit alors le journal de cette session (le
+`SpaceEngineers_*.log` d'avant le courant, dans `%AppData%\SpaceEngineers`)
+et en fait un rapport de genre `plantage`, avec le bloc CRASH INFO du jeu, l'exception qui l'a fait
+tomber et sa pile, les 20 dernières lignes d'erreur du jeu et les 20 dernières lignes du greffon.
 
-## Languages
+Un rapport est un document JSON UTF-8 `{ greffon, version, genre, message, pile,
+premiere, derniere, nombre, session, lignes }` envoyé par
+`MyAPIGateway.Multiplayer.SendMessageToServer` sur le canal 5465479001 (l'API du jeu
+adresse un message sur 16 bits, donc le message part sur les 16 bits de poids
+faible de ce nombre, 38745). Il ne porte rien sur le joueur : une ligne de journal
+avec un identifiant Steam, un pseudo, un nom de grille ou une adresse de serveur est
+retirée, et le dossier de l'utilisateur Windows s'écrit `%USERPROFILE%`.
 
-The map speaks the language set in the game's options, for every language
-the game offers; a text missing in a language shows in English. The texts are
-in `Source/Logic/Texts.cs` (English) and `Source/Logic/Translations.*.cs`.
+Les rapports ne partent que quand vous êtes sur l'un de nos serveurs (PU ou PTU, reconnus par
+le nom sous lequel le serveur est listé, qui contient « Sirius Immersion »).
+Partout ailleurs (solo, partie hébergée, tout autre serveur) ils attendent, un fichier
+chacun, dans `%AppData%\SpaceEngineers\Storage\sir-holomap\reports`, et partent à la
+prochaine connexion à l'un des nôtres ; le fichier est effacé une fois envoyé. Une faute
+en préparant ou en envoyant un rapport est avalée : elle n'atteint jamais le jeu.
 
-## Living with other plugins
+## Rejoindre un autre serveur
 
-The map borrows two steps of the game while it is open: the render camera (so
-that the game draws the real planet from the map's point of view) and the
-sun's direction (the "Daylight globe" box). If another plugin already holds
-one of them, the map leaves it alone and says so in a notification. Without
-the camera, the planet view shows a globe the map paints itself from the real planet's
-relief and terrain colours, turning and zooming with the map's camera, at a
-coarser level of detail than the game's own. Without the light, the globe
-keeps the game's light.
+Un double clic sur un serveur de la galaxie demande d'abord au serveur s'il
+répond, s'il a de la place et s'il fait tourner cette version du jeu ; à chacune de ces défaillances
+vous restez où vous êtes, avec un message qui dit pourquoi. Puis une confirmation nomme
+le serveur ; quand le serveur demande un mot de passe, elle porte une case pour le taper. Son
+texte est coupé à la largeur de la case et la case grandit pour le porter, dans toutes les
+langues et pour les noms de serveur les plus longs.
+Le mot de passe est remis à la connexion propre du jeu quand elle le demande, et n'est pas
+gardé. Alors seulement le jeu quitte le serveur actuel. Si l'autre
+serveur refuse encore une fois l'actuel quitté (un mauvais mot de passe, par
+exemple), le jeu est de retour à son menu principal et la carte propose de revenir au serveur
+que vous venez de quitter.
 
-## Building
+## Langues
 
-Pulsar compiles the `Source` folder itself. For a local build, give the path
-of the game's `Bin64` folder (see `Directory.Build.props.example`):
+La carte parle la langue réglée dans les options du jeu, pour chaque langue
+que le jeu offre ; un texte absent d'une langue se montre en français, la langue de référence. Les textes sont
+dans `Source/Logic/Texts.cs` (français) et `Source/Logic/Translations.*.cs`.
+
+## Cohabiter avec d'autres greffons
+
+La carte emprunte deux étapes du jeu tant qu'elle est ouverte : la caméra de rendu (pour
+que le jeu dessine la vraie planète depuis le point de vue de la carte) et la direction du
+soleil (la case « Globe éclairé »). Si un autre greffon tient déjà l'une des deux,
+la carte n'y touche pas et le dit dans une notification. Sans la caméra, la vue Planète montre
+un globe que la carte peint elle-même d'après le relief et les couleurs de terrain de la vraie planète,
+tournant et zoomant avec la caméra de la carte, à un niveau de détail
+plus grossier que celui du jeu. Sans la lumière, le globe garde celle du jeu.
+
+## Construction
+
+Pulsar compile lui-même le dossier `Source`. Pour une compilation locale, donnez le chemin
+du dossier `Bin64` du jeu (voir `Directory.Build.props.example`) :
 
     dotnet build sir-holomap.csproj
 
-The tests cover the plugin's pure logic and run without the game:
+Les tests couvrent la logique pure du greffon et tournent sans le jeu :
 
     dotnet test tests/tests.csproj

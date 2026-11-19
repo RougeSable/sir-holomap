@@ -1,10 +1,10 @@
-using System.Linq;
+﻿using System.Linq;
 using Xunit;
 
 namespace SirHolomap.Tests
 {
-    // The confirmation to join a server cuts its text at the width of its
-    // box, whatever the language and the length of the server name.
+    // La confirmation pour rejoindre un serveur coupe son texte à la largeur de
+    // sa boîte, quelle que soit la langue et la longueur du nom du serveur.
     public class TextWrapTests
     {
         private static float Measure(string text)
@@ -15,17 +15,17 @@ namespace SirHolomap.Tests
         [Fact]
         public void EveryLineFitsTheBox()
         {
-            var text = "Leave this server and join \"[FR] A very very long server name that goes on and on\"?\n\n"
-                + "Address: steam://147.185.221.16:10664\nAVeryLongWordWithoutAnySpaceThatCannotFitOnOneLine";
+            var text = "Quitter ce serveur et rejoindre \"[FR] Un très très long nom de serveur qui n'en finit plus\" ?\n\n"
+                + "Adresse : steam://147.185.221.16:10664\nAVeryLongWordWithoutAnySpaceThatCannotFitOnOneLine";
             var lines = TextWrap.Wrap(text, Measure, 100);
-            Assert.All(lines, line => Assert.True(Measure(line) <= 100, "\"" + line + "\" is too wide"));
+            Assert.All(lines, line => Assert.True(Measure(line) <= 100, "\"" + line + "\" est trop large"));
 
-            // Nothing is lost: every letter is still there, in order.
+            // Rien n'est perdu : chaque lettre est encore là, dans l'ordre.
             Assert.Equal(text.Replace("\n", "").Replace(" ", ""), string.Concat(lines).Replace(" ", ""));
 
-            // Line breaks of the text stay, the empty line too.
+            // Les retours à la ligne du texte restent, la ligne vide aussi.
             Assert.Contains("", lines);
-            Assert.StartsWith("Address:", lines.First(l => l.StartsWith("Address")));
+            Assert.StartsWith("Adresse", lines.First(l => l.StartsWith("Adresse")));
         }
 
         [Fact]

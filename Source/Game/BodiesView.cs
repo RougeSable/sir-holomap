@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using VRage.Utils;
 using VRageMath;
 
 namespace SirHolomap
 {
-    // C, first tab: the planets laid flat in a row, by distance to the centre
-    // of the world, each with its moons below it, next to the sun. A double
-    // click opens the globe of a body (live, with memories greyed when it is
-    // out of reach); zooming out of that globe comes straight back here.
+    // C, premier onglet : les planètes alignées à plat, par distance au centre
+    // du monde, chacune avec ses lunes dessous, à côté du soleil. Un double
+    // clic ouvre le globe d'un astre (vivant, avec les souvenirs grisés quand il est
+    // hors de portée) ; dézoomer de ce globe revient tout droit ici.
     internal sealed class BodiesView : MapView
     {
         private readonly List<Body> m_drawn = new List<Body>();
@@ -62,8 +62,8 @@ namespace SirHolomap
             Pan(new Vector2((float)(-keys.X * 900 * dt), 0));
         }
 
-        // The wheel zooms into the body under the cursor: its globe. Turned
-        // the other way, it zooms out to the galaxy after a couple of notches.
+        // La molette zoome vers l'astre sous le curseur : son globe. Tournée
+        // dans l'autre sens, elle dézoome vers la galaxie après quelques crans.
         public override void Wheel(double notches, bool ctrl)
         {
             if (notches < 0)
@@ -122,12 +122,12 @@ namespace SirHolomap
             var area = Map.MapArea;
             var middle = area.Y + area.Height * 0.38f;
 
-            // Faint stars behind.
+            // Étoiles faibles derrière.
             if (GameTextures.GalaxyReady())
                 Gfx.Sprite(GameTextures.Galaxy, area.X + area.Width * 0.7f, area.Y + area.Height * 0.5f, area.Height * 1.6f, area.Height * 1.6f,
                     new Color(255, 255, 255, 28));
 
-            // The sun, half out of the left edge.
+            // Le soleil, à moitié hors du bord gauche.
             var sunSize = area.Height * 1.1f;
             Gfx.Sprite(GameTextures.Sun, area.X - sunSize * 0.18f - m_scroll, middle, sunSize, sunSize, Color.White);
             Gfx.Text(Texts.Sun, area.X + 30 * s - m_scroll, area.Y + area.Height - 70 * s, 0.7f, new Color(255, 230, 170));
@@ -153,7 +153,7 @@ namespace SirHolomap
                 DrawBody(planet, at, r, player);
                 Gfx.Text(Distance(planet.Centre.Length()), x, middle + r + 30 * s, 0.52f, Style.Dim, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_TOP);
 
-                // Moons in a column below their planet.
+                // Les lunes en colonne sous leur planète.
                 var y = middle + r + 64 * s;
                 foreach (var moon in planet.Moons)
                 {

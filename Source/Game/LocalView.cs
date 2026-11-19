@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
@@ -12,26 +12,26 @@ namespace SirHolomap
         Player,
         Body,
         Free,
-        // The camera fastened to a grid the game sends now: it fills the
-        // screen in 3D and the camera turns around it.
+        // La caméra attachée à une grille que le jeu envoie maintenant : elle remplit
+        // l'écran en 3D et la caméra tourne autour d'elle.
         Grid,
-        // Centred on a grid known from memory only: the game has nothing to
-        // draw there, so the view shows its marker at its last known place.
+        // Centrée sur une grille connue de la mémoire seulement : le jeu n'a rien à
+        // y dessiner, la vue montre donc son repère à sa dernière place connue.
         Memory,
     }
 
-    // B: the neighbourhood, seen from above a virtual plane laid through the
-    // centre of the view, over the sky of the world. Every grid hangs over
-    // the plane by a line that tells its height; grids move as they move in
-    // the game. A double click on a grid in range fastens the camera to it,
-    // close enough for the grid to fill the screen; on a remembered grid it
-    // centres the view on its marker. While a grid is followed the plane
-    // stays where it was; a simple click on empty space, a right click or
-    // the wheel lets go, back over the player.
+    // B : le voisinage, vu d'au-dessus d'un plan virtuel posé à travers le
+    // centre de la vue, sur le ciel du monde. Chaque grille pend au-dessus du
+    // plan par une ligne qui dit sa hauteur ; les grilles bougent comme elles bougent dans
+    // le jeu. Un double clic sur une grille à portée attache la caméra à elle,
+    // assez près pour que la grille remplisse l'écran ; sur une grille retenue, il
+    // centre la vue sur son repère. Tant qu'une grille est suivie, le plan
+    // reste où il était ; un simple clic dans le vide, un clic droit ou
+    // la molette la lâche, de retour au-dessus du joueur.
     internal sealed class LocalView : MapView
     {
-        // The plane is the same everywhere in the system: the world's
-        // horizontal.
+        // Le plan est le même partout dans le système : l'horizontale
+        // du monde.
         public static readonly Vector3D Normal = Vector3D.Up;
         private static readonly Vector3D Reference = Vector3D.Forward;
 
@@ -48,18 +48,18 @@ namespace SirHolomap
         private readonly ZoomLadder m_ladder = new ZoomLadder(0, ZoomRung.Local);
         private Vector3D m_focus;
 
-        // The plane stays put while a grid is followed.
+        // Le plan reste en place tant qu'une grille est suivie.
         private readonly FollowPlane m_plane = new FollowPlane();
-        // The follow came from a dive in C: the wheel out goes back there.
+        // Le suivi est venu d'une plongée en C : la molette vers l'extérieur y retourne.
         private bool m_followFromSystem;
-        // The view over the player as it was before the double click, given
-        // back when the follow ends.
+        // La vue au-dessus du joueur telle qu'elle était avant le double clic, rendue
+        // quand le suivi se termine.
         private bool m_hasBefore;
         private double m_beforeYaw;
         private double m_beforePitch;
         private double m_beforeDistance;
 
-        // The frame drawn around the followed grid, on screen.
+        // Le cadre dessiné autour de la grille suivie, à l'écran.
         private bool m_frameShown;
         private Vector2 m_frameAt;
         private float m_frameSize;
@@ -67,8 +67,8 @@ namespace SirHolomap
         private readonly List<Marker> m_visible = new List<Marker>();
         private readonly List<Vector2> m_visibleAt = new List<Vector2>();
 
-        // The planets and moons in sight: a click shows one in the menu, a
-        // double click glides over to its globe, in the planet view.
+        // Les planètes et les lunes en vue : un clic en montre une dans le menu, un
+        // double clic glisse vers son globe, dans la vue Planète.
         private readonly List<Body> m_bodies = new List<Body>();
         private readonly List<Vector2> m_bodiesAt = new List<Vector2>();
         private readonly List<float> m_bodiesRadius = new List<float>();
@@ -82,7 +82,7 @@ namespace SirHolomap
             get { return m_anchor; }
         }
 
-        // The grid the camera is fastened to, if any.
+        // La grille à laquelle la caméra est attachée, s'il y en a une.
         public Marker LockedGrid
         {
             get { return m_anchor == LocalAnchor.Grid ? m_grid : null; }
@@ -93,7 +93,7 @@ namespace SirHolomap
             get { return m_returnToSystem; }
         }
 
-        // The camera follows a grid, live or remembered.
+        // La caméra suit une grille, vivante ou retenue.
         public bool Following
         {
             get { return m_anchor == LocalAnchor.Grid || m_anchor == LocalAnchor.Memory; }
@@ -141,7 +141,7 @@ namespace SirHolomap
 
         public void Enter(LocalAnchor anchor, Body body, Marker grid, bool fromSystem, bool continuous)
         {
-            // Nothing to fly around on a remembered grid: centred on it.
+            // Rien à survoler sur une grille retenue : centrée dessus.
             if (anchor == LocalAnchor.Grid && grid != null && !grid.Live)
                 anchor = LocalAnchor.Memory;
             m_plane.Release();
@@ -164,9 +164,9 @@ namespace SirHolomap
 
             if (continuous)
             {
-                // From the camera as it is going to be, never from where it
-                // still glides: the view starts inside the gap of the switch
-                // it just crossed.
+                // Depuis la caméra telle qu'elle va être, jamais depuis l'endroit où elle
+                // glisse encore : la vue commence dans l'écart du passage qu'elle
+                // vient de franchir.
                 FromCamera();
                 if (anchor == LocalAnchor.Free)
                     m_free = Camera.TargetFocus;
@@ -200,9 +200,9 @@ namespace SirHolomap
                 }
             }
             m_focus = AnchorPoint();
-            // Coming onto a grid from another view: the plane is laid through
-            // the grid as it is now, at the scale of the neighbourhood, and
-            // stays there while the camera follows it.
+            // On arrive sur une grille depuis une autre vue : le plan est posé à travers
+            // la grille telle qu'elle est maintenant, à l'échelle du voisinage, et
+            // reste là tant que la caméra la suit.
             if (anchor == LocalAnchor.Grid)
                 m_plane.Keep(MapWorld.ToVec(m_focus), NeighbourhoodDistance());
         }
@@ -213,8 +213,8 @@ namespace SirHolomap
             return MathHelper.Clamp(sync * 1.1, 1500, 15000);
         }
 
-        // The plane as it is on screen now: through the point the camera
-        // looks at, at the height of the view's centre.
+        // Le plan tel qu'il est à l'écran maintenant : à travers le point que la caméra
+        // regarde, à la hauteur du centre de la vue.
         private void KeepPlaneAsShown()
         {
             m_plane.Keep(MapWorld.ToVec(LivePlaneOrigin()), Camera.Distance);
@@ -316,15 +316,15 @@ namespace SirHolomap
             {
                 var radius = m_grid != null ? Math.Max(m_grid.Radius, 3) : 20;
                 m_distance = Math.Max(m_distance, radius * 1.1 + MapScales.ClosestToGrid);
-                // The grid left the range of the game: its memory stays, and
-                // the plane with it.
+                // La grille est sortie de la portée du jeu : sa mémoire reste, et le plan
+                // avec elle.
                 if (m_grid != null && !m_grid.Live)
                     m_anchor = LocalAnchor.Memory;
             }
             else if (m_anchor == LocalAnchor.Memory)
             {
-                // A remembered grid seen again: the camera fastens to it, the
-                // plane staying where it is now.
+                // Une grille retenue revue : la caméra s'y attache, le
+                // plan restant où il est maintenant.
                 if (m_grid != null && m_grid.Live)
                 {
                     KeepPlaneAsShown();
@@ -356,9 +356,9 @@ namespace SirHolomap
             Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
         }
 
-        // The end of a follow: the neighbourhood centred on the player, as it
-        // was before the double click when the follow started here. The
-        // camera only glides; nothing reaches the character.
+        // La fin d'un suivi : le voisinage centré sur le joueur, tel qu'il
+        // était avant le double clic quand le suivi a commencé ici. La
+        // caméra ne fait que glisser ; rien n'atteint le personnage.
         private void BackToPlayer()
         {
             m_anchor = LocalAnchor.Player;
@@ -383,8 +383,8 @@ namespace SirHolomap
             Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
         }
 
-        // A simple click on empty space, a right click or the wheel ends the
-        // follow. False when no grid was followed.
+        // Un simple clic dans le vide, un clic droit ou la molette met fin au
+        // suivi. Faux quand aucune grille n'était suivie.
         public bool StopFollowing()
         {
             if (!Following)
@@ -397,9 +397,9 @@ namespace SirHolomap
         {
             if (Following)
             {
-                // A dive from C goes back there when the wheel turns out;
-                // otherwise the wheel always brings back the neighbourhood of
-                // the player.
+                // Une plongée depuis C y retourne quand la molette tourne vers l'extérieur ;
+                // sinon la molette ramène toujours le voisinage du
+                // joueur.
                 if (notches < 0 && m_followFromSystem && m_returnToSystem)
                 {
                     m_followFromSystem = false;
@@ -421,7 +421,7 @@ namespace SirHolomap
             m_pitch = MathHelper.Clamp(m_pitch + delta.Y * 0.005, m_anchor == LocalAnchor.Grid ? -1.4 : 0.08, 1.55);
         }
 
-        // The map follows the cursor across the plane.
+        // La carte suit le curseur à travers le plan.
         public override void Pan(Vector2 delta)
         {
             if (m_anchor == LocalAnchor.Grid)
@@ -448,9 +448,9 @@ namespace SirHolomap
         {
             if (m_anchor == LocalAnchor.Body || m_anchor == LocalAnchor.Memory)
             {
-                // Away from the planet's centre: no globe to go down to, but
-                // the way up to the system keeps its scale, so moving the
-                // camera never jumps to C by itself.
+                // Loin du centre de la planète : pas de globe où descendre, mais
+                // la montée vers le système garde son échelle, si bien que bouger la
+                // caméra ne saute jamais à C toute seule.
                 m_ladder.LeavePlanet();
                 m_distance = m_ladder.Entry(ZoomRung.Local, m_distance);
             }
@@ -470,9 +470,10 @@ namespace SirHolomap
         {
             if (grid == null)
                 return;
+            PointsDeFonctionnalites.Point(Fonctionnalites.SuiviGrille, Map.World);
             if (!Following)
             {
-                // Remembered to be given back when the follow ends.
+                // Retenu pour être rendu quand le suivi se termine.
                 m_hasBefore = true;
                 m_beforeYaw = m_yaw;
                 m_beforePitch = m_pitch;
@@ -484,8 +485,8 @@ namespace SirHolomap
             m_gridId = grid.Id;
             if (grid.Live)
             {
-                // The plane stays as it is on screen now, wherever the grid
-                // goes; following another grid keeps it there too.
+                // Le plan reste tel qu'il est à l'écran maintenant, où que la grille
+                // aille ; suivre une autre grille l'y garde aussi.
                 KeepPlaneAsShown();
                 m_anchor = LocalAnchor.Grid;
                 m_distance = LockDistance(grid);
@@ -493,8 +494,8 @@ namespace SirHolomap
             }
             else
             {
-                // A remembered grid does not move: the plane is laid through
-                // its marker, which shows with its card.
+                // Une grille retenue ne bouge pas : le plan est posé à travers
+                // son repère, qui se montre avec sa fiche.
                 m_plane.Release();
                 m_anchor = LocalAnchor.Memory;
                 m_distance = MemoryDistance(grid);
@@ -514,8 +515,8 @@ namespace SirHolomap
                 Lock(marker);
                 return;
             }
-            // A planet or a moon in sight: the camera glides over to its
-            // globe, in the planet view, and the menu shows that body.
+            // Une planète ou une lune en vue : la caméra glisse vers son
+            // globe, dans la vue Planète, et le menu montre cet astre.
             var body = target as Body;
             if (body != null && body.Planet != null && !body.Planet.Closed)
                 Map.GoPlanet(body, m_returnToSystem, false, null);
@@ -538,14 +539,14 @@ namespace SirHolomap
                     bestDistance = d;
                 }
             }
-            // Anywhere in the frame of the followed grid is the grid: only a
-            // click outside it, on empty space, ends the follow.
+            // N'importe où dans le cadre de la grille suivie, c'est la grille : seul un
+            // clic en dehors, dans le vide, met fin au suivi.
             if (best == null && m_anchor == LocalAnchor.Grid && m_frameShown && m_grid != null
                 && FollowGestures.InsideFrame(mouse.X, mouse.Y, m_frameAt.X, m_frameAt.Y, m_frameSize, Gfx.Scale))
                 best = m_grid;
             if (best != null)
                 return best;
-            // Markers first; then the planets and moons in sight.
+            // Les repères d'abord ; puis les planètes et les lunes en vue.
             var closest = double.MaxValue;
             for (var i = 0; i < m_bodies.Count; i++)
             {
@@ -559,7 +560,7 @@ namespace SirHolomap
             return best;
         }
 
-        // Straight under (or over) a position, on the plane.
+        // Juste en dessous (ou au-dessus) d'une position, sur le plan.
         private Vector3D Foot(Vector3D position)
         {
             return position - Normal * Vector3D.Dot(position - PlaneOrigin, Normal);
@@ -594,9 +595,9 @@ namespace SirHolomap
                 m_visibleAt.Add(at);
             }
 
-            // The height lines first, under every marker. The followed grid
-            // has its own over the kept plane: it grows and shrinks as the
-            // grid climbs or sinks.
+            // Les lignes de hauteur d'abord, sous chaque repère. La grille suivie
+            // a la sienne sur le plan gardé : elle grandit et rétrécit quand la
+            // grille monte ou descend.
             var s = Gfx.Scale;
             for (var i = 0; i < m_visible.Count; i++)
             {
@@ -619,8 +620,8 @@ namespace SirHolomap
                 var marker = m_visible[i];
                 if (m_anchor == LocalAnchor.Grid && marker.Id == m_gridId)
                 {
-                    // The grid fills the screen, drawn by the game: only thin
-                    // corners around it, the size of the grid on screen.
+                    // La grille remplit l'écran, dessinée par le jeu : seulement de fins
+                    // coins autour d'elle, de la taille de la grille à l'écran.
                     Vector2 at;
                     double depth;
                     if (Camera.Project(marker.Position, out at, out depth))
@@ -638,8 +639,8 @@ namespace SirHolomap
             }
         }
 
-        // The virtual plane: lines every power of ten, the finer ones fading
-        // in as the camera comes closer, fading out with distance.
+        // Le plan virtuel : des lignes à chaque puissance de dix, les plus fines apparaissant
+        // en fondu quand la caméra se rapproche, et s'effaçant avec la distance.
         private void DrawPlane(Vector3D focus, double distance)
         {
             var origin = Foot(focus);
@@ -660,7 +661,7 @@ namespace SirHolomap
             var s = Gfx.Scale;
             for (var axis = 0; axis < 2; axis++)
             {
-                // Lines run along one axis, one every step across the other.
+                // Les lignes courent le long d'un axe, une tous les pas en travers de l'autre.
                 var along = axis == 0 ? Reference : side;
                 var across = axis == 0 ? side : Reference;
                 var centreAlong = Vector3D.Dot(origin, along);
@@ -672,7 +673,7 @@ namespace SirHolomap
                     var offset = fixedValue - centreAcross;
                     if (Math.Abs(offset) >= range)
                         continue;
-                    // Segments fading with the distance from the centre.
+                    // Segments qui s'effacent avec la distance au centre.
                     const int pieces = 6;
                     for (var p = 0; p < pieces; p++)
                     {
@@ -691,22 +692,22 @@ namespace SirHolomap
             }
         }
 
-        // The planets and moons hide the plane: the game draws them in the
-        // scene, the plane is drawn over the scene, so every piece of a line
-        // that passes inside a body, or behind it as seen from the camera,
-        // is left out. Bodies are spheres of their mean radius; the plane
-        // runs through the point the view is centred on, which therefore
-        // always stays in sight, even in a valley below the mean radius.
+        // Les planètes et les lunes cachent le plan : le jeu les dessine dans la
+        // scène, le plan est dessiné par-dessus la scène, donc chaque morceau de ligne
+        // qui passe à l'intérieur d'un astre, ou derrière lui vu de la caméra,
+        // est laissé de côté. Les astres sont des sphères de leur rayon moyen ; le plan
+        // passe par le point sur lequel la vue est centrée, qui reste donc
+        // toujours en vue, même dans une vallée sous le rayon moyen.
         private struct Occluder
         {
             public Vector3D Centre;
             public double Radius;
-            // A character: a capsule from Bottom to Top, of this radius.
+            // Un personnage : une capsule de Bottom à Top, de ce rayon.
             public bool Capsule;
             public Vec3 Bottom;
             public Vec3 Top;
-            // Its disc on screen, to skip the lines far from it; Wide when
-            // the body is too close to the camera to bound it that way.
+            // Son disque à l'écran, pour sauter les lignes loin de lui ; Wide quand
+            // l'astre est trop près de la caméra pour le borner ainsi.
             public Vector2 At;
             public float ScreenRadius;
             public bool Wide;
@@ -726,15 +727,15 @@ namespace SirHolomap
                     radius = focusDistance * 0.998;
                 var toBody = body.Centre - eye;
                 var distance = toBody.Length();
-                // A camera low in a valley, below the mean radius: the body
-                // still hides what lies beyond its curve.
+                // Une caméra basse dans une vallée, sous le rayon moyen : l'astre
+                // cache encore ce qui se trouve au-delà de sa courbure.
                 radius = Math.Min(radius, distance * 0.995);
                 if (radius <= 1)
                     continue;
                 var occluder = new Occluder { Centre = body.Centre, Radius = radius };
-                // The body covers the directions within an angle of the one
-                // to its centre; on screen, at most this far from where its
-                // centre lands, stretched as it goes off the middle.
+                // L'astre couvre les directions dans un angle de celle
+                // vers son centre ; à l'écran, au plus à cette distance d'où son
+                // centre tombe, étiré quand il s'éloigne du milieu.
                 var spread = Math.Asin(MathHelper.Clamp(radius / distance, 0, 1));
                 var off = Math.Acos(MathHelper.Clamp(Vector3D.Dot(toBody / distance, Camera.Forward), -1, 1));
                 Vector2 at;
@@ -757,16 +758,16 @@ namespace SirHolomap
             PrepareCharacters();
         }
 
-        // The characters hide the plane as the bodies do: the player's own,
-        // and every other player the game sends now. Each is a capsule from
-        // its feet to its head, turned as it stands.
+        // Les personnages cachent le plan comme les astres : celui du joueur,
+        // et chaque autre joueur que le jeu envoie maintenant. Chacun est une capsule de
+        // ses pieds à sa tête, tournée comme il se tient.
         private readonly HashSet<long> m_characters = new HashSet<long>();
 
         private void PrepareCharacters()
         {
             m_characters.Clear();
-            // Only when the game draws the scene from the map's camera:
-            // otherwise no character shows behind the plane.
+            // Seulement quand le jeu dessine la scène depuis la caméra de la carte :
+            // sinon aucun personnage ne se montre derrière le plan.
             if (!RenderHooks.Active)
                 return;
             var session = MyAPIGateway.Session;
@@ -789,7 +790,7 @@ namespace SirHolomap
                 return;
             var matrix = character.WorldMatrix;
             var feet = matrix.Translation;
-            // Too far to cover a pixel: nothing to hide.
+            // Trop loin pour couvrir un pixel : rien à cacher.
             var toFeet = feet - Camera.Position;
             var distance = toFeet.Length();
             if (Occlusion.CharacterHeight * Camera.PixelsPerMetre(Math.Max(distance, 0.01)) < 1.5)
@@ -829,7 +830,7 @@ namespace SirHolomap
             m_occluders.Add(occluder);
         }
 
-        // Inside a body, or behind it from the camera.
+        // À l'intérieur d'un astre, ou derrière lui depuis la caméra.
         private bool Occluded(Vector3D point)
         {
             var eye = Camera.Position;
@@ -856,7 +857,7 @@ namespace SirHolomap
             return false;
         }
 
-        // Might a body hide part of this piece? Only then is it cut up.
+        // Un astre peut-il cacher une partie de ce morceau ? Alors seulement il est découpé.
         private bool NearOccluder(Vector3D a, Vector3D b)
         {
             if (m_occluders.Count == 0)
@@ -870,7 +871,7 @@ namespace SirHolomap
                     return true;
                 if (DistanceToSegment(o.At, sa, sb) < o.ScreenRadius)
                     return true;
-                // A piece that runs inside the body is cut, wherever it shows.
+                // Un morceau qui passe à l'intérieur de l'astre est coupé, où qu'il se montre.
                 if (SegmentInside(a, b, o))
                     return true;
             }
@@ -895,8 +896,8 @@ namespace SirHolomap
             return (a + ab * t - p).Length();
         }
 
-        // A line of the map in the world, with what the bodies hide left
-        // out: the edge of a body cuts it cleanly.
+        // Une ligne de la carte dans le monde, avec ce que les astres cachent laissé
+        // de côté : le bord d'un astre la coupe net.
         private readonly List<double> m_samples = new List<double>();
 
         private void Segment(Vector3D a, Vector3D b, float thickness, Color color)
@@ -906,8 +907,8 @@ namespace SirHolomap
                 DrawPiece(a, b, thickness, color);
                 return;
             }
-            // Evenly along the piece, and closely where a character could
-            // hide it: a person is small next to a piece of the plane.
+            // Régulièrement le long du morceau, et de près là où un personnage pourrait
+            // le cacher : une personne est petite à côté d'un morceau du plan.
             const int samples = 24;
             m_samples.Clear();
             for (var i = 0; i <= samples; i++)
@@ -956,7 +957,7 @@ namespace SirHolomap
                 DrawPiece(a + (b - a) * start, b, thickness, color);
         }
 
-        // Where between two samples the line goes in or out of sight.
+        // Où entre deux échantillons la ligne entre ou sort de la vue.
         private double Edge(Vector3D a, Vector3D b, double t0, double t1, bool visibleAtStart)
         {
             for (var i = 0; i < 10; i++)
@@ -977,7 +978,7 @@ namespace SirHolomap
                 Gfx.Line(sa, sb, thickness, color);
         }
 
-        // Where the game stops sending: beyond, the map shows memories.
+        // Là où le jeu cesse d'envoyer : au-delà, la carte montre des souvenirs.
         private void DrawSyncRange()
         {
             if (World.SyncRadius >= double.MaxValue || World.SyncRadius > Camera.Distance * 6)
@@ -1002,9 +1003,9 @@ namespace SirHolomap
             }
         }
 
-        // When the game does not draw the scene from the map's camera, the
-        // bodies are painted by the map, at their true size, under the plane
-        // they hide.
+        // Quand le jeu ne dessine pas la scène depuis la caméra de la carte, les
+        // astres sont peints par la carte, à leur vraie taille, sous le plan
+        // qu'ils cachent.
         private void DrawPaintedBodies()
         {
             var order = new List<Body>(World.Bodies);
@@ -1022,8 +1023,8 @@ namespace SirHolomap
             }
         }
 
-        // The names of the bodies in sight, and what a click finds there. A
-        // body hidden behind another one is not offered.
+        // Les noms des astres en vue, et ce qu'un clic y trouve. Un
+        // astre caché derrière un autre n'est pas proposé.
         private void DrawBodies()
         {
             m_bodies.Clear();
@@ -1065,7 +1066,7 @@ namespace SirHolomap
             return other != null && other.Id == body.Id;
         }
 
-        // The side of the body facing the camera lies behind another body.
+        // Le côté de l'astre tourné vers la caméra est derrière un autre astre.
         private bool BehindAnotherBody(Body body)
         {
             var eye = Camera.Position;
@@ -1115,8 +1116,8 @@ namespace SirHolomap
 
         private readonly List<Marker> m_list = new List<Marker>();
 
-        // The grids on screen, closest to the player first. Clicking one
-        // shows it on the map.
+        // Les grilles à l'écran, les plus proches du joueur d'abord. En cliquer une
+        // la montre sur la carte.
         public override void List(Panel panel)
         {
             m_list.Clear();

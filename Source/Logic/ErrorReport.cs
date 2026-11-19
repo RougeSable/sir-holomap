@@ -1,31 +1,31 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
 namespace SirHolomap
 {
-    // The rule of the client-side plugins for reporting errors: one JSON
-    // document, UTF-8, on one channel. Nothing about the player goes in it.
+    // La règle des greffons côté joueur pour rapporter les erreurs : un document JSON,
+    // en UTF-8, sur un seul canal. Rien sur le joueur n'y entre.
     public static class ReportRule
     {
         public const string PluginName = "Sir Holomap";
 
-        // What the plugin writes in front of every line it adds to the
-        // game's log.
+        // Ce que le greffon écrit devant chaque ligne qu'il ajoute au
+        // journal du jeu.
         public const string LogTag = "[sir-holomap]";
 
-        // The channel of the rule. The game's multiplayer API addresses a
-        // message with 16 bits only, so the channel it is sent on is the low
-        // 16 bits of this number.
+        // Le canal de la règle. L'API multijoueur du jeu adresse un message sur
+        // 16 bits seulement : le canal d'envoi est donc les 16 bits de poids
+        // faible de ce nombre.
         public const long Channel = 5465479001;
         public const ushort ModApiChannel = unchecked((ushort)Channel);
 
         public const string KindError = "erreur";
         public const string KindCrash = "plantage";
 
-        // How many lines of the game's log a crash report carries of each
-        // sort.
+        // Combien de lignes du journal du jeu un rapport de plantage porte de chaque
+        // sorte.
         public const int TailLines = 20;
 
         public const int MaxMessage = 1000;
@@ -34,7 +34,7 @@ namespace SirHolomap
         public const int MaxLine = 600;
     }
 
-    // One report: what goes to the server.
+    // Un rapport : ce qui part vers le serveur.
     public sealed class ErrorReport
     {
         public string Plugin = ReportRule.PluginName;
@@ -51,7 +51,7 @@ namespace SirHolomap
 
     public static class ErrorReportJson
     {
-        // The names of the rule, in the order they are written.
+        // Les noms de la règle, dans l'ordre où ils s'écrivent.
         public static readonly string[] FieldNames =
         {
             "greffon", "version", "genre", "message", "pile", "premiere", "derniere", "nombre", "session", "lignes",
@@ -100,7 +100,7 @@ namespace SirHolomap
             return text.ToString();
         }
 
-        // UTF-8 without a byte order mark: what goes on the channel.
+        // UTF-8 sans marque d'ordre des octets : ce qui part sur le canal.
         public static byte[] ToBytes(ErrorReport report)
         {
             return new UTF8Encoding(false).GetBytes(ToJson(report));

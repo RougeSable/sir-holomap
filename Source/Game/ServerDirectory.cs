@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using Sandbox;
@@ -9,7 +9,7 @@ using VRage.GameServices;
 
 namespace SirHolomap
 {
-    // A server shown on the galaxy.
+    // Un serveur montré sur la galaxie.
     internal sealed class GalaxyServer
     {
         public string Address = "";
@@ -20,8 +20,8 @@ namespace SirHolomap
         public MyGameServerItem Item;
         public GalaxyPoint Place;
 
-        // The number its place is computed from: the layout of the icons is
-        // ordered by it, never by the list.
+        // Le nombre dont sa place est calculée : la disposition des icônes est
+        // ordonnée par lui, jamais par la liste.
         public ulong Key;
         public bool IsCurrent;
 
@@ -31,9 +31,9 @@ namespace SirHolomap
         }
     }
 
-    // The servers the galaxy knows: those the player visited (kept by the
-    // map), the game's favorites, and the game's server list when no filter
-    // is checked, asked to the game the way its own server browser does.
+    // Les serveurs que la galaxie connaît : ceux que le joueur a visités (gardés par la
+    // carte), les favoris du jeu, et la liste de serveurs du jeu quand aucun filtre
+    // n'est coché, demandée au jeu comme le fait son propre navigateur de serveurs.
     internal sealed class ServerDirectory
     {
         private const int MaximumServers = 6000;
@@ -65,9 +65,9 @@ namespace SirHolomap
 
         public void Update(MapWorld world, MapSettings settings)
         {
-            // Every server visited has its place, however long the game's
-            // list: by its address, or by its key for a game joined without
-            // one, the same key the current server is found by.
+            // Chaque serveur visité a sa place, quelle que soit la longueur de la
+            // liste du jeu : par son adresse, ou par sa clé pour une partie rejointe sans
+            // adresse, la même clé qui sert à retrouver le serveur actuel.
             if (world.History != null)
             {
                 foreach (var visit in world.History.Servers)
@@ -84,8 +84,8 @@ namespace SirHolomap
                 }
             }
 
-            // Where the player is: a dedicated server by its address; a local
-            // world or a hosted game by its key, so that it has its place too.
+            // Où est le joueur : un serveur dédié par son adresse ; un monde local
+            // ou une partie hébergée par sa clé, pour qu'il ait aussi sa place.
             var current = "";
             var identity = world.Identity;
             if (identity != null)
@@ -117,8 +117,8 @@ namespace SirHolomap
             m_internetAsked = false;
         }
 
-        // always: a visited or current server, kept even past the limit of
-        // the game's list.
+        // always : un serveur visité ou actuel, gardé même au-delà de la limite de
+        // la liste du jeu.
         private GalaxyServer Get(string address, bool always = false)
         {
             var key = ServerAddress.Normalize(address);
@@ -206,8 +206,8 @@ namespace SirHolomap
             m_loadingUntil = DateTime.MinValue;
         }
 
-        // Which servers the filters let through: favorites and visited are
-        // boxes, both unchecked shows all; the search matches name or address.
+        // Quels serveurs les filtres laissent passer : favoris et visités sont des
+        // cases, les deux décochées montrent tout ; la recherche porte sur le nom ou l'adresse.
         public static bool Passes(GalaxyServer server, MapSettings settings)
         {
             if (server.IsCurrent)
@@ -230,13 +230,13 @@ namespace SirHolomap
         }
     }
 
-    // Joining another server from the galaxy. The double click first asks
-    // the server whether it answers, has room and runs this version of the
-    // game; then a confirmation names it, with a box for the password when
-    // the server asks for one. Only then does the game leave the current
-    // server. On any failure the player stays where they are, and is told
-    // why. The password typed is handed to the game when its own join asks
-    // for it, and forgotten at once.
+    // Rejoindre un autre serveur depuis la galaxie. Le double clic demande d'abord
+    // au serveur s'il répond, a de la place et fait tourner cette version du
+    // jeu ; puis une confirmation le nomme, avec une case pour le mot de passe quand
+    // le serveur en demande un. Alors seulement le jeu quitte le serveur
+    // actuel. À toute défaillance, le joueur reste où il est, et on lui dit
+    // pourquoi. Le mot de passe tapé est remis au jeu quand sa propre connexion le
+    // demande, et oublié aussitôt.
     internal static class ServerJoiner
     {
         private static GalaxyServer s_pending;
@@ -276,7 +276,7 @@ namespace SirHolomap
             Check(server);
         }
 
-        // returning: going back to the server just left, from the main menu.
+        // returning : retour au serveur qu'on vient de quitter, depuis le menu principal.
         private static void Check(GalaxyServer server, bool returning = false)
         {
             if (Busy)
@@ -290,10 +290,10 @@ namespace SirHolomap
                 Fail(returning ? Texts.ReturnOffline : Texts.JoinOffline);
         }
 
-        // Called every update, in a world or not: a server that never answers
-        // is offline, a password typed in the confirmation goes to the game's
-        // own password prompt, and a join that failed after leaving offers
-        // the way back.
+        // Appelé à chaque mise à jour, dans un monde ou non : un serveur qui ne répond jamais
+        // est hors ligne, un mot de passe tapé dans la confirmation va à l'invite de
+        // mot de passe propre au jeu, et une connexion qui a échoué après le départ propose
+        // le chemin du retour.
         public static void Update(bool inWorld)
         {
             if (s_pending != null && DateTime.UtcNow > s_deadline)
@@ -322,7 +322,7 @@ namespace SirHolomap
                 Address = ServerAddress.Normalize(s_wayBack.BackConnection),
                 Name = s_wayBack.BackName,
             };
-            HolomapPlugin.Log("the join of " + s_wayBack.TargetName + " failed: offering the way back to " + back.ConnectionString);
+            HolomapPlugin.Log("la connexion à " + s_wayBack.TargetName + " a échoué : retour proposé vers " + back.ConnectionString);
             var box = MyGuiSandbox.CreateMessageBox(
                 styleEnum: MyMessageBoxStyleEnum.Info,
                 buttonType: MyMessageBoxButtonsType.YES_NO,
@@ -343,7 +343,7 @@ namespace SirHolomap
             var server = s_pending;
             if (server == null || item == null)
                 return;
-            // Another ping of the game's own: not ours.
+            // Un autre sondage propre au jeu : pas le nôtre.
             if (ServerAddress.Normalize(item.ConnectionString) != server.Address)
                 return;
             GameServices.StopPing(Responded, Failed);
@@ -365,7 +365,7 @@ namespace SirHolomap
 
             if (returning)
             {
-                HolomapPlugin.Log("going back to " + item.ConnectionString);
+                HolomapPlugin.Log("retour vers " + item.ConnectionString);
                 MySandboxGame.Static.Invoke(() =>
                 {
                     if (!GameServices.Join(item, false))
@@ -374,7 +374,7 @@ namespace SirHolomap
                 return;
             }
 
-            // The confirmation, naming the server.
+            // La confirmation, qui nomme le serveur.
             var lines = new List<string>();
             lines.Add(string.Format(Texts.JoinQuestion, name));
             lines.Add("");
@@ -392,10 +392,10 @@ namespace SirHolomap
 
         private static void Leave(MyGameServerItem item, string name, string password)
         {
-            HolomapPlugin.Log("leaving for " + item.ConnectionString);
+            HolomapPlugin.Log("départ vers " + item.ConnectionString);
             MySandboxGame.Static.Invoke(() =>
             {
-                // The way back, should the other server refuse once left.
+                // Le chemin du retour, au cas où l'autre serveur refuserait une fois quitté.
                 var plugin = HolomapPlugin.Instance;
                 var here = plugin != null ? plugin.CurrentServer : null;
                 if (here != null && here.IsDedicated)

@@ -1,19 +1,19 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace SirHolomap
 {
-    // The mean colour of a texture file (DDS), as it looks from very far
-    // away: the colour a terrain takes on a small globe. Only one small
-    // level of the mipmap chain is read, never the whole picture.
+    // La couleur moyenne d'un fichier de texture (DDS), telle qu'elle se voit de très loin :
+    // la couleur qu'un terrain prend sur un petit globe. Seul un petit
+    // niveau de la chaîne de mipmaps est lu, jamais l'image entière.
     //
-    // Formats read: 32-bit uncompressed (RGBA, BGRA, BGRX), BC1, BC2, BC3
-    // and BC7. For BC7 blocks split in several subsets, the mean of the
-    // block is estimated from the middle of each subset's endpoints: a mean
-    // colour does not need the exact shape of the subsets.
+    // Formats lus : 32 bits non compressé (RGBA, BGRA, BGRX), BC1, BC2, BC3
+    // et BC7. Pour les blocs BC7 répartis en plusieurs sous-ensembles, la moyenne du
+    // bloc est estimée au milieu des extrémités de chaque sous-ensemble : une couleur
+    // moyenne n'a pas besoin de la forme exacte des sous-ensembles.
     public static class TextureColor
     {
-        // The level read is the first one no wider than this.
+        // Le niveau lu est le premier pas plus large que cela.
         public const int TargetSize = 64;
 
         private const uint Magic = 0x20534444; // "DDS "
@@ -37,8 +37,8 @@ namespace SirHolomap
             Bc7,
         }
 
-        // Mean colour, sRGB, 0..1 per channel. False when the file is not a
-        // texture this reader knows.
+        // Couleur moyenne, sRGB, 0..1 par canal. Faux quand le fichier n'est pas une
+        // texture que ce lecteur connaît.
         public static bool TryMean(Stream stream, out float r, out float g, out float b)
         {
             r = g = b = 0;
@@ -103,7 +103,7 @@ namespace SirHolomap
             if (format == Format.Unknown)
                 return false;
 
-            // The first level no wider than the target, or the last one.
+            // Le premier niveau pas plus large que la cible, ou le dernier.
             long offset = dataStart;
             int w = width, h = height;
             for (var level = 0; level < mips - 1 && Math.Max(w, h) > TargetSize; level++)
@@ -228,9 +228,9 @@ namespace SirHolomap
             sum[3] += weight;
         }
 
-        // The colour part of BC1, BC2 and BC3: two 5:6:5 colours and a 2-bit
-        // index per pixel. Only BC1 knows the three-colour mode, whose
-        // fourth index is a transparent pixel, left out of the mean.
+        // La partie couleur de BC1, BC2 et BC3 : deux couleurs 5:6:5 et un indice de 2 bits
+        // par pixel. Seul BC1 connaît le mode à trois couleurs, dont le
+        // quatrième indice est un pixel transparent, laissé hors de la moyenne.
         private static void ColourBlock(byte[] data, int at, bool canBeTransparent, double[] sum)
         {
             var c0 = data[at] | (data[at + 1] << 8);
@@ -276,10 +276,10 @@ namespace SirHolomap
             palette[slot, 2] = (b << 3) | (b >> 2);
         }
 
-        // BC7, mode by mode (the format's own table):
-        // subsets, partition bits, rotation bits, index selection bit,
-        // colour bits, alpha bits, endpoint p-bits, shared p-bits,
-        // index bits, second index bits.
+        // BC7, mode par mode (la table propre au format) :
+        // sous-ensembles, bits de partition, bits de rotation, bit de sélection d'indice,
+        // bits de couleur, bits d'alpha, p-bits des extrémités, p-bits partagés,
+        // bits d'indice, bits du second indice.
         private static readonly int[,] Bc7Modes =
         {
             { 3, 4, 0, 0, 4, 0, 1, 0, 3, 0 },
@@ -326,7 +326,7 @@ namespace SirHolomap
         {
             var first = data[at];
             if (first == 0)
-                return; // Reserved mode: no colour.
+                return; // Mode réservé : pas de couleur.
             var mode = 0;
             while ((first & (1 << mode)) == 0)
                 mode++;
@@ -381,7 +381,7 @@ namespace SirHolomap
 
             if (subsets > 1)
             {
-                // The middle of each subset, every subset counted alike.
+                // Le milieu de chaque sous-ensemble, chaque sous-ensemble compté pareil.
                 for (var s = 0; s < subsets; s++)
                 {
                     Add(sum, (colours[s * 2, 0] + colours[s * 2 + 1, 0]) / 2.0,
@@ -391,8 +391,8 @@ namespace SirHolomap
                 return;
             }
 
-            // One subset: every pixel from its own index. The first pixel's
-            // index has one bit less (its top bit is always zero).
+            // Un sous-ensemble : chaque pixel depuis son propre indice. L'indice du premier
+            // pixel a un bit de moins (son bit de poids fort est toujours zéro).
             var primary = new int[16];
             for (var i = 0; i < 16; i++)
                 primary[i] = bits.Take(i == 0 ? indexBits - 1 : indexBits);

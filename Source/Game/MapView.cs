@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Sandbox.Definitions;
 using VRageMath;
 
 namespace SirHolomap
 {
-    // The four views, in the order of their buttons at the top.
+    // Les quatre vues, dans l'ordre de leurs boutons en haut.
     public enum MapMode
     {
         Planet,
@@ -14,16 +14,16 @@ namespace SirHolomap
         Galaxy,
     }
 
-    // The two tabs of the system view.
+    // Les deux onglets de la vue Système.
     public enum SystemTab
     {
         Bodies,
         Orrery,
     }
 
-    // One view of the map. Every view answers the same gestures the same way:
-    // left drag turns, middle drag (or WASD) moves, the wheel zooms, a click
-    // selects, a double click dives into what is under the cursor.
+    // Une vue de la carte. Chaque vue répond aux mêmes gestes de la même façon :
+    // le glissement gauche tourne, le glissement milieu (ou WASD) déplace, la molette zoome, un clic
+    // sélectionne, un double clic plonge dans ce qui est sous le curseur.
     internal abstract class MapView
     {
         protected readonly MapScreen Map;
@@ -52,7 +52,7 @@ namespace SirHolomap
         public abstract string Subtitle { get; }
         public abstract string Help { get; }
 
-        // False for the flat views, drawn over a plain background.
+        // Faux pour les vues plates, dessinées sur un fond uni.
         public virtual bool Uses3D
         {
             get { return true; }
@@ -95,7 +95,7 @@ namespace SirHolomap
         {
         }
 
-        // Selecting from the list on the right: the view shows it.
+        // Sélection depuis la liste de droite : la vue la montre.
         public virtual void Focus(object target)
         {
         }
@@ -104,7 +104,7 @@ namespace SirHolomap
         public abstract void Filters(Panel panel);
         public abstract void List(Panel panel);
 
-        // Shared helpers.
+        // Aides partagées.
 
         protected bool Passes(Marker marker, int threshold)
         {
@@ -137,8 +137,8 @@ namespace SirHolomap
             panel.Checkbox(Texts.ShowMemories, null, Settings.ShowMemories, v => Settings.ShowMemories = v, 1);
             if (planet)
             {
-                // Another plugin holds the game's light: the box stays, and
-                // its help says why it does nothing.
+                // Un autre greffon tient la lumière du jeu : la case reste, et
+                // son aide dit pourquoi elle ne fait rien.
                 var help = RenderHooks.LightAvailable ? Texts.DaylightHelp : Texts.DaylightUnavailableHelp;
                 panel.Checkbox(Texts.Daylight, help, Settings.DaylightGlobe, v => Settings.DaylightGlobe = v, 0);
                 panel.NumberField("thresholdA", Texts.ThresholdPlanet, Texts.ThresholdHelp, Settings.PlanetBlockThreshold,
@@ -203,7 +203,7 @@ namespace SirHolomap
             return marker.Live ? Texts.Live : string.Format(Texts.SeenAgo, TimeAgo.Format(DateTime.UtcNow - marker.LastSeenUtc));
         }
 
-        // The info of a selected marker: the same lines in every view.
+        // Les infos d'un repère sélectionné : les mêmes lignes dans chaque vue.
         public void MarkerInfo(Panel panel, Marker marker)
         {
             panel.Heading(marker.IsSelf ? Texts.You : marker.Name, KindText(marker));
@@ -228,7 +228,7 @@ namespace SirHolomap
             panel.Line(Texts.Position, ((Vector3I)marker.Position).ToString());
         }
 
-        // The info of a planet or a moon: the same lines in every view.
+        // Les infos d'une planète ou d'une lune : les mêmes lignes dans chaque vue.
         public void BodyInfo(Panel panel, Body body)
         {
             panel.Heading(body.Name, body.IsMoon ? string.Format(Texts.MoonOf, body.Parent.Name) : Texts.KindPlanet);
@@ -287,7 +287,7 @@ namespace SirHolomap
 
         private static readonly Dictionary<long, string> OreCache = new Dictionary<long, string>();
 
-        // The ores found in the ground of the planet, from its own definition.
+        // Les minerais trouvés dans le sol de la planète, d'après sa propre définition.
         private static string OresOf(Body body)
         {
             string text;
@@ -319,8 +319,8 @@ namespace SirHolomap
         }
     }
 
-    // Colours and sizes shared by every view: the map looks the same in A, B
-    // and C.
+    // Couleurs et tailles partagées par toutes les vues : la carte a le même aspect en A, B
+    // et C.
     internal static class Style
     {
         public static readonly Color Accent = new Color(70, 190, 235);
@@ -356,8 +356,8 @@ namespace SirHolomap
             }
         }
 
-        // A memory is greyed: the eye tells it from a live marker without
-        // reading.
+        // Un souvenir est grisé : l'œil le distingue d'un repère vivant sans
+        // lire.
         public static Color MarkerColor(Marker marker)
         {
             if (marker.IsSelf)
@@ -405,7 +405,7 @@ namespace SirHolomap
         }
     }
 
-    // Draws markers the same way in every 3D view.
+    // Dessine les repères de la même façon dans chaque vue 3D.
     internal static class MarkerPainter
     {
         public static void Paint(MapScreen map, Marker marker, Vector2 at, bool label, string extra, bool showAge = true)
@@ -451,7 +451,7 @@ namespace SirHolomap
             }
             else if (showAge && !marker.Live && !marker.IsGps)
             {
-                // Memories always say when they were seen.
+                // Les souvenirs disent toujours quand ils ont été vus.
                 Gfx.Text(SeenShort(marker), at.X + size * 0.8f + 3 * s, at.Y - 5 * s, 0.48f, Gfx.Alpha(Style.Memory, 0.85f));
             }
         }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -25,27 +25,27 @@ namespace SirHolomap.Tests
                     return true;
                 };
 
-                reporter.ErrorLine("terrain of EarthLike not read", T0);
+                reporter.ErrorLine("terrain de EarthLike non lu", T0);
                 var later = T0.AddMinutes(10);
 
-                // Solo, a hosted game, any other server: nothing leaves, the
-                // report waits in the plugin's folder.
+                // Solo, une partie hébergée, tout autre serveur : rien ne part, le
+                // rapport attend dans le dossier du greffon.
                 Assert.Equal(0, reporter.Pump(false, send, later, false));
                 Assert.Equal(0, reporter.Pump(false, send, later, true));
                 Assert.Empty(sent);
                 Assert.Single(Directory.GetFiles(Path.Combine(folder.Path, ReportQueue.FolderName), "*.json"));
 
-                // Even after a restart of the game it is still there ...
+                // Même après un redémarrage du jeu il est encore là ...
                 var restarted = new ErrorReporter(folder.Path, "1.0.0.0", later, new ReportScrubber());
                 Assert.Single(restarted.Queue.Waiting());
 
-                // ... and leaves at the first connection to one of ours.
+                // ... et part à la première connexion à l'un des nôtres.
                 Assert.Equal(1, restarted.Pump(true, send, later.AddSeconds(10), false));
                 Assert.Single(sent);
                 using (var document = JsonDocument.Parse(sent[0]))
                 {
                     Assert.Equal("erreur", document.RootElement.GetProperty("genre").GetString());
-                    Assert.Equal("terrain of EarthLike not read", document.RootElement.GetProperty("message").GetString());
+                    Assert.Equal("terrain de EarthLike non lu", document.RootElement.GetProperty("message").GetString());
                 }
                 Assert.Empty(restarted.Queue.Waiting());
                 Assert.Empty(Directory.GetFiles(Path.Combine(folder.Path, ReportQueue.FolderName), "*.json"));
@@ -57,7 +57,7 @@ namespace SirHolomap.Tests
         {
             Assert.True(OurServers.IsOurs("Sirius Immersion PTU", true));
             Assert.True(OurServers.IsOurs("[FR] SIRIUS IMMERSION - PU", true));
-            Assert.False(OurServers.IsOurs("Some other server", true));
+            Assert.False(OurServers.IsOurs("Un autre serveur", true));
             Assert.False(OurServers.IsOurs("Sirius Immersion PTU", false));
             Assert.False(OurServers.IsOurs("", true));
             Assert.False(OurServers.IsOurs(null, true));
@@ -69,38 +69,38 @@ namespace SirHolomap.Tests
             using (var folder = new TempFolder())
             {
                 var reporter = new ErrorReporter(folder.Path, "1.0.0.0", Session, new ReportScrubber());
-                reporter.ErrorLine("planet material rules not found", T0);
+                reporter.ErrorLine("règles de matériaux de planète introuvables", T0);
                 var later = T0.AddMinutes(10);
 
-                // The game refuses the message.
+                // Le jeu refuse le message.
                 Assert.Equal(0, reporter.Pump(true, bytes => false, later, false));
-                // The send itself throws.
-                Assert.Equal(0, reporter.Pump(true, bytes => { throw new InvalidOperationException("no channel"); }, later, true));
-                // The report is still there for the next try, and goes then.
+                // L'envoi lui-même lève une exception.
+                Assert.Equal(0, reporter.Pump(true, bytes => { throw new InvalidOperationException("pas de canal"); }, later, true));
+                // Le rapport est encore là pour l'essai suivant, et part alors.
                 Assert.Single(reporter.Queue.Waiting());
                 Assert.Equal(1, reporter.Pump(true, bytes => true, later.AddMinutes(1), false));
 
-                // Preparing a report never throws either: a null exception,
-                // a text that cannot be cleaned, a folder that cannot be
-                // written.
+                // Préparer un rapport ne lève jamais non plus : une exception nulle,
+                // un texte qu'on ne peut pas nettoyer, un dossier où l'on ne peut pas
+                // écrire.
                 reporter.Caught("update", null, T0);
                 reporter.CaughtLine(null, null, T0);
                 reporter.ErrorLine(null, T0);
                 reporter.Note(null);
 
                 var blocked = Path.Combine(folder.Path, "blocked");
-                File.WriteAllText(blocked, "a file where a folder should be");
+                File.WriteAllText(blocked, "un fichier là où un dossier devrait être");
                 var broken = new ErrorReporter(blocked, "1.0.0.0", Session, new ReportScrubber());
-                broken.ErrorLine("any error", T0);
+                broken.ErrorLine("une erreur", T0);
                 broken.Flush();
                 Assert.Equal(0, broken.Pump(true, bytes => true, later, true));
                 broken.Enqueue(new ErrorReport());
 
-                // The library code's hook swallows what its listener throws.
+                // Le crochet du code de la bibliothèque avale ce que son écouteur lève.
                 Faults.CaughtHandler = (where, e) => { throw new InvalidOperationException("listener"); };
                 try
                 {
-                    Faults.Caught("somewhere", new Exception("caught"));
+                    Faults.Caught("quelque part", new Exception("rattrapée"));
                 }
                 finally
                 {

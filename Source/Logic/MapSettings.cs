@@ -1,28 +1,28 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Xml.Serialization;
 
 namespace SirHolomap
 {
-    // The player's map settings. They are the same for every server and are
-    // kept between game launches.
+    // Les réglages de la carte du joueur. Ils sont les mêmes pour tous les serveurs et sont
+    // gardés d'un lancement du jeu à l'autre.
     public sealed class MapSettings
     {
         public const int ThresholdMin = 1;
         public const int ThresholdMax = 100000;
 
-        // Grids with fewer blocks are hidden: debris of a broken grid make a
-        // lot of noise. One value for the planet view (A), one for the
-        // neighbourhood and the system (B and C).
+        // Les grilles de moins de blocs sont cachées : les débris d'une grille brisée font
+        // beaucoup de bruit. Une valeur pour la vue Planète (A), une pour
+        // le voisinage et le système (B et C).
         public int PlanetBlockThreshold = 1;
         public int SpaceBlockThreshold = 5;
 
-        // Galaxy tab: both unchecked shows every server known.
+        // Onglet Galaxie : les deux décochées montrent tous les serveurs connus.
         public bool GalaxyFavoritesOnly;
         public bool GalaxyVisitedOnly;
         public string GalaxySearch = "";
 
-        // What the planet and neighbourhood views show.
+        // Ce que les vues Planète et Espace proche montrent.
         public bool ShowStations = true;
         public bool ShowShips = true;
         public bool ShowSmallGrids = true;
@@ -30,7 +30,7 @@ namespace SirHolomap
         public bool ShowGps = true;
         public bool ShowMemories = true;
 
-        // The globe lit from the camera, so that the night side reads too.
+        // Le globe éclairé depuis la caméra, pour que la face de nuit se lise aussi.
         public bool DaylightGlobe = true;
 
         public MapSettings Copy()
@@ -58,8 +58,8 @@ namespace SirHolomap
         }
     }
 
-    // Reading and writing the settings. A missing or unreadable file never
-    // blocks the game: the defaults are used instead.
+    // Lire et écrire les réglages. Un fichier absent ou illisible ne bloque
+    // jamais le jeu : les valeurs par défaut sont utilisées à la place.
     public static class MapSettingsFile
     {
         public const string FileName = "settings.xml";
@@ -79,7 +79,7 @@ namespace SirHolomap
                     var read = Serializer.Deserialize(stream) as MapSettings;
                     if (read == null)
                     {
-                        problem = "empty settings file " + path;
+                        problem = "fichier de réglages vide " + path;
                         return new MapSettings();
                     }
                     return read.Normalized();
@@ -87,7 +87,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                problem = "unreadable settings file " + path + " (" + e.Message + ")";
+                problem = "fichier de réglages illisible " + path + " (" + e.Message + ")";
                 return new MapSettings();
             }
         }

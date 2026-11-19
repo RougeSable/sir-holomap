@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using Sandbox.Engine.Networking;
 using Sandbox.ModAPI;
@@ -6,15 +6,15 @@ using VRage.FileSystem;
 
 namespace SirHolomap
 {
-    // The game side of the error reports (the rule of the client-side
-    // plugins): the plugin's errors and the crash of the last session are
-    // written to its folder, and leave for our servers (PU, PTU) while the
-    // player is on one. Everywhere else they wait. Whatever goes wrong in
-    // here stays in here: the game never sees it.
+    // Le côté jeu des rapports d'erreurs (la règle des greffons côté
+    // joueur) : les erreurs du greffon et le plantage de la dernière session sont
+    // écrits dans son dossier, et partent vers nos serveurs (PU, PTU) tant que le
+    // joueur est sur l'un d'eux. Partout ailleurs ils attendent. Tout ce qui va mal
+    // ici reste ici : le jeu ne le voit jamais.
     internal sealed class ErrorReporting
     {
-        // Updates between two writes of what changed, and between two looks
-        // at whether a server of ours is listening (60 updates per second).
+        // Mises à jour entre deux écritures de ce qui a changé, et entre deux regards
+        // pour savoir si un serveur à nous écoute (60 mises à jour par seconde).
         private const int FlushInterval = 300;
         private const int PumpInterval = 600;
 
@@ -30,9 +30,9 @@ namespace SirHolomap
             m_folder = folder;
         }
 
-        // Starts the reports of this session: lays the mark that tells a
-        // crash at the next start, and turns the last session's crash into a
-        // report if it left its mark behind.
+        // Démarre les rapports de cette session : pose la marque qui fait reconnaître un
+        // plantage au démarrage suivant, et fait un rapport du plantage de la dernière
+        // session si elle a laissé sa marque.
         public static void Start(string folder, ServerHistory history)
         {
             try
@@ -46,7 +46,7 @@ namespace SirHolomap
             }
         }
 
-        // A line the plugin wrote to the game's log.
+        // Une ligne que le greffon a écrite au journal du jeu.
         public static void Note(string line)
         {
             var current = s_current;
@@ -54,7 +54,7 @@ namespace SirHolomap
                 current.m_reporter.Note(line);
         }
 
-        // A line the plugin wrote to the game's log as an error.
+        // Une ligne que le greffon a écrite au journal du jeu comme une erreur.
         public static void Error(string text)
         {
             var current = s_current;
@@ -62,7 +62,7 @@ namespace SirHolomap
                 current.m_reporter.ErrorLine(text, DateTime.UtcNow);
         }
 
-        // An exception the plugin caught.
+        // Une exception que le greffon a rattrapée.
         public static void Caught(string where, Exception e)
         {
             var current = s_current;
@@ -70,7 +70,7 @@ namespace SirHolomap
                 current.m_reporter.Caught(where, e, DateTime.UtcNow);
         }
 
-        // An exception the plugin caught, with the line it wrote about it.
+        // Une exception que le greffon a rattrapée, avec la ligne qu'il a écrite à son sujet.
         public static void CaughtLine(string line, Exception e)
         {
             var current = s_current;
@@ -98,7 +98,7 @@ namespace SirHolomap
                 ReportCrash(previous.Value, version, scrubber);
         }
 
-        // What must never be in a report, as far as it is known at the start.
+        // Ce qui ne doit jamais être dans un rapport, pour autant qu'on le sache au démarrage.
         private static void Prepare(ReportScrubber scrubber, ServerHistory history)
         {
             try
@@ -118,8 +118,8 @@ namespace SirHolomap
             }
         }
 
-        // The player's Steam name and identifier, as the game services know
-        // them.
+        // Le nom et l'identifiant Steam du joueur, tels que les services du jeu les
+        // connaissent.
         private static void AddSteamAccount(ReportScrubber scrubber)
         {
             try
@@ -154,8 +154,8 @@ namespace SirHolomap
                 scrubber.AddPrivate(normalized.Substring(0, colon));
         }
 
-        // The game did not end cleanly last time: its log, read again, makes
-        // a report that waits for a server of ours.
+        // Le jeu ne s'est pas terminé proprement la dernière fois : son journal, relu, fait
+        // un rapport qui attend un serveur à nous.
         private void ReportCrash(DateTime previousStartUtc, string version, ReportScrubber scrubber)
         {
             try
@@ -177,7 +177,7 @@ namespace SirHolomap
             }
         }
 
-        // Every update, from the plugin's own.
+        // À chaque mise à jour, depuis celle du greffon.
         public static void Tick(MapWorld world)
         {
             var current = s_current;
@@ -205,9 +205,9 @@ namespace SirHolomap
             }
         }
 
-        // The session ends cleanly: what is waiting leaves if a server of ours
-        // is there, and the mark is taken away, so that the next start does
-        // not take this session for a crash.
+        // La session se termine proprement : ce qui attend part si un serveur à nous
+        // est là, et la marque est retirée, pour que le démarrage suivant
+        // ne prenne pas cette session pour un plantage.
         public static void Stop(MapWorld world)
         {
             var current = s_current;
@@ -268,8 +268,8 @@ namespace SirHolomap
             }
         }
 
-        // The player is on a server of ours, which listens on the channel.
-        private static bool OnOurServer(MapWorld world)
+        // Le joueur est sur un serveur à nous, qui écoute sur le canal.
+        internal static bool OnOurServer(MapWorld world)
         {
             try
             {

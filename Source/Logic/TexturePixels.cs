@@ -1,32 +1,32 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace SirHolomap
 {
-    // How a picture of the map is handed to the game's renderer.
+    // Comment une image de la carte est remise au moteur de rendu du jeu.
     //
-    // The renderer (VRage.Render11, MyGeneratedTextureManager) reads exactly
-    // what the size announces, straight from the bytes it was given, on its
-    // own thread and later than the call: one level of width x height x 4
-    // bytes, or, when the texture has mipmaps, every level one after the
-    // other, each half the size of the one before, down to one pixel. Fewer
-    // bytes than that and it reads past the end of the array, which is what
-    // brought the game down. So every picture sent is a new array of exactly
-    // the announced length, never touched again once sent.
+    // Le moteur de rendu (VRage.Render11, MyGeneratedTextureManager) lit exactement
+    // ce que la taille annonce, droit dans les octets qu'on lui a donnés, sur son
+    // propre fil et plus tard que l'appel : un niveau de largeur x hauteur x 4
+    // octets, ou, quand la texture a des mipmaps, chaque niveau l'un après
+    // l'autre, chacun moitié du précédent, jusqu'à un pixel. Moins d'octets que
+    // cela et il lit au-delà de la fin du tableau, ce qui a fait
+    // tomber le jeu. Chaque image envoyée est donc un nouveau tableau de la longueur
+    // annoncée exactement, jamais retouché une fois envoyé.
     //
-    // The game draws every sprite with premultiplied alpha
-    // (MySpritesRenderer, premultipliedAlpha: true): a pixel that is
-    // transparent must also be black, or the "transparent" corners of a disc
-    // show as a coloured square. The map paints its pictures with straight
-    // alpha; they are premultiplied here, in linear light, as the texture is
+    // Le jeu dessine chaque sprite avec un alpha prémultiplié
+    // (MySpritesRenderer, premultipliedAlpha: true) : un pixel
+    // transparent doit aussi être noir, sinon les coins « transparents » d'un disque
+    // se montrent comme un carré coloré. La carte peint ses images avec un alpha
+    // droit ; elles sont prémultipliées ici, en lumière linéaire, puisque la texture est
     // sRGB.
     public static class TexturePixels
     {
         public const int BytesPerPixel = 4;
 
-        // Only square pictures whose side is a power of two get mipmaps: their
-        // levels are exactly halves down to one pixel, the same sizes the
-        // renderer walks through, so its reading never goes past the end.
+        // Seules les images carrées dont le côté est une puissance de deux ont des mipmaps : leurs
+        // niveaux sont exactement des moitiés jusqu'à un pixel, les mêmes tailles que le
+        // moteur parcourt, si bien que sa lecture ne dépasse jamais la fin.
         public static bool UsesMipmaps(int width, int height)
         {
             return width == height && width >= 2 && (width & (width - 1)) == 0;
@@ -42,7 +42,7 @@ namespace SirHolomap
             return levels;
         }
 
-        // The number of bytes the renderer reads for a texture of this size.
+        // Le nombre d'octets que le moteur lit pour une texture de cette taille.
         public static int DeclaredLength(int width, int height)
         {
             CheckSize(width, height);
@@ -56,19 +56,19 @@ namespace SirHolomap
                 h = Math.Max(1, h >> 1);
             }
             if (total > int.MaxValue)
-                throw new ArgumentException("picture too large: " + width + " x " + height);
+                throw new ArgumentException("image trop grande : " + width + " x " + height);
             return (int)total;
         }
 
         private static void CheckSize(int width, int height)
         {
             if (width <= 0 || height <= 0 || width > 16384 || height > 16384)
-                throw new ArgumentException("bad picture size: " + width + " x " + height);
+                throw new ArgumentException("taille d'image invalide : " + width + " x " + height);
         }
 
-        // A new array, ready for the renderer: premultiplied, with every
-        // mipmap level when the size has them, exactly DeclaredLength bytes.
-        // The picture given is only read, never kept.
+        // Un nouveau tableau, prêt pour le moteur : prémultiplié, avec chaque
+        // niveau de mipmap quand la taille en a, exactement DeclaredLength octets.
+        // L'image donnée est seulement lue, jamais gardée.
         public static byte[] Prepare(int width, int height, byte[] straight)
         {
             CheckSize(width, height);
@@ -76,7 +76,7 @@ namespace SirHolomap
                 throw new ArgumentNullException("straight");
             var level0 = width * height * BytesPerPixel;
             if (straight.Length != level0)
-                throw new ArgumentException("picture of " + width + " x " + height + " needs " + level0 + " bytes, got " + straight.Length);
+                throw new ArgumentException("l'image de " + width + " x " + height + " demande " + level0 + " octets, reçu " + straight.Length);
 
             var result = new byte[DeclaredLength(width, height)];
             var levels = MipLevels(width, height);
@@ -87,8 +87,8 @@ namespace SirHolomap
                 return result;
             }
 
-            // Levels averaged in linear light, premultiplied: the edges of a
-            // disc fade out as they should when it is drawn small.
+            // Niveaux moyennés en lumière linéaire, prémultipliés : les bords d'un
+            // disque s'effacent comme il se doit quand il est dessiné petit.
             var linear = new float[level0];
             for (var i = 0; i < level0; i += 4)
             {
@@ -113,8 +113,8 @@ namespace SirHolomap
                 var count = w * h * BytesPerPixel;
                 for (var i = 0; i < count; i += 4)
                 {
-                    // Never brighter than the alpha once both are rounded: a
-                    // pixel that ends up transparent is black.
+                    // Jamais plus clair que l'alpha une fois les deux arrondis : un
+                    // pixel qui finit transparent est noir.
                     var alpha = (byte)Math.Round(Clamp01(linear[i + 3]) * 255);
                     var most = alpha / 255f;
                     result[offset + i] = ToSrgbByte(Math.Min(linear[i], most));
@@ -205,16 +205,16 @@ namespace SirHolomap
         }
     }
 
-    // What to tell the renderer for one picture.
+    // Ce qu'il faut dire au moteur pour une image.
     public enum TextureAction
     {
-        // A new name: create it.
+        // Un nouveau nom : le créer.
         Create,
-        // A name already created with this size: replace its pixels.
+        // Un nom déjà créé à cette taille : remplacer ses pixels.
         Reset,
-        // A name already created with another size: destroy it, create it
-        // again. A creation under a name that exists is ignored by the
-        // renderer, which would keep the old picture.
+        // Un nom déjà créé à une autre taille : le détruire, le créer
+        // de nouveau. Une création sous un nom qui existe est ignorée par le
+        // moteur, qui garderait l'ancienne image.
         Recreate,
     }
 
@@ -225,13 +225,13 @@ namespace SirHolomap
         public int Height;
         public bool Mipmaps;
         public TextureAction Action;
-        // A new array, exactly TexturePixels.DeclaredLength bytes, owned by
-        // the renderer from the moment it is sent.
+        // Un nouveau tableau, exactement TexturePixels.DeclaredLength octets, appartenant au
+        // moteur dès l'instant où il est envoyé.
         public byte[] Pixels;
     }
 
-    // The textures the map has handed to the renderer, with their sizes, so
-    // that every later picture under the same name is sent the right way.
+    // Les textures que la carte a remises au moteur, avec leurs tailles, pour
+    // que chaque image suivante sous le même nom soit envoyée de la bonne façon.
     public sealed class TextureLedger
     {
         private struct Entry
@@ -260,7 +260,7 @@ namespace SirHolomap
         public TextureUpload Plan(string name, int width, int height, byte[] straight)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("a texture needs a name");
+                throw new ArgumentException("une texture a besoin d'un nom");
             var pixels = TexturePixels.Prepare(width, height, straight);
             Entry entry;
             TextureAction action;

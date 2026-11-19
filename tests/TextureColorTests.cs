@@ -1,19 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
 namespace SirHolomap.Tests
 {
-    // The colour of a terrain on the small globes of the system view comes,
-    // when the game gives no far colour, from the mean of the terrain's own
-    // texture file: one small level of its mipmap chain, in the formats the
-    // game and the mods ship.
+    // La couleur d'un terrain sur les petits globes de la vue Système vient,
+    // quand le jeu ne donne pas de couleur lointaine, de la moyenne de la propre
+    // texture du terrain : un petit niveau de sa chaîne de mipmaps, dans les formats que
+    // le jeu et les mods livrent.
     public class TextureColorTests
     {
         private const float Tolerance = 1.5f / 255f;
 
-        // A DDS file: its header, then the given levels one after the other.
+        // Un fichier DDS : son en-tête, puis les niveaux donnés l'un après l'autre.
         private static byte[] Dds(int width, int height, int mips, uint fourCc, uint dxgi, bool bgra, params byte[][] levels)
         {
             var header = new byte[128];
@@ -83,7 +83,7 @@ namespace SirHolomap.Tests
             return data;
         }
 
-        // Bits written low first, as BC7 reads them.
+        // Bits écrits de poids faible en premier, comme BC7 les lit.
         private sealed class BitWriter
         {
             private readonly byte[] m_block = new byte[16];
@@ -120,17 +120,17 @@ namespace SirHolomap.Tests
         public void UncompressedTextureGivesItsColour()
         {
             AssertColor(Dds(8, 8, 1, 0, 0, false, Filled(8, 8, 200, 100, 50)), 200, 100, 50);
-            // Blue first in the file: still read as red, green, blue.
+            // Bleu d'abord dans le fichier : lu quand même comme rouge, vert, bleu.
             AssertColor(Dds(8, 8, 1, 0, 0, true, Filled(8, 8, 50, 100, 200)), 200, 100, 50);
-            // The same, announced by the extended header.
+            // Pareil, annoncé par l'en-tête étendu.
             AssertColor(Dds(8, 8, 1, 0x30315844, 29, false, Filled(8, 8, 10, 220, 30)), 10, 220, 30);
         }
 
         [Fact]
         public void ReadsTheSmallLevelOfTheMipmapChain()
         {
-            // 128 wide, then 64: the second level is the one read, the large
-            // one is skipped, whether the stream can seek or not.
+            // 128 de large, puis 64 : le second niveau est celui lu, le grand
+            // est sauté, que le flux puisse se positionner ou non.
             var file = Dds(128, 128, 2, 0, 0, false, Filled(128, 128, 255, 0, 0), Filled(64, 64, 0, 255, 0));
             AssertColor(file, 0, 255, 0);
             float r, g, b;
@@ -142,12 +142,12 @@ namespace SirHolomap.Tests
         [Fact]
         public void Bc1BlocksGiveTheirColour()
         {
-            // Pure red against pure blue, every pixel on the red one.
+            // Rouge pur contre bleu pur, chaque pixel sur le rouge.
             var red = new byte[] { 0x00, 0xF8, 0x1F, 0x00, 0, 0, 0, 0 };
             AssertColor(Dds(8, 8, 1, 0x31545844, 0, false, Repeat(red, 4)), 255, 0, 0);
 
-            // Three-colour mode: half the pixels transparent, left out; the
-            // other half on the blue one.
+            // Mode trois couleurs : la moitié des pixels transparents, laissés de côté ; l'autre
+            // moitié sur le bleu.
             var holes = new byte[] { 0x1F, 0x00, 0x00, 0xF8, 0xCC, 0xCC, 0xCC, 0xCC };
             AssertColor(Dds(4, 4, 1, 0x31545844, 0, false, holes), 0, 0, 255);
         }
@@ -158,7 +158,7 @@ namespace SirHolomap.Tests
             var block = new byte[16];
             block[0] = 255;
             block[1] = 255;
-            // Pure green (0x07E0) on every pixel.
+            // Vert pur (0x07E0) sur chaque pixel.
             block[8] = 0xE0;
             block[9] = 0x07;
             AssertColor(Dds(4, 4, 1, 0x35545844, 0, false, block), 0, 255, 0);
@@ -167,14 +167,14 @@ namespace SirHolomap.Tests
         [Fact]
         public void Bc7SingleSubsetBlocksAreDecodedPixelByPixel()
         {
-            // Mode 6: both endpoints alike, every pixel the same colour.
+            // Mode 6 : les deux extrémités pareilles, chaque pixel de la même couleur.
             var flat = new BitWriter().Put(1 << 6, 7)
                 .Put(100, 7).Put(100, 7).Put(50, 7).Put(50, 7).Put(10, 7).Put(10, 7).Put(127, 7).Put(127, 7)
                 .Put(1, 1).Put(1, 1)
                 .Put(0, 3).Put(0, 60).Block();
             AssertColor(Dds(4, 4, 1, 0x30315844, 99, false, flat), 201, 101, 21);
 
-            // Mode 6, black to white: the first pixel black, fifteen white.
+            // Mode 6, du noir au blanc : le premier pixel noir, quinze blancs.
             var ramp = new BitWriter().Put(1 << 6, 7)
                 .Put(0, 7).Put(127, 7).Put(0, 7).Put(127, 7).Put(0, 7).Put(127, 7).Put(127, 7).Put(127, 7)
                 .Put(0, 1).Put(1, 1)
@@ -184,8 +184,8 @@ namespace SirHolomap.Tests
             var white = 255.0 * 15 / 16;
             AssertColor(Dds(4, 4, 1, 0x30315844, 98, false, ramp.Block()), white, white, white);
 
-            // Mode 5 with the red and alpha channels swapped: the colour
-            // comes out of the alpha endpoints.
+            // Mode 5 avec les canaux rouge et alpha échangés : la couleur
+            // sort des extrémités alpha.
             var rotated = new BitWriter().Put(1 << 5, 6).Put(1, 2)
                 .Put(0, 7).Put(0, 7).Put(64, 7).Put(64, 7).Put(32, 7).Put(32, 7)
                 .Put(200, 8).Put(200, 8)
@@ -196,8 +196,8 @@ namespace SirHolomap.Tests
         [Fact]
         public void Bc7SplitBlocksAreEstimatedFromTheirSubsets()
         {
-            // Mode 1: one subset white, the other black; the mean is grey
-            // whatever the shape of the subsets.
+            // Mode 1 : un sous-ensemble blanc, l'autre noir ; la moyenne est grise
+            // quelle que soit la forme des sous-ensembles.
             var split = new BitWriter().Put(1 << 1, 2).Put(13, 6);
             foreach (var channel in new[] { 0, 1, 2 })
                 split.Put(63, 6).Put(63, 6).Put(0, 6).Put(0, 6);
@@ -212,16 +212,16 @@ namespace SirHolomap.Tests
             Assert.False(TextureColor.TryMean(new MemoryStream(new byte[] { 1, 2, 3 }), out r, out g, out b));
             Assert.False(TextureColor.TryMean(new MemoryStream(new byte[300]), out r, out g, out b));
 
-            // A format it does not read (BC5, through the extended header).
+            // Un format qu'il ne lit pas (BC5, par l'en-tête étendu).
             Assert.False(TextureColor.TryMean(new MemoryStream(Dds(4, 4, 1, 0x30315844, 83, false, new byte[16])), out r, out g, out b));
 
-            // Cut short: its level is missing.
+            // Coupé court : son niveau manque.
             var cut = Dds(8, 8, 1, 0, 0, false, Filled(8, 8, 1, 2, 3));
             Array.Resize(ref cut, cut.Length - 10);
             Assert.False(TextureColor.TryMean(new MemoryStream(cut), out r, out g, out b));
         }
 
-        // A stream read from start to end only, like a file inside a zip.
+        // Un flux lu seulement du début à la fin, comme un fichier dans un zip.
         private sealed class ForwardOnly : Stream
         {
             private readonly MemoryStream m_inner;

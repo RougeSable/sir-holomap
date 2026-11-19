@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Xunit;
 
@@ -17,11 +17,11 @@ namespace SirHolomap.Tests
             Assert.Equal(a.X, c.X);
             Assert.Equal(a.Y, c.Y);
 
-            // Inside the galaxy disc.
+            // Dans le disque de la galaxie.
             var radius = System.Math.Sqrt(a.X * a.X + a.Y * a.Y);
             Assert.InRange(radius, GalaxyShape.InnerRadius, GalaxyShape.OuterRadius);
 
-            // A game joined without an address keeps its place by its key.
+            // Une partie rejointe sans adresse garde sa place par sa clé.
             var lobby = GalaxyPlacement.PositionOf("lobby:90071992547409");
             var again = GalaxyPlacement.PositionOf("lobby:90071992547409");
             Assert.Equal(lobby.X, again.X);
@@ -34,8 +34,8 @@ namespace SirHolomap.Tests
         {
             var seen = new Dictionary<string, string>();
 
-            // Neighbouring ports and neighbouring addresses: the worst case
-            // for a careless hash.
+            // Des ports voisins et des adresses voisines : le pire cas
+            // pour un hachage négligent.
             for (var host = 0; host < 64; host++)
             {
                 for (var port = 27010; port < 27080; port++)
@@ -43,12 +43,12 @@ namespace SirHolomap.Tests
                     var address = "10.0.0." + host + ":" + port;
                     var p = GalaxyPlacement.PositionOf(address);
                     var key = p.X.ToString("R") + "|" + p.Y.ToString("R");
-                    Assert.False(seen.ContainsKey(key), address + " collides with " + (seen.ContainsKey(key) ? seen[key] : ""));
+                    Assert.False(seen.ContainsKey(key), address + " entre en collision avec " + (seen.ContainsKey(key) ? seen[key] : ""));
                     seen[key] = address;
                 }
             }
 
-            // The packing is exact for IPv4 and port, and the mix reversible.
+            // L'empaquetage est exact pour IPv4 et le port, et le mélange réversible.
             var keys = new HashSet<ulong>();
             for (ulong k = 0; k < 20000; k++)
                 Assert.True(keys.Add(GalaxyPlacement.Mix48(k * 7919)));
@@ -67,13 +67,13 @@ namespace SirHolomap.Tests
             {
                 for (var j = i + 1; j < placed.Length; j++)
                     Assert.True(Distance(placed[i], placed[j]) >= spacing * 0.999,
-                        "icons " + i + " and " + j + " are " + Distance(placed[i], placed[j]) + " apart");
+                        "les icônes " + i + " et " + j + " sont à " + Distance(placed[i], placed[j]) + " de distance");
             }
         }
 
-        // Close icons gather and spread around the middle of their group: none
-        // covers another, each keeps its own spot to be clicked. An icon
-        // alone stays exactly at its place.
+        // Les icônes proches se rassemblent et s'étalent autour du milieu de leur groupe : aucune
+        // n'en couvre une autre, chacune garde sa place pour être cliquée. Une icône
+        // seule reste exactement à sa place.
         [Fact]
         public void CloseIconsSpreadWithoutCovering()
         {
@@ -95,7 +95,7 @@ namespace SirHolomap.Tests
                 Assert.True(placed[i].Moved);
                 Assert.Equal(icons[i].X, placed[i].TrueX);
                 Assert.Equal(icons[i].Y, placed[i].TrueY);
-                // Still close to where it truly is.
+                // Encore proche de l'endroit où elle est vraiment.
                 Assert.True(Distance(placed[i], new PlacedIcon { X = 101, Y = 103.7 }) < 16);
             }
             Assert.False(placed[3].Moved);
@@ -103,7 +103,7 @@ namespace SirHolomap.Tests
             Assert.Equal(400, placed[3].X);
             Assert.Equal(300, placed[3].Y);
 
-            // Zoomed in, the same icons are far enough apart to stand alone.
+            // Zoomées, les mêmes icônes sont assez écartées pour être seules.
             var zoomed = new List<ScreenIcon>();
             foreach (var icon in icons)
                 zoomed.Add(new ScreenIcon(icon.Index, icon.Key, icon.X * 8, icon.Y * 8));
@@ -111,8 +111,8 @@ namespace SirHolomap.Tests
                 Assert.False(p.Moved);
         }
 
-        // However many icons crowd the same spot, every one stays apart from
-        // all the others: on top of each other, or scattered in a small area.
+        // Quel que soit le nombre d'icônes qui s'entassent au même endroit, chacune reste écartée de
+        // toutes les autres : les unes sur les autres, ou dispersées dans une petite zone.
         [Fact]
         public void CrowdedIconsNeverOverlap()
         {
@@ -130,7 +130,7 @@ namespace SirHolomap.Tests
                 scattered.Add(new ScreenIcon(i, (ulong)random.Next(), random.NextDouble() * 300, random.NextDouble() * 300));
             AssertApart(GalaxyLayout.Dots(scattered, 12), 12);
 
-            // Two neighbours on a ring are never closer than the spacing.
+            // Deux voisines sur un anneau ne sont jamais plus proches que l'espacement.
             for (var rank = 1; rank < 300; rank++)
             {
                 var chord = 2 * rank * Math.Sin(Math.PI / GalaxyLayout.RingCapacity(rank));
@@ -138,9 +138,9 @@ namespace SirHolomap.Tests
             }
         }
 
-        // The place of an icon depends on the servers and the view only:
-        // never on the order of the list, so the current server listed first
-        // moves nobody.
+        // La place d'une icône ne dépend que des serveurs et de la vue :
+        // jamais de l'ordre de la liste, si bien que le serveur actuel listé en premier
+        // ne déplace personne.
         [Fact]
         public void LayoutIgnoresTheOrderOfTheList()
         {
@@ -177,9 +177,9 @@ namespace SirHolomap.Tests
                 && pa.Y - a.Height / 2 < pb.Y + b.Height / 2 && pb.Y - b.Height / 2 < pa.Y + a.Height / 2;
         }
 
-        // Servers shown with their name, close to each other: their rows
-        // stack in a column, and no name covers another. A server alone keeps
-        // its exact place.
+        // Des serveurs montrés avec leur nom, proches les uns des autres : leurs lignes
+        // s'empilent en colonne, et aucun nom n'en couvre un autre. Un serveur seul garde
+        // sa place exacte.
         [Fact]
         public void NamedServersNeverCoverEachOther()
         {
@@ -194,18 +194,18 @@ namespace SirHolomap.Tests
             for (var i = 0; i < icons.Count; i++)
             {
                 for (var j = i + 1; j < icons.Count; j++)
-                    Assert.False(Cover(icons[i], placed[i], icons[j], placed[j], 8), "rows " + i + " and " + j + " cover each other");
+                    Assert.False(Cover(icons[i], placed[i], icons[j], placed[j], 8), "les lignes " + i + " et " + j + " se couvrent");
             }
             Assert.True(placed[0].Moved && placed[1].Moved && placed[2].Moved);
             Assert.Equal(3, placed[0].GroupSize);
-            // Highest first, in one column.
+            // Le plus haut d'abord, dans une colonne.
             Assert.True(placed[1].Y < placed[0].Y && placed[0].Y < placed[2].Y);
             Assert.Equal(placed[0].X, placed[1].X, 9);
             Assert.False(placed[3].Moved);
             Assert.Equal(900, placed[3].X);
             Assert.Equal(700, placed[3].Y);
 
-            // Many named servers in a small area.
+            // Beaucoup de serveurs nommés dans une petite zone.
             var random = new Random(42);
             var crowd = new List<ScreenIcon>();
             for (var i = 0; i < 40; i++)
@@ -215,7 +215,7 @@ namespace SirHolomap.Tests
             for (var i = 0; i < crowd.Count; i++)
             {
                 for (var j = i + 1; j < crowd.Count; j++)
-                    Assert.False(Cover(crowd[i], crowdPlaced[i], crowd[j], crowdPlaced[j], 8), "rows " + i + " and " + j + " cover each other");
+                    Assert.False(Cover(crowd[i], crowdPlaced[i], crowd[j], crowdPlaced[j], 8), "les lignes " + i + " et " + j + " se couvrent");
             }
         }
     }

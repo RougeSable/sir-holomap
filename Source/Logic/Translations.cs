@@ -1,10 +1,12 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace SirHolomap
 {
-    // The texts of the plugin in every other language the game offers, one
-    // file per language. Letters with accents are written as escapes
-    // (\u00e9 and the like) in some of them: the same text in the game.
+    // Les textes du greffon dans chacune des autres langues que le jeu offre, un
+    // fichier par langue. Dans certains fichiers, les lettres accentuées sont
+    // écrites en séquences d'échappement (une barre oblique inverse, la lettre u et
+    // quatre chiffres hexadécimaux, qui donnent par exemple la lettre é) : le texte
+    // obtenu dans le jeu est le même.
     public static partial class Translations
     {
         public static Dictionary<GameLanguage, Dictionary<string, string>> All()
@@ -16,7 +18,6 @@ namespace SirHolomap
                 { GameLanguage.German, German() },
                 { GameLanguage.Russian, Russian() },
                 { GameLanguage.Spanish_Spain, SpanishSpain() },
-                { GameLanguage.French, French() },
                 { GameLanguage.Italian, Italian() },
                 { GameLanguage.Danish, Danish() },
                 { GameLanguage.Dutch, Dutch() },

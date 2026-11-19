@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using VRage.Utils;
 using VRageMath;
 
 namespace SirHolomap
 {
-    // C, second tab: the system in 3D. Distances are true; planets and moons
-    // are enlarged to a readable size, never smaller than the real thing.
-    // Distance rings around the centre of the world on the system plane, a
-    // line from every body down to the plane, and the sun as a bright mark on
-    // the edge of the screen, in its true direction. Centred on the zone
-    // closest to the player.
+    // C, second onglet : le système en 3D. Les distances sont vraies ; les planètes et les lunes
+    // sont agrandies à une taille lisible, jamais plus petites que la réalité.
+    // Des anneaux de distance autour du centre du monde sur le plan du système, une
+    // ligne de chaque astre jusqu'au plan, et le soleil comme une marque brillante sur
+    // le bord de l'écran, dans sa vraie direction. Centré sur la zone
+    // la plus proche du joueur.
     internal sealed class OrreryView : MapView
     {
         private Vector3D m_focus;
@@ -47,7 +47,7 @@ namespace SirHolomap
 
         public override double NeededFar
         {
-            // The camera may still glide in from the galaxy, farther out.
+            // La caméra peut encore glisser depuis la galaxie, plus loin.
             get { return Math.Max(m_distance, Camera.Distance) * 3 + Extent() * 2; }
         }
 
@@ -59,8 +59,8 @@ namespace SirHolomap
             return extent;
         }
 
-        // The zone closest to the player: the planet they are near, or the
-        // player themselves out in deep space.
+        // La zone la plus proche du joueur : la planète près de laquelle il est, ou
+        // le joueur lui-même en plein espace lointain.
         private void FindZone()
         {
             var near = World.NearestBody(World.PlayerPosition);
@@ -76,8 +76,8 @@ namespace SirHolomap
             }
         }
 
-        // The way out to the galaxy, measured on the whole system once, when
-        // the view is entered: it never moves while the wheel turns.
+        // Le chemin de sortie vers la galaxie, mesuré une fois sur le système entier,
+        // quand la vue est entrée : il ne bouge jamais pendant que la molette tourne.
         private void PrepareGalaxy()
         {
             var size = 0.0;
@@ -113,9 +113,9 @@ namespace SirHolomap
             m_distance = Math.Min(m_distance, m_galaxy.DownBelow * 0.9);
         }
 
-        // Back from the galaxy, zooming in: the camera comes from far out and
-        // glides in to the system, inside the gap of the way out so that the
-        // galaxy does not come straight back.
+        // Retour de la galaxie, en zoomant : la caméra vient de loin et
+        // glisse vers le système, dans l'écart du chemin de sortie pour que la
+        // galaxie ne revienne pas aussitôt.
         public void EnterFromGalaxy()
         {
             FindZone();
@@ -151,7 +151,7 @@ namespace SirHolomap
         public override void Update(double dt)
         {
             Camera.SetTarget(m_focus, -Offset, ScreenUp, m_distance);
-            // Zoomed in far enough: the neighbourhood of the zone.
+            // Assez zoomé : le voisinage de la zone.
             var before = m_ladder.Rung;
             if (m_ladder.Update(m_distance) != before && m_ladder.Rung != ZoomRung.System)
             {
@@ -161,7 +161,7 @@ namespace SirHolomap
                     Map.GoLocal(LocalAnchor.Player, null, null, false, true);
                 return;
             }
-            // Zoomed out far enough: the whole system is a dot, the galaxy.
+            // Assez dézoomé : le système entier est un point, la galaxie.
             if (m_galaxy.Update(m_distance) && m_galaxy.IsUp)
                 Map.GoGalaxy(true);
         }
@@ -170,7 +170,7 @@ namespace SirHolomap
         {
             if (ctrl)
             {
-                // Ctrl and the wheel fly the camera forward instead.
+                // Ctrl et la molette font plutôt avancer la caméra.
                 m_focus += Camera.Forward * (m_distance * 0.25 * notches);
                 return;
             }
@@ -250,7 +250,7 @@ namespace SirHolomap
             return best;
         }
 
-        // Enlarged, but never smaller than the real thing.
+        // Agrandis, mais jamais plus petits que la réalité.
         public static float BodyRadius(Body body, MapCamera camera, double depth)
         {
             var real = (float)(body.Radius * camera.PixelsPerMetre(depth));
@@ -266,7 +266,7 @@ namespace SirHolomap
             var s = Gfx.Scale;
             var centre = Vector3D.Zero;
 
-            // Rings around the centre of the world, through every planet.
+            // Des anneaux autour du centre du monde, passant par chaque planète.
             foreach (var body in World.Bodies)
             {
                 if (body.IsMoon)
@@ -277,7 +277,7 @@ namespace SirHolomap
                     Ring(centre, radius, Gfx.Alpha(Style.Orbit, 0.28f));
             }
 
-            // Bodies, farthest first so that near ones cover them.
+            // Les astres, les plus lointains d'abord pour que les proches les couvrent.
             var order = new List<Body>(World.Bodies);
             order.Sort((a, b) => Vector3D.DistanceSquared(b.Centre, Camera.Position).CompareTo(Vector3D.DistanceSquared(a.Centre, Camera.Position)));
             foreach (var body in order)
@@ -305,7 +305,7 @@ namespace SirHolomap
                 m_itemsRadius.Add(r);
             }
 
-            // Grids, players and GPS points.
+            // Les grilles, les joueurs et les points GPS.
             var threshold = Settings.SpaceBlockThreshold;
             var markers = 0;
             foreach (var marker in World.Markers)
@@ -360,8 +360,8 @@ namespace SirHolomap
             }
         }
 
-        // The sun of Space Engineers is a direction: its mark sits where that
-        // direction meets the screen, or on the edge pointing to it.
+        // Le soleil de Space Engineers est une direction : sa marque se place là où cette
+        // direction rencontre l'écran, ou sur le bord qui pointe vers elle.
         public static void DrawSun(MapCamera camera, Vector3D toSun, RectangleF area)
         {
             var s = Gfx.Scale;
@@ -389,7 +389,7 @@ namespace SirHolomap
                 return;
             }
 
-            // Off screen: on the edge, in the direction of the sun.
+            // Hors de l'écran : sur le bord, dans la direction du soleil.
             var direction = new Vector2((float)x, (float)-y);
             if (direction.LengthSquared() < 1e-8f)
                 direction = new Vector2(0, -1);
@@ -433,7 +433,7 @@ namespace SirHolomap
 
         private readonly List<Marker> m_list = new List<Marker>();
 
-        // The sector list: bodies with their moons, then the grids.
+        // La liste des secteurs : les astres avec leurs lunes, puis les grilles.
         public override void List(Panel panel)
         {
             var player = World.PlayerPosition;

@@ -1,31 +1,31 @@
-using System;
+﻿using System;
 
 namespace SirHolomap
 {
-    // The galaxy's camera, without the screen: what the view shows (the
-    // galaxy point in the middle of the map and the zoom) and where it is
-    // going. The zoom glides in log space, like the camera of the other
-    // views; the point the wheel zoomed around stays under the cursor during
-    // the whole glide, so that each notch makes the picture grow or shrink
-    // around it, never swing nor jump. A notch given while the view still
-    // glides goes on from where the view is going.
+    // La caméra de la galaxie, sans l'écran : ce que la vue montre (le
+    // point de la galaxie au milieu de la carte et le zoom) et où elle
+    // va. Le zoom glisse en espace logarithmique, comme la caméra des autres
+    // vues ; le point autour duquel la molette a zoomé reste sous le curseur pendant
+    // tout le glissement, si bien que chaque cran fait grandir ou rétrécir l'image
+    // autour de lui, sans balancer ni sauter. Un cran donné pendant que la vue
+    // glisse encore continue depuis l'endroit où la vue va.
     //
-    // Screen positions are given from the middle of the map, in units of the
-    // galaxy's half size at zoom 1: a galaxy point p shows at
+    // Les positions à l'écran sont données depuis le milieu de la carte, en unités de
+    // la demi-taille de la galaxie au zoom 1 : un point p de la galaxie se montre à
     // (p - centre) * zoom.
     public sealed class GalaxyCamera
     {
-        // Seconds for half of the remaining way, after a notch. A flat picture
-        // that grows by a whole notch at once reads as a jump: a little
-        // softer than the 3D views.
+        // Secondes pour la moitié du chemin restant, après un cran. Une image plate
+        // qui grandit d'un cran entier d'un coup se lit comme un saut : un peu
+        // plus doux que les vues 3D.
         public const double HalfLife = 0.12;
 
         private readonly GalaxyZoom m_zoom = new GalaxyZoom();
         private double m_centreX;
         private double m_centreY;
 
-        // The galaxy point kept under a screen point while the view glides,
-        // and what the shown view still has to catch up, on top of that.
+        // Le point de la galaxie gardé sous un point de l'écran pendant que la vue glisse,
+        // et ce que la vue montrée doit encore rattraper, en plus.
         private double m_pivotX;
         private double m_pivotY;
         private double m_pivotU;
@@ -38,7 +38,7 @@ namespace SirHolomap
             Rest();
         }
 
-        // Where the view is going.
+        // Où la vue va.
         public double TargetZoom
         {
             get { return m_zoom.Target; }
@@ -54,23 +54,23 @@ namespace SirHolomap
             get { return m_centreY; }
         }
 
-        // What it shows now.
+        // Ce qu'elle montre maintenant.
         public double ShownZoom { get; private set; }
         public double ShownX { get; private set; }
         public double ShownY { get; private set; }
 
-        // Zoomed in past the way back: the system takes over once the view
-        // has glided there.
+        // Zoomé au-delà du chemin du retour : le système reprend la main une fois que la vue
+        // a glissé jusque-là.
         public bool BackToSystem
         {
             get { return m_zoom.BackToSystem; }
         }
 
-        // The shown zoom at which the view hands over to the system.
+        // Le zoom montré auquel la vue passe la main au système.
         public const double LeaveAt = MapScales.GalaxyBackToSystem * 0.97;
 
-        // How much of the galaxy still shows, from 1 to 0, as the view glides
-        // in towards the system from a zoom it was at; 1 when not leaving.
+        // Quelle part de la galaxie se montre encore, de 1 à 0, quand la vue glisse
+        // vers le système depuis un zoom où elle était ; 1 quand on ne la quitte pas.
         public double LeaveFade(double from)
         {
             if (!BackToSystem)
@@ -89,7 +89,7 @@ namespace SirHolomap
             }
         }
 
-        // The whole galaxy, at once.
+        // La galaxie entière, d'un coup.
         public void Rest()
         {
             m_zoom.Home();
@@ -101,9 +101,9 @@ namespace SirHolomap
             Pivot(0, 0, 0, 0);
         }
 
-        // Entered from the system: the view starts this close on a place
-        // (the current server) and glides out to the whole galaxy, the place
-        // gliding to where it rests.
+        // Entrée depuis le système : la vue commence aussi près sur un lieu
+        // (le serveur actuel) et glisse vers l'extérieur jusqu'à la galaxie entière, le lieu
+        // glissant vers sa position de repos.
         public void Arrive(double fromZoom, double placeX, double placeY)
         {
             m_zoom.Home();
@@ -116,8 +116,8 @@ namespace SirHolomap
             Pivot(placeX, placeY, (placeX - m_centreX) * zoom, (placeY - m_centreY) * zoom);
         }
 
-        // Notches of the wheel around a point of the screen: the galaxy point
-        // under it in the view the camera is going to stays there.
+        // Des crans de molette autour d'un point de l'écran : le point de la galaxie
+        // qui est dessous, dans la vue où la caméra va, y reste.
         public void Wheel(double notches, double u, double v)
         {
             var before = m_zoom.Target;
@@ -130,7 +130,7 @@ namespace SirHolomap
             Pivot(x, y, u, v);
         }
 
-        // The picture dragged on the screen: it follows at once.
+        // L'image tirée sur l'écran : elle suit tout de suite.
         public void Pan(double du, double dv)
         {
             m_centreX -= du / m_zoom.Target;
@@ -141,7 +141,7 @@ namespace SirHolomap
             m_pivotV += dv;
         }
 
-        // A galaxy point brought to the middle, gliding, the zoom kept.
+        // Un point de la galaxie amené au milieu, en glissant, le zoom gardé.
         public void CentreOn(double x, double y)
         {
             m_centreX = x;
@@ -149,7 +149,7 @@ namespace SirHolomap
             Pivot(x, y, 0, 0);
         }
 
-        // Back to the whole galaxy, gliding.
+        // Retour à la galaxie entière, en glissant.
         public void Home()
         {
             m_zoom.Home();
@@ -179,22 +179,22 @@ namespace SirHolomap
             ShownY = m_pivotY - m_pivotV / ShownZoom + m_errorY;
         }
 
-        // Where a galaxy point shows now, from the middle of the map.
+        // Où un point de la galaxie se montre maintenant, depuis le milieu de la carte.
         public void ToScreen(double x, double y, out double u, out double v)
         {
             u = (x - ShownX) * ShownZoom;
             v = (y - ShownY) * ShownZoom;
         }
 
-        // The same, in the view the camera is going to.
+        // La même chose, dans la vue où la caméra va.
         public void ToTargetScreen(double x, double y, out double u, out double v)
         {
             u = (x - m_centreX) * m_zoom.Target;
             v = (y - m_centreY) * m_zoom.Target;
         }
 
-        // The point to keep under a screen point; whatever the shown view
-        // differs from that is caught up softly.
+        // Le point à garder sous un point de l'écran ; tout ce dont la vue montrée
+        // diffère de cela est rattrapé doucement.
         private void Pivot(double x, double y, double u, double v)
         {
             m_pivotX = x;

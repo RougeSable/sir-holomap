@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace SirHolomap.Tests
 {
-    // A temporary folder that goes away with the test.
+    // Un dossier temporaire qui disparaît avec le test.
     internal sealed class TempFolder : IDisposable
     {
         public readonly string Path;
@@ -28,13 +28,13 @@ namespace SirHolomap.Tests
         }
     }
 
-    // The game's log of the session of 2026-10-27 on PTU, the one that ended
-    // on the graphics card (DXGI_ERROR_DEVICE_REMOVED) fifteen seconds after
-    // the respawn, written the way the game writes its log: a line per entry
-    // ("time - Thread: n -> text"), the stacks and the CRASH INFO block on
-    // lines that carry no time. The player data in it is the kind the game
-    // really writes: the Windows user, the Steam account, the nickname, the
-    // grids, the server.
+    // Le journal du jeu de la session du 2026-10-27 sur PTU, celle qui s'est terminée
+    // sur la carte graphique (DXGI_ERROR_DEVICE_REMOVED) quinze secondes après
+    // la réapparition, écrit comme le jeu écrit son journal : une ligne par entrée
+    // (« heure - Thread: n -> texte »), les piles et le bloc CRASH INFO sur des
+    // lignes qui ne portent pas d'heure. Les données du joueur qui s'y trouvent sont celles que le jeu
+    // écrit vraiment : l'utilisateur Windows, le compte Steam, le pseudo, les
+    // grilles, le serveur. Les lignes du jeu restent en anglais, comme le jeu les écrit.
     internal static class GameLogOf20261027
     {
         public const string WindowsUser = "Jean Dupont";
@@ -44,8 +44,8 @@ namespace SirHolomap.Tests
         public const string ServerAddress = "203.0.113.7:27016";
         public const string ServerName = "Sirius Immersion PTU";
 
-        public const string ShapeCacheLine = "planet shape cache of EarthLike not ready: Object reference not set to an instance of an object.";
-        public const string TerrainLine = "terrain of EarthLike not read: NullReferenceException Object reference not set to an instance of an object.";
+        public const string ShapeCacheLine = "cache de forme de la planète EarthLike pas prêt : La référence d'objet n'est pas définie à une instance d'un objet.";
+        public const string TerrainLine = "terrain de EarthLike non lu : NullReferenceException La référence d'objet n'est pas définie à une instance d'un objet.";
 
         public static readonly DateTime SessionStartUtc = new DateTime(2026, 10, 27, 19, 3, 12, DateTimeKind.Utc);
         public static readonly DateTime CrashedAtUtc = new DateTime(2026, 10, 27, 19, 14, 17, 913, DateTimeKind.Utc);
@@ -68,7 +68,7 @@ namespace SirHolomap.Tests
             lines.Add(Line(3, 30, 1, "Grid '" + GridName + "' loaded for " + Nickname));
             lines.Add(Line(3, 31, 1, "Entity name: " + GridName));
 
-            // Thirty errors of the game, then twenty-five lines of the plugin.
+            // Trente erreurs du jeu, puis vingt-cinq lignes du greffon.
             for (var i = 1; i <= 30; i++)
                 lines.Add(Line(4 + i / 10, i, 7, "Error loading audio bank " + i + ": file not found"));
             for (var i = 1; i <= 25; i++)

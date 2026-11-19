@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using Sandbox.Graphics;
@@ -8,16 +8,16 @@ using VRageMath;
 
 namespace SirHolomap
 {
-    // The confirmation before leaving for another server: it names the
-    // server, tells what is known of it, and, when the server asks for a
-    // password, holds a box to type it before leaving. Nothing happens until
-    // the player presses the join button; Esc or the other button keeps them
-    // where they are.
+    // La confirmation avant de partir pour un autre serveur : elle nomme le
+    // serveur, dit ce qu'on en sait et, quand le serveur demande un mot de
+    // passe, porte une case pour le taper avant de partir. Rien ne se passe tant que
+    // le joueur n'a pas appuyé sur le bouton Rejoindre ; Échap ou l'autre bouton le garde
+    // où il est.
     //
-    // The text is cut into lines at the width of the box with the game's own
-    // font, in the language set in the game (whose letters may be drawn
-    // larger), and the box grows to hold every line: a long server name or a
-    // longer language never spills over the frame.
+    // Le texte est coupé en lignes à la largeur de la boîte avec la police propre
+    // du jeu, dans la langue réglée dans le jeu (dont les lettres peuvent être dessinées
+    // plus grandes), et la boîte grandit pour porter chaque ligne : un long nom de serveur ou une
+    // langue plus longue ne déborde jamais du cadre.
     internal sealed class JoinDialog : MyGuiScreenBase
     {
         private const string Font = "White";
@@ -66,8 +66,8 @@ namespace SirHolomap
             return "SirHolomapJoinDialog";
         }
 
-        // The game draws a label's text this much larger than asked in some
-        // languages: the lines are measured the way they will be drawn.
+        // Le jeu dessine le texte d'une étiquette plus grand que demandé dans certaines
+        // langues : les lignes sont mesurées comme elles seront dessinées.
         private static float DrawnScale(float scale)
         {
             var probe = new MyGuiControlLabel(text: "", textScale: scale, font: Font);

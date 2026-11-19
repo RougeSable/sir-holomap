@@ -1,42 +1,42 @@
-using System;
+﻿using System;
 
 namespace SirHolomap
 {
-    // A star of the night sky the galaxy lies on: where it sits in its tile
-    // (0 to 1 both ways), how large and how bright it is, and its colour.
+    // Une étoile du ciel nocturne sur lequel repose la galaxie : où elle se trouve dans sa tuile
+    // (0 à 1 dans les deux sens), sa taille, sa luminosité et sa couleur.
     public struct SkyStar
     {
         public double X;
         public double Y;
-        // 1 for an ordinary star, up to a little over 2 for the largest.
+        // 1 pour une étoile ordinaire, jusqu'à un peu plus de 2 pour la plus grande.
         public double Size;
-        // Opacity of the star, 0 to 1.
+        // Opacité de l'étoile, 0 à 1.
         public double Alpha;
         public byte R;
         public byte G;
         public byte B;
     }
 
-    // The sky behind the galaxy: a few stars, scattered, each one a soft
-    // round dot with a light halo (the Star shape), in gentle colours: the
-    // white, pale blue, warm orange and rose of the stars of a holographic
-    // map, never a hard or loud one. Most stars are small and dim, a few
-    // larger and brighter, so that the galaxy and the servers stay what
-    // the eye reads first.
+    // Le ciel derrière la galaxie : quelques étoiles éparses, chacune un point
+    // rond et doux avec un halo léger (la forme Star), aux couleurs douces : le
+    // blanc, le bleu pâle, l'orange chaud et le rose des étoiles d'une carte
+    // holographique, jamais dures ni criardes. La plupart des étoiles sont petites et ternes, quelques-unes
+    // plus grandes et plus brillantes, pour que la galaxie et les serveurs restent ce que
+    // l'œil lit d'abord.
     public static class StarSky
     {
-        // Stars of the far layer and of the near one, per tile: few, so
-        // that the sky reads as depth rather than as noise.
+        // Les étoiles de la couche lointaine et de la proche, par tuile : peu, pour
+        // que le ciel se lise comme de la profondeur plutôt que comme du bruit.
         public const int FarStars = 70;
         public const int NearStars = 18;
 
-        // The gentle colours, and how often each comes.
+        // Les couleurs douces, et la fréquence de chacune.
         private static readonly byte[][] Tints =
         {
-            new byte[] { 255, 247, 236 },   // warm white
-            new byte[] { 244, 247, 255 },   // cold white
-            new byte[] { 198, 218, 255 },   // pale blue
-            new byte[] { 255, 214, 172 },   // light orange
+            new byte[] { 255, 247, 236 },   // blanc chaud
+            new byte[] { 244, 247, 255 },   // blanc froid
+            new byte[] { 198, 218, 255 },   // bleu pâle
+            new byte[] { 255, 214, 172 },   // orange clair
             new byte[] { 255, 200, 212 },   // rose
         };
 
@@ -47,8 +47,8 @@ namespace SirHolomap
             get { return Tints.Length; }
         }
 
-        // The stars of one layer, the same for every player and every
-        // opening of the map.
+        // Les étoiles d'une couche, les mêmes pour chaque joueur et chaque
+        // ouverture de la carte.
         public static SkyStar[] Layer(int count, int seed)
         {
             var stars = new SkyStar[Math.Max(0, count)];
@@ -57,7 +57,7 @@ namespace SirHolomap
                 var star = new SkyStar();
                 star.X = Hash(seed * 7919 + n * 31 + 1);
                 star.Y = Hash(seed * 104729 + n * 17 + 2);
-                // Few large ones, many small ones; the large ones brighter.
+                // Peu de grandes, beaucoup de petites ; les grandes plus brillantes.
                 var weight = Math.Pow(Hash(seed * 53 + n * 7 + 4), 3);
                 star.Size = 1 + 1.2 * weight;
                 star.Alpha = 0.32 + 0.5 * weight + 0.12 * Hash(seed * 13 + n * 101 + 3);
@@ -71,7 +71,7 @@ namespace SirHolomap
             return stars;
         }
 
-        // One of the gentle colours, picked by a number from 0 to 1.
+        // Une des couleurs douces, choisie par un nombre de 0 à 1.
         public static void Tint(double pick, out byte r, out byte g, out byte b)
         {
             var index = Tints.Length - 1;

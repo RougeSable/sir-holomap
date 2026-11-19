@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Xunit;
 
@@ -45,7 +45,7 @@ namespace SirHolomap.Tests
         [Fact]
         public void PlanetsByDistanceToCentreWithTheirMoons()
         {
-            // The vanilla star system, roughly.
+            // Le système stellaire de base, à peu près.
             var earth = new BodyInfo { Name = "EarthLike", Position = new Vec3(0, 0, 0), Radius = 60000 };
             var moon = new BodyInfo { Name = "Moon", Position = new Vec3(16384, 136384, -113616), Radius = 9500 };
             var mars = new BodyInfo { Name = "Mars", Position = new Vec3(1031072, 131072, 1631072), Radius = 60000 };
@@ -82,7 +82,7 @@ namespace SirHolomap.Tests
             var again = ServerHistory.Load(history.Save());
             Assert.Equal("Sirius Immersion", again.Find("steam://1.2.3.4:27016").Name);
             Assert.Equal(when, again.FindByAddress("steam://1.2.3.4:27016").LastVisitUtc);
-            Assert.Equal("12 days", TimeAgo.Format(TimeSpan.FromDays(12)));
+            Assert.Equal("12 jours", TimeAgo.Format(TimeSpan.FromDays(12)));
         }
     }
 
@@ -98,16 +98,16 @@ namespace SirHolomap.Tests
             Assert.Equal(32 * 32 * 4, Images.GlobeImage(32, 8, 4, colors, heights, 60000, 0, null).Length);
         }
 
-        // The globe painted through the map's camera, for when the game's
-        // camera cannot be borrowed: what faces the camera is the side of the
-        // planet the camera is above, and the sky around stays clear.
+        // Le globe peint par la caméra de la carte, pour quand la caméra du
+        // jeu ne peut pas être empruntée : ce qui fait face à la caméra est le côté de la
+        // planète au-dessus duquel la caméra se trouve, et le ciel autour reste dégagé.
         [Fact]
         public void GlobeSeenThroughTheCameraShowsTheSideBelowIt()
         {
             const int columns = 16, rows = 8;
             var colors = new float[columns * rows * 3];
             var heights = new float[columns * rows];
-            // Red where x > 0 (longitude around 0), blue elsewhere.
+            // Rouge où x > 0 (longitude autour de 0), bleu ailleurs.
             for (var row = 0; row < rows; row++)
             {
                 for (var column = 0; column < columns; column++)
@@ -123,7 +123,7 @@ namespace SirHolomap.Tests
             const int size = 64;
             var tan = Math.Tan(Math.PI / 6);
             var light = new Vec3(1, 0, 0);
-            // Above longitude 0 (on +x), looking at the centre.
+            // Au-dessus de la longitude 0 (sur +x), regardant le centre.
             var image = Images.GlobeViewImage(size, size, columns, rows, colors, heights, 60000,
                 new Vec3(3, 0, 0), new Vec3(-1, 0, 0), new Vec3(0, 0, -1), new Vec3(0, 1, 0), tan, tan, light, null);
             Assert.Equal(size * size * 4, image.Length);
@@ -132,7 +132,7 @@ namespace SirHolomap.Tests
             Assert.True(image[centre] > 150 && image[centre + 2] < 60);
             Assert.Equal(0, image[3]);
 
-            // Above the other side, lit from there: blue faces the camera.
+            // Au-dessus de l'autre côté, éclairé de là : le bleu fait face à la caméra.
             var far = Images.GlobeViewImage(size, size, columns, rows, colors, heights, 60000,
                 new Vec3(-3, 0, 0), new Vec3(1, 0, 0), new Vec3(0, 0, 1), new Vec3(0, 1, 0), tan, tan, new Vec3(-1, 0, 0), null);
             Assert.True(far[centre + 2] > 150 && far[centre] < 60);
@@ -148,15 +148,15 @@ namespace SirHolomap.Tests
         {
             var way = new WayBack();
             way.Leave("steam://1.2.3.4:27016", "Sirius", "Other", Start);
-            // Joining: nothing to offer.
+            // Connexion en cours : rien à proposer.
             Assert.False(way.Update(Start.AddSeconds(2), false, true));
             Assert.False(way.Update(Start.AddSeconds(12), false, true));
-            // Back at the menu, idle.
+            // De retour au menu, inactif.
             Assert.False(way.Update(Start.AddSeconds(13), false, false));
             Assert.True(way.Update(Start.AddSeconds(18), false, false));
             Assert.Equal("steam://1.2.3.4:27016", way.BackConnection);
             Assert.Equal("Sirius", way.BackName);
-            // Once only.
+            // Une seule fois.
             Assert.False(way.Update(Start.AddSeconds(30), false, false));
         }
 

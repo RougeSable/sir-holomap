@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -6,8 +6,8 @@ using System.Text;
 
 namespace SirHolomap
 {
-    // The reports waiting to leave: one file each in the plugin's folder,
-    // until they are sent to one of our servers.
+    // Les rapports qui attendent de partir : un fichier chacun dans le dossier du greffon,
+    // jusqu'à leur envoi à l'un de nos serveurs.
     public sealed class ReportQueue
     {
         public const string FolderName = "reports";
@@ -31,8 +31,8 @@ namespace SirHolomap
             return Path.Combine(m_directory, id + Extension);
         }
 
-        // Written next to the file, then swapped in: a crash never leaves a
-        // half-written report.
+        // Écrit à côté du fichier, puis mis à sa place : un plantage ne laisse jamais un
+        // rapport à moitié écrit.
         public void Save(string id, ErrorReport report)
         {
             System.IO.Directory.CreateDirectory(m_directory);
@@ -45,7 +45,7 @@ namespace SirHolomap
             Prune();
         }
 
-        // The ids of the reports waiting, oldest first.
+        // Les identifiants des rapports en attente, le plus ancien en premier.
         public List<string> Waiting()
         {
             var ids = new List<string>();
@@ -70,7 +70,7 @@ namespace SirHolomap
                 File.Delete(path);
         }
 
-        // A player who never meets our servers keeps a bounded folder.
+        // Un joueur qui ne croise jamais nos serveurs garde un dossier borné.
         private void Prune()
         {
             var ids = Waiting();
@@ -79,8 +79,8 @@ namespace SirHolomap
         }
     }
 
-    // Where the plugin's caught exceptions and error lines go: the library
-    // code reports them here, and the game side listens.
+    // Où vont les exceptions rattrapées et les lignes d'erreur du greffon : le code
+    // de la bibliothèque les rapporte ici, et le côté jeu écoute.
     public static class Faults
     {
         public static Action<string, Exception> CaughtHandler;
@@ -99,15 +99,15 @@ namespace SirHolomap
         }
     }
 
-    // Collects what goes wrong in this session and sends it to our servers.
-    // The same error (same message, same top of stack) is one report for the
-    // whole session, with how many times it happened and when first and
-    // last. Nothing here ever throws: a report that cannot be prepared or
-    // sent is lost, the game goes on.
+    // Rassemble ce qui va mal dans cette session et l'envoie à nos serveurs.
+    // La même erreur (même message, même haut de pile) fait un seul rapport pour
+    // toute la session, avec le nombre de fois où elle est arrivée et sa première et sa
+    // dernière heure. Rien ici ne lève jamais d'exception : un rapport qu'on ne peut pas préparer ou
+    // envoyer est perdu, le jeu continue.
     public sealed class ErrorReporter
     {
-        // An error that has not come back for this long is settled: it can
-        // leave without waiting for the end of the session.
+        // Une erreur qui n'est pas revenue depuis ce temps est réglée : elle peut
+        // partir sans attendre la fin de la session.
         public const int QuietSeconds = 120;
 
         public const int MaximumEntries = 200;
@@ -130,8 +130,8 @@ namespace SirHolomap
         private readonly ReportQueue m_queue;
         private readonly Dictionary<string, Entry> m_entries = new Dictionary<string, Entry>();
         private readonly Dictionary<string, Entry> m_byId = new Dictionary<string, Entry>();
-        // The same errors by their raw text: an error that comes back every
-        // frame is recognised without being cleaned again.
+        // Les mêmes erreurs par leur texte brut : une erreur qui revient à chaque
+        // image est reconnue sans être nettoyée de nouveau.
         private readonly Dictionary<string, Entry> m_raw = new Dictionary<string, Entry>();
         private readonly List<string> m_recent = new List<string>();
 
@@ -154,7 +154,7 @@ namespace SirHolomap
             get { return m_scrubber; }
         }
 
-        // How many different errors this session has seen.
+        // Combien d'erreurs différentes cette session a vues.
         public int Kinds
         {
             get
@@ -164,8 +164,8 @@ namespace SirHolomap
             }
         }
 
-        // A line the plugin wrote to the game's log, error or not: the
-        // reports carry the last ones.
+        // Une ligne que le greffon a écrite au journal du jeu, erreur ou non : les
+        // rapports portent les dernières.
         public void Note(string line)
         {
             try
@@ -185,7 +185,7 @@ namespace SirHolomap
             }
         }
 
-        // An exception the plugin caught.
+        // Une exception que le greffon a rattrapée.
         public void Caught(string where, Exception e, DateTime nowUtc)
         {
             try
@@ -200,9 +200,9 @@ namespace SirHolomap
             }
         }
 
-        // An exception the plugin caught, with the line it wrote about it to
-        // the game's log: the line is the message, the exception gives the
-        // stack.
+        // Une exception que le greffon a rattrapée, avec la ligne qu'il a écrite à son sujet dans
+        // le journal du jeu : la ligne est le message, l'exception donne la
+        // pile.
         public void CaughtLine(string line, Exception e, DateTime nowUtc)
         {
             try
@@ -217,7 +217,7 @@ namespace SirHolomap
             }
         }
 
-        // An error line the plugin wrote to the game's log.
+        // Une ligne d'erreur que le greffon a écrite au journal du jeu.
         public void ErrorLine(string text, DateTime nowUtc)
         {
             try
@@ -284,11 +284,11 @@ namespace SirHolomap
         {
             entry.Report.Count++;
             entry.Report.LastUtc = nowUtc;
-            // Once an error has left, the session has said it.
+            // Une fois qu'une erreur est partie, la session l'a dite.
             entry.Dirty = !entry.Sent;
         }
 
-        // A message on one line, without anything about the player.
+        // Un message sur une ligne, sans rien sur le joueur.
         private string CleanText(string text)
         {
             var kept = new List<string>();
@@ -301,8 +301,8 @@ namespace SirHolomap
             return kept.Count > 0 ? string.Join(" | ", kept.ToArray()) : ReportScrubber.Removed;
         }
 
-        // A report built elsewhere (the crash of the last session) joins
-        // the queue.
+        // Un rapport construit ailleurs (le plantage de la dernière session) rejoint
+        // la file.
         public void Enqueue(ErrorReport report)
         {
             try
@@ -315,8 +315,8 @@ namespace SirHolomap
             }
         }
 
-        // What changed since the last time goes to the plugin's folder, so
-        // that a crash does not take it away.
+        // Ce qui a changé depuis la dernière fois va dans le dossier du greffon, pour
+        // qu'un plantage ne l'emporte pas.
         public void Flush()
         {
             try
@@ -347,10 +347,10 @@ namespace SirHolomap
             }
         }
 
-        // Called now and then, and once more when the session ends. Outside
-        // our servers (onOurServer false) nothing leaves: the reports wait in
-        // the plugin's folder for the next connection. Returns how many
-        // left.
+        // Appelé de temps en temps, et une fois de plus à la fin de la session. Hors de
+        // nos serveurs (onOurServer faux) rien ne part : les rapports attendent dans
+        // le dossier du greffon la prochaine connexion. Rend le nombre de rapports
+        // partis.
         public int Pump(bool onOurServer, Func<byte[], bool> send, DateTime nowUtc, bool endOfSession)
         {
             try
@@ -365,8 +365,8 @@ namespace SirHolomap
                     {
                         Entry live;
                         m_byId.TryGetValue(id, out live);
-                        // An error of this session that may still come back
-                        // waits, so that it leaves once, with its count.
+                        // Une erreur de cette session qui peut encore revenir
+                        // attend, pour partir une seule fois, avec son compte.
                         if (live != null && !endOfSession && (nowUtc - live.Report.LastUtc).TotalSeconds < QuietSeconds)
                             continue;
                         if (live != null && live.Sent)

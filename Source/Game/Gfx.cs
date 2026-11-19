@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Sandbox.Graphics;
 using VRage.Utils;
 using VRageMath;
@@ -6,9 +6,9 @@ using VRageRender;
 
 namespace SirHolomap
 {
-    // Drawing in screen pixels, over the game's image: sprites, lines, text.
-    // The map's interface is drawn after the 3D scene, like the game's own
-    // menus, so it stays sharp.
+    // Dessin en pixels d'écran, par-dessus l'image du jeu : sprites, lignes, texte.
+    // L'interface de la carte est dessinée après la scène 3D, comme les menus
+    // du jeu, pour rester nette.
     internal static class Gfx
     {
         public const string Font = "White";
@@ -16,7 +16,7 @@ namespace SirHolomap
         public static float Width = 1920;
         public static float Height = 1080;
 
-        // 1 at 1080 pixels high: the interface keeps its proportions.
+        // 1 à 1080 pixels de haut : l'interface garde ses proportions.
         public static float Scale = 1;
 
         public static void BeginFrame()
@@ -63,7 +63,7 @@ namespace SirHolomap
             Rect(x + w - thickness, y, thickness, h, color);
         }
 
-        // A sprite turned along a direction: lines and arrows.
+        // Un sprite tourné selon une direction : lignes et flèches.
         public static void Line(Vector2 a, Vector2 b, float thickness, Color color)
         {
             Line(a, b, thickness, color, GameTextures.White);
@@ -91,9 +91,9 @@ namespace SirHolomap
             MyRenderProxy.DrawSpriteExt(texture, ref dest, null, color, ref direction, ref origin, true, true);
         }
 
-        // Selection corners around a box, drawn as thin lines at any size: a
-        // texture stretched over a large grid would turn into wide blurred
-        // bars. The arms stay short, the box keeps its shape.
+        // Des coins de sélection autour d'une boîte, dessinés en lignes fines à toute taille : une
+        // texture étirée sur une grande grille deviendrait de larges barres
+        // floues. Les bras restent courts, la boîte garde sa forme.
         public static void Brackets(Vector2 centre, float width, float height, float thickness, Color color)
         {
             if (!IsFinite(centre))
@@ -160,12 +160,12 @@ namespace SirHolomap
             return MyGuiManager.GetScreenSizeFromNormalizedSize(MyGuiManager.MeasureString(Font, text, scale));
         }
 
-        // The text, cut with "..." to fit a width in pixels.
+        // Le texte, coupé avec « ... » pour tenir dans une largeur en pixels.
         public static string Fit(string text, float scale, float width)
         {
             if (string.IsNullOrEmpty(text) || Measure(text, scale).X <= width)
                 return text;
-            // The longest start that fits, found by halving.
+            // Le plus long début qui tient, trouvé par dichotomie.
             var low = 0;
             var high = text.Length - 1;
             while (low < high)

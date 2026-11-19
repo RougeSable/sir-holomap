@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace SirHolomap
 {
-    // A game log file on disk.
+    // Un fichier de journal du jeu sur le disque.
     public sealed class LogFileInfo
     {
         public string Path = "";
@@ -15,17 +15,17 @@ namespace SirHolomap
         public DateTime LastWriteUtc;
     }
 
-    // Finding the log of the session that crashed, and reading its end.
+    // Retrouver le journal de la session qui a planté, et en lire la fin.
     public static class GameLogFiles
     {
         public const string Pattern = "SpaceEngineers_*.log";
 
-        // How much of the end of a log is read: a crash is at the end.
+        // Ce qu'on lit de la fin d'un journal : un plantage est à la fin.
         public const int TailBytes = 2 * 1024 * 1024;
 
-        // The log of the session that began at this time: the newest one
-        // created before the plugin of that session started. The log of the
-        // session running now was created later.
+        // Le journal de la session qui a commencé à cette heure : le plus récent
+        // créé avant le démarrage du greffon de cette session. Le journal de la
+        // session en cours a été créé plus tard.
         public static LogFileInfo Pick(IEnumerable<LogFileInfo> files, DateTime sessionStartUtc)
         {
             LogFileInfo best = null;
@@ -57,8 +57,8 @@ namespace SirHolomap
             return found;
         }
 
-        // The end of a file, whole lines only. The game may still hold the
-        // file open.
+        // La fin d'un fichier, lignes entières seulement. Le jeu peut encore tenir
+        // le fichier ouvert.
         public static string ReadTail(string path, int maximumBytes)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
@@ -85,11 +85,11 @@ namespace SirHolomap
         }
     }
 
-    // The game's log, read for what a crash report needs.
+    // Le journal du jeu, lu pour ce dont un rapport de plantage a besoin.
     public static class GameLog
     {
-        // "2026-10-27 21:14:02.331 - Thread:   1 ->  text", with or without
-        // the date.
+        // « 2026-10-27 21:14:02.331 - Thread:   1 ->  texte », avec ou sans
+        // la date.
         private static readonly Regex Header = new Regex(
             @"^(?:\d{4}-\d{2}-\d{2}\s+)?\d{1,2}:\d{2}:\d{2}(?:[.,]\d+)?\s+-\s+Thread:\s*\d+\s+->\s?(?<text>.*)$", RegexOptions.CultureInvariant);
 
@@ -100,7 +100,11 @@ namespace SirHolomap
         private static readonly Regex ExceptionLine = new Regex(
             @"(?<![\w.])(?:[A-Za-z_]\w*\.)*[A-Za-z_]\w*(?:Exception|Error)\b\s*[:(]|DXGI_ERROR_\w+|\bHRESULT\b", RegexOptions.CultureInvariant);
 
-        private static readonly Regex StackLine = new Regex(@"^\s*(?:at\s|---|in\s)", RegexOptions.CultureInvariant);
+        // Une ligne de pile du jeu commence par « at » (ou « in »), ou par un trait « --- ».
+        private const string MotAt = "at";
+        private const string MotIn = "in";
+
+        private static readonly Regex StackLine = new Regex(@"^\s*(?:" + MotAt + @"\s|---|" + MotIn + @"\s)", RegexOptions.CultureInvariant);
 
         private static readonly Regex CrashInfo = new Regex(@"CRASH\s+INFO", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
@@ -119,8 +123,8 @@ namespace SirHolomap
             return lines;
         }
 
-        // The text of a line without the time and the thread the game puts
-        // in front of it.
+        // Le texte d'une ligne sans l'heure ni le fil que le jeu met
+        // devant.
         public static string TextOf(string line)
         {
             var match = Header.Match(line ?? "");
@@ -142,9 +146,9 @@ namespace SirHolomap
             return IsHeader(line) && !IsPluginLine(line) && ErrorWords.IsMatch(TextOf(line));
         }
 
-        // The report of a game that did not leave cleanly, from the log of
-        // that session. Nothing about the player: the scrubber has the last
-        // word on every line.
+        // Le rapport d'un jeu qui n'est pas sorti proprement, d'après le journal de
+        // cette session. Rien sur le joueur : le nettoyeur a le dernier
+        // mot sur chaque ligne.
         public static ErrorReport BuildCrashReport(
             string logText,
             string version,
@@ -163,7 +167,7 @@ namespace SirHolomap
                 SessionUtc = sessionStartUtc,
             };
 
-            // The block the game writes when it goes down.
+            // Le bloc que le jeu écrit quand il tombe.
             var blockStart = -1;
             for (var i = lines.Count - 1; i >= 0; i--)
             {
@@ -185,8 +189,8 @@ namespace SirHolomap
                 }
             }
 
-            // The exception that brought it down, and its stack: in the
-            // block, after it, or else the last one of the log.
+            // L'exception qui l'a fait tomber, et sa pile : dans le
+            // bloc, après lui, ou sinon la dernière du journal.
             var exceptionAt = -1;
             for (var i = Math.Max(blockStart, 0); i < lines.Count && blockStart >= 0; i++)
             {
@@ -222,12 +226,12 @@ namespace SirHolomap
             var gameErrors = Tail(lines, IsErrorLine, ReportRule.TailLines);
             var pluginLines = Tail(lines, IsPluginLine, ReportRule.TailLines);
 
-            // What the report says about it.
+            // Ce que le rapport en dit.
             var firstLine = exception.Count > 0 ? scrubber.Clean(TextOf(exception[0])) : null;
             var stackLines = scrubber.CleanLines(exception.GetRange(Math.Min(1, exception.Count), Math.Max(0, exception.Count - 1)));
             report.Message = firstLine != null
                 ? firstLine.Trim()
-                : (exception.Count > 0 ? ReportScrubber.Removed : "The game stopped without a clean exit");
+                : (exception.Count > 0 ? ReportScrubber.Removed : "Le jeu s'est arrêté sans sortie propre");
             report.Stack = string.Join("\n", stackLines.ToArray());
 
             report.Lines.Add("-- CRASH INFO --");

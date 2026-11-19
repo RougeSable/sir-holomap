@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace SirHolomap
 {
-    // The languages the game offers, in the order and with the numbers of the
-    // game's own list (VRage.MyLanguagesEnum): the plugin follows the
-    // language set in the game's options.
+    // Les langues que le jeu offre, dans l'ordre et avec les numéros de la
+    // liste du jeu (VRage.MyLanguagesEnum) : le greffon suit la
+    // langue réglée dans les options du jeu.
     public enum GameLanguage : byte
     {
         English,
@@ -37,9 +37,9 @@ namespace SirHolomap
         Japanese,
     }
 
-    // Every text of the plugin in every language of the game. English is the
-    // reference: a text missing in a language, or a language the plugin does
-    // not know, falls back to it.
+    // Chaque texte du greffon dans chaque langue du jeu. Le français est la
+    // référence (la langue « English » de l'énumération est celle de la référence) : un texte
+    // absent d'une langue, ou une langue que le greffon ne connaît pas, retombe dessus.
     public sealed class TextCatalog
     {
         private readonly Dictionary<string, string> m_english;
@@ -64,7 +64,7 @@ namespace SirHolomap
             return m_english.TryGetValue(key, out text) ? text : key;
         }
 
-        // The text in this language, or in English when it has none.
+        // Le texte dans cette langue, ou celui de la référence quand elle n'en a pas.
         public string Get(GameLanguage language, string key)
         {
             Dictionary<string, string> table;
@@ -75,7 +75,7 @@ namespace SirHolomap
             return English(key);
         }
 
-        // True when this language has its own text for the key.
+        // Vrai quand cette langue a son propre texte pour la clé.
         public bool Has(GameLanguage language, string key)
         {
             if (language == GameLanguage.English)
@@ -86,8 +86,8 @@ namespace SirHolomap
         }
     }
 
-    // The language the plugin speaks: the game's, read every frame by the
-    // plugin (English until the game tells).
+    // La langue que parle le greffon : celle du jeu, relue à chaque image par le
+    // greffon (la référence tant que le jeu ne la dit pas).
     public static class Localization
     {
         private static TextCatalog s_catalog;
@@ -99,7 +99,7 @@ namespace SirHolomap
             get { return s_catalog ?? (s_catalog = new TextCatalog(Texts.EnglishTable(), Translations.All())); }
         }
 
-        // A number of the game's list; unknown numbers speak English.
+        // Un numéro de la liste du jeu ; les numéros inconnus parlent la langue de référence.
         public static GameLanguage FromGame(int value)
         {
             if (value < 0 || value > 255 || !Enum.IsDefined(typeof(GameLanguage), (byte)value))

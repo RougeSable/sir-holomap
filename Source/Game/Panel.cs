@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using VRage.Utils;
 using VRageMath;
 
 namespace SirHolomap
 {
-    // The menu on the right of the map, the same in every view: a title, the
-    // info of what is selected, what to show, and the list of what is in
-    // view. Drawn every frame; what can be clicked is registered with the map.
+    // Le menu à droite de la carte, le même dans chaque vue : un titre, les
+    // infos de ce qui est sélectionné, ce qu'il faut montrer, et la liste de ce qui est en
+    // vue. Dessiné à chaque image ; ce qui se clique est enregistré auprès de la carte.
     internal sealed class Panel
     {
         private readonly MapScreen m_map;
@@ -92,7 +92,7 @@ namespace SirHolomap
                 var on = i == current;
                 Gfx.Rect(x, m_y, width, height, on ? Gfx.Alpha(Style.Accent, 0.35f) : (hover ? Style.RowHover : Style.Row));
                 Gfx.Frame(x, m_y, width, height, 1, on ? Style.Accent : Gfx.Alpha(Style.AccentDim, 0.8f));
-                // The name shrinks to fit its button, whatever the language.
+                // Le nom rétrécit pour tenir dans son bouton, quelle que soit la langue.
                 var room = width - 10 * S;
                 var scale = TextFit.Scale(Gfx.Measure(names[i], TabTextScale).X, TabTextScale, room, TabTextFloor);
                 Gfx.Text(Gfx.Fit(names[i], scale, room), x + width / 2, m_y + height / 2, scale, on ? Color.White : Style.Text,
@@ -132,7 +132,7 @@ namespace SirHolomap
             Line(key, value, color, false);
         }
 
-        // Key on the left, value on the right; long values wrap under.
+        // La clé à gauche, la valeur à droite ; les longues valeurs passent à la ligne dessous.
         public void Line(string key, string value, Color color, bool wrap)
         {
             CloseColumns();
@@ -151,7 +151,7 @@ namespace SirHolomap
                 return;
             }
 
-            // Wrapped, aligned right, at most three lines.
+            // Passé à la ligne, aligné à droite, au plus trois lignes.
             var words = value.Split(' ');
             var line = "";
             var lines = 0;
@@ -185,7 +185,7 @@ namespace SirHolomap
             m_y += 21 * S;
         }
 
-        // Two boxes per line.
+        // Deux cases par ligne.
         public void Checkbox(string label, string help, bool value, Action<bool> set, int column)
         {
             if (column == 0)
@@ -268,8 +268,8 @@ namespace SirHolomap
             m_y += h + 8 * S;
         }
 
-        // The list fills what is left above the help lines. Rows are added in
-        // order; the map scrolls them with the wheel.
+        // La liste remplit ce qui reste au-dessus des lignes d'aide. Les lignes sont ajoutées dans
+        // l'ordre ; la carte les fait défiler avec la molette.
         private float m_listTop;
         private float m_listBottom;
         private int m_row;
@@ -317,9 +317,9 @@ namespace SirHolomap
             Gfx.Text(text, m_x + 14 * S, m_listTop + 4 * S, 0.58f, Style.Dim);
         }
 
-        // The help at the bottom of the menu, wrapped on as many lines as it
-        // needs. Laid out first, so that the list above stops before it and
-        // its last line never leaves the frame.
+        // L'aide en bas du menu, passée à la ligne sur autant de lignes qu'il
+        // en faut. Disposée la première, pour que la liste au-dessus s'arrête avant elle et que
+        // sa dernière ligne ne sorte jamais du cadre.
         public void PrepareFooter(string help)
         {
             m_footerLines.Clear();

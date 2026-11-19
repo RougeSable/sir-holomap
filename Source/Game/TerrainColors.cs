@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -8,11 +8,11 @@ using VRageMath;
 
 namespace SirHolomap
 {
-    // The colour of each terrain material seen from orbit, worked out once
-    // per material: the far colour the game itself paints it with when it
-    // has one, otherwise the mean colour of the material's own texture (read
-    // off the game thread, from the game's files or the mod's), otherwise
-    // its colour key. Any material works, modded ones included.
+    // La couleur de chaque matériau de terrain vu de l'orbite, calculée une fois
+    // par matériau : la couleur lointaine dont le jeu lui-même le peint quand il
+    // en a une, sinon la couleur moyenne de la texture propre du matériau (lue
+    // hors du fil du jeu, dans les fichiers du jeu ou du mod), sinon
+    // sa clé de couleur. Tout matériau marche, ceux des mods compris.
     internal sealed class TerrainColors
     {
         private sealed class Swatch
@@ -27,7 +27,7 @@ namespace SirHolomap
         private readonly Dictionary<MyVoxelMaterialDefinition, Swatch> m_swatches =
             new Dictionary<MyVoxelMaterialDefinition, Swatch>();
 
-        // Starts working out the colour of a material, if not done already.
+        // Se met à calculer la couleur d'un matériau, si ce n'est pas déjà fait.
         public void Request(MyVoxelMaterialDefinition material)
         {
             if (material == null || m_swatches.ContainsKey(material))
@@ -55,7 +55,7 @@ namespace SirHolomap
             swatch.Reading = Task.Run(() => ReadMean(files, name));
         }
 
-        // True when every material asked for has its colour.
+        // Vrai quand chaque matériau demandé a sa couleur.
         public bool AllReady(IEnumerable<MyVoxelMaterialDefinition> materials)
         {
             var ready = true;
@@ -76,7 +76,7 @@ namespace SirHolomap
             return ready;
         }
 
-        // The colour of a material, sRGB, 0..1; grey when it has none.
+        // La couleur d'un matériau, sRGB, 0..1 ; gris quand il n'en a pas.
         public void ColorOf(MyVoxelMaterialDefinition material, out float r, out float g, out float b)
         {
             r = 0.45f;
@@ -114,8 +114,8 @@ namespace SirHolomap
             swatch.Ready = true;
         }
 
-        // The colour the game paints the material with from far away, linear,
-        // brought to sRGB.
+        // La couleur dont le jeu peint le matériau de loin, linéaire,
+        // ramenée en sRGB.
         private static bool FarColor(MyVoxelMaterialDefinition material, out float r, out float g, out float b)
         {
             r = g = b = 0;
@@ -148,8 +148,8 @@ namespace SirHolomap
             return true;
         }
 
-        // The colour textures of the material, the ones seen from farthest
-        // first, and the top faces before the sides: what a globe shows.
+        // Les textures de couleur du matériau, celles vues de plus loin
+        // d'abord, et les faces du dessus avant les côtés : ce qu'un globe montre.
         private static List<string> TextureFiles(MyVoxelMaterialDefinition material)
         {
             var files = new List<string>();
@@ -178,7 +178,7 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                HolomapPlugin.LogCaught("terrain textures of " + material.Id.SubtypeName + " not found: " + e.Message, e);
+                HolomapPlugin.LogCaught("textures de terrain de " + material.Id.SubtypeName + " introuvables : " + e.Message, e);
             }
             return files;
         }
@@ -221,7 +221,7 @@ namespace SirHolomap
                     HolomapPlugin.Caught("TerrainColors.ReadMean", ex);
                 }
             }
-            HolomapPlugin.LogError("no readable colour texture for terrain " + name + ": painted with its colour key or grey");
+            HolomapPlugin.LogError("aucune texture de couleur lisible pour le terrain " + name + " : peint avec sa clé de couleur ou en gris");
             return null;
         }
     }

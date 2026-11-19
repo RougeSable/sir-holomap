@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -12,10 +12,10 @@ using VRageMath;
 
 namespace SirHolomap
 {
-    // The map, full screen. While it is open it holds the keyboard and the
-    // mouse: the game's controls never reach the character or the ship, and
-    // the character is told every frame to stand still. The game keeps
-    // drawing its world behind, seen from the map's camera.
+    // La carte, plein écran. Tant qu'elle est ouverte, elle tient le clavier et la
+    // souris : les commandes du jeu n'atteignent jamais le personnage ni le vaisseau, et
+    // le personnage reçoit à chaque image l'ordre de rester immobile. Le jeu continue de
+    // dessiner son monde derrière, vu depuis la caméra de la carte.
     internal sealed class MapScreen : MyGuiScreenBase
     {
         public static MapScreen Current { get; private set; }
@@ -114,8 +114,8 @@ namespace SirHolomap
             Gfx.BeginFrame();
             Camera.SetLens(RenderHooks.LastFov, Gfx.Width / Gfx.Height);
 
-            // Always centred on the player: on a planet, its globe; in space,
-            // the neighbourhood.
+            // Toujours centrée sur le joueur : sur une planète, son globe ; dans l'espace,
+            // le voisinage.
             var planet = World.PlanetUnderPlayer();
             if (planet != null)
                 GoPlanet(planet, false, false, null);
@@ -123,6 +123,7 @@ namespace SirHolomap
                 GoLocal(LocalAnchor.Player, null, null, false, false);
             Camera.Snap();
             RenderHooks.Jump = true;
+            PointsDeFonctionnalites.Point(Fonctionnalites.Carte, World);
         }
 
         public override string GetFriendlyName()
@@ -148,7 +149,7 @@ namespace SirHolomap
             }
         }
 
-        // Changes of view. Each starts a soft glide of the camera.
+        // Changements de vue. Chacun lance un doux glissement de la caméra.
 
         private void StartTransition()
         {
@@ -157,15 +158,15 @@ namespace SirHolomap
             m_clicks.Cancel();
         }
 
-        // A view that moves its camera far by itself (another globe, for
-        // instance) glides there as softly as a change of view.
+        // Une vue qui déplace seule sa caméra loin (un autre globe, par
+        // exemple) y glisse aussi doucement qu'un changement de vue.
         public void Glide()
         {
             StartTransition();
         }
 
-        // grid: a grid to keep in the middle of the globe, the camera turning
-        // around it.
+        // grid : une grille à garder au milieu du globe, la caméra tournant
+        // autour d'elle.
         public void GoPlanet(Body body, bool fromSystem, bool continuous, Marker grid)
         {
             if (body == null)
@@ -186,14 +187,15 @@ namespace SirHolomap
             StartTransition();
         }
 
-        // continuous: reached with the wheel, gliding on from where the
-        // camera is; from the galaxy, the system comes back from afar.
+        // continuous : atteint avec la molette, en glissant depuis l'endroit où est la
+        // caméra ; depuis la galaxie, le système revient de loin.
         public void GoSystem(SystemTab tab, bool continuous)
         {
             var fromGalaxy = Mode == MapMode.Galaxy;
             var from3D = View.Uses3D;
             Tab = tab;
             Mode = MapMode.System;
+            PointsDeFonctionnalites.Point(Fonctionnalites.Systeme, World);
             if (fromGalaxy)
                 Selected = null;
             if (tab == SystemTab.Orrery)
@@ -206,22 +208,23 @@ namespace SirHolomap
             StartTransition();
         }
 
-        // The galaxy, a view of its own. continuous: reached by zooming out
-        // of the system, it starts close on the current server and glides
-        // out to the whole galaxy.
+        // La galaxie, une vue à part. continuous : atteinte en dézoomant
+        // du système, elle commence près du serveur actuel et glisse
+        // vers la galaxie entière.
         public void GoGalaxy(bool continuous)
         {
             if (Mode == MapMode.Galaxy)
                 return;
             Selected = null;
             Mode = MapMode.Galaxy;
-            // The servers first: the glide starts on the current one.
+            PointsDeFonctionnalites.Point(Fonctionnalites.Galaxie, World);
+            // Les serveurs d'abord : le glissement commence sur le serveur actuel.
             Servers.Update(World, Settings);
             GalaxyMode.Enter(continuous);
             StartTransition();
         }
 
-        // The buttons at the top.
+        // Les boutons du haut.
         private void PickMode(MapMode mode)
         {
             if (mode == Mode)
@@ -229,8 +232,8 @@ namespace SirHolomap
             switch (mode)
             {
                 case MapMode.Planet:
-                    // A grid fastened in B near a planet stays in the middle
-                    // of the globe.
+                    // Une grille suivie en B près d'une planète reste au milieu
+                    // du globe.
                     var locked = Mode == MapMode.Local ? LocalMode.LockedGrid : null;
                     var lockedBody = locked != null ? World.BodyAt(locked.Position, 1.6) : null;
                     if (lockedBody != null)
@@ -264,8 +267,8 @@ namespace SirHolomap
             }
         }
 
-        // Input. The game's controls are not handled here at all: they are
-        // not passed on, so nothing reaches the character.
+        // Entrées. Les commandes du jeu ne sont pas du tout traitées ici : elles ne
+        // sont pas transmises, donc rien n'atteint le personnage.
         public override void HandleInput(bool receivedFocusInThisUpdate)
         {
             try
@@ -304,8 +307,8 @@ namespace SirHolomap
                     View.Recentre();
             }
 
-            // Left button: a click on the interface, a click or a drag on the
-            // map.
+            // Bouton gauche : un clic sur l'interface, un clic ou un glissement sur la
+            // carte.
             if (input.IsNewLeftMousePressed())
             {
                 m_pressAt = mouse;
@@ -348,8 +351,8 @@ namespace SirHolomap
             else
                 m_middleOnMap = false;
 
-            // Right button: a simple click clears the selection and ends the
-            // follow of a grid; the game never sees it.
+            // Bouton droit : un simple clic efface la sélection et met fin au
+            // suivi d'une grille ; le jeu ne le voit jamais.
             if (input.IsNewRightMousePressed())
             {
                 m_rightPressAt = mouse;
@@ -397,15 +400,15 @@ namespace SirHolomap
             m_lastMouse = mouse;
         }
 
-        // What a click on empty space carries: the single click then clears
-        // the selection.
+        // Ce que porte un clic dans le vide : le simple clic efface alors
+        // la sélection.
         private static readonly object Nothing = new object();
 
         private void DoubleClick(object target)
         {
             if (target == null)
                 return;
-            // Two quick clicks on empty space are still clicks on nothing.
+            // Deux clics rapides dans le vide sont encore des clics sur rien.
             if (ReferenceEquals(target, Nothing))
             {
                 Selected = null;
@@ -416,8 +419,8 @@ namespace SirHolomap
             View.DoubleClick(target);
         }
 
-        // Back to the neighbourhood centred on the player, gliding, when a
-        // grid is followed in B.
+        // Retour au voisinage centré sur le joueur, en glissant, quand une
+        // grille est suivie en B.
         private void StopFollowing()
         {
             if (Mode != MapMode.Local || !LocalMode.StopFollowing())
@@ -445,7 +448,7 @@ namespace SirHolomap
             return mouse.Y <= TopBarHeight || mouse.X >= PanelLeft - 8 * Gfx.Scale;
         }
 
-        // Registered by the panel while drawing; true when the mouse is over.
+        // Enregistré par le panneau pendant le dessin ; vrai quand la souris est dessus.
         public bool AddHit(RectangleF rect, Action click, object item, string help)
         {
             m_hits.Add(new Hit { Rect = rect, Click = click, Item = item, Help = help });
@@ -465,14 +468,14 @@ namespace SirHolomap
             ListScroll = MathHelper.Clamp(ListScroll, 0, Math.Max(0, total - shown));
         }
 
-        // A row of the list: one click selects and shows it, a double click
-        // dives into it, as on the map.
+        // Une ligne de la liste : un clic la sélectionne et la montre, un double clic
+        // plonge dedans, comme sur la carte.
         public void ListClick(object item)
         {
             if (item == null)
                 return;
-            // Selecting is harmless: it shows at once. Only the dive waits for
-            // the second click.
+            // Sélectionner est sans danger : cela se montre tout de suite. Seule la plongée attend
+            // le second clic.
             object target;
             var kind = m_clicks.Click(Gfx.Mouse.X, Gfx.Mouse.Y, Time, item, out target);
             Selected = item;
@@ -481,8 +484,8 @@ namespace SirHolomap
                 View.DoubleClick(item);
         }
 
-        // Text fields of the panel: digits for thresholds, free text for the
-        // galaxy search.
+        // Les champs de texte du panneau : des chiffres pour les seuils, du texte libre pour la
+        // recherche de la galaxie.
         public void FocusField(string id, string value, Action<string> commit, bool digits)
         {
             if (FocusedField == id)
@@ -556,22 +559,22 @@ namespace SirHolomap
             Time = m_clock.Elapsed.TotalSeconds;
             var dt = MathHelper.Clamp(Time - m_lastTime, 0, 0.1);
 
-            // Out of the world, or the character dead: the map closes by
-            // itself and the game shows its own screen of respawn, as without
-            // the map. M opens it again once the player is back.
+            // Hors du monde, ou personnage mort : la carte se ferme toute seule
+            // et le jeu montre son propre écran de réapparition, comme sans
+            // la carte. M la rouvre une fois le joueur revenu.
             if (MyAPIGateway.Session == null || !PlayerAlive(World.InWorld))
             {
                 CloseScreen();
                 return;
             }
 
-            // The character and the ship stay as they are.
+            // Le personnage et le vaisseau restent comme ils sont.
             var controlled = MyAPIGateway.Session.ControlledObject;
             if (controlled != null)
                 controlled.MoveAndRotate(Vector3.Zero, Vector2.Zero, 0f);
 
             World.Refresh();
-            // A selected body stays selected when the bodies are read again.
+            // Un astre sélectionné reste sélectionné quand les astres sont relus.
             var selectedBody = Selected as Body;
             if (selectedBody != null)
                 Selected = World.Follow(selectedBody);
@@ -582,8 +585,8 @@ namespace SirHolomap
             if (m_clicks.Poll(Time, out clicked) == ClickKind.Single)
             {
                 Selected = ReferenceEquals(clicked, Nothing) ? null : clicked;
-                // A simple click on empty space, outside the frame of the
-                // followed grid, lets go of it.
+                // Un simple clic dans le vide, hors du cadre de la
+                // grille suivie, la lâche.
                 if (ReferenceEquals(clicked, Nothing))
                     StopFollowing();
             }
@@ -594,7 +597,7 @@ namespace SirHolomap
             View.Update(dt);
             Camera.Update(dt);
 
-            // A long glide is a jump for the terrain's level of detail.
+            // Un long glissement est un saut pour le niveau de détail du terrain.
             if ((Camera.Position - before).Length() > Camera.Distance * 0.05)
                 RenderHooks.Jump = true;
 
@@ -615,8 +618,8 @@ namespace SirHolomap
             m_lastTime = Time;
         }
 
-        // True while the map may stay open: in a world, with a living
-        // character.
+        // Vrai tant que la carte peut rester ouverte : dans un monde, avec un
+        // personnage vivant.
         public static bool PlayerAlive(bool inWorld)
         {
             var session = MyAPIGateway.Session;
@@ -653,7 +656,7 @@ namespace SirHolomap
                 Current = null;
         }
 
-        // Layout, in pixels.
+        // Mise en page, en pixels.
         public float TopBarHeight
         {
             get { return 56 * Gfx.Scale; }
@@ -721,9 +724,9 @@ namespace SirHolomap
             Gfx.Rect(0, TopBarHeight - 2 * s, w, 2 * s, Gfx.Alpha(Style.Accent, 0.8f));
             Gfx.Text(Texts.Title, 24 * s, TopBarHeight / 2, 0.95f, Style.Accent, MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER);
 
-            // The views are named, never lettered, from the closest to the
-            // farthest. The buttons share the room between the title and the
-            // menu on the right.
+            // Les vues sont nommées, jamais lettrées, de la plus proche à la
+            // plus lointaine. Les boutons se partagent la place entre le titre et le
+            // menu de droite.
             var labels = new[] { Texts.ModePlanet, Texts.ModeLocal, Texts.ModeSystem, Texts.ModeGalaxy };
             var helps = new[] { Texts.ModePlanetHelp, Texts.ModeLocalHelp, Texts.ModeSystemHelp, Texts.TabGalaxyHelp };
             var modes = new[] { MapMode.Planet, MapMode.Local, MapMode.System, MapMode.Galaxy };
@@ -802,7 +805,7 @@ namespace SirHolomap
             Gfx.Rect(0, y - 6 * s, PanelLeft - 14 * s, 36 * s, new Color(0, 0, 0, 120));
             Gfx.Text(text, x, y, 0.58f, Style.Dim);
 
-            // A scale bar in the 3D views.
+            // Une barre d'échelle dans les vues 3D.
             if (view.Uses3D)
             {
                 var metres = 120 * s / Camera.PixelsPerMetre(Camera.Distance);

@@ -1,24 +1,24 @@
-using System;
+﻿using System;
 
 namespace SirHolomap
 {
-    // Leaving for another server from the galaxy goes through the main menu,
-    // as with the game's own server browser. Most refusals are caught before
-    // leaving (no answer, full, password, other version); when the other
-    // server still refuses afterwards, the game is left at the main menu. The
-    // way back notices it and offers to return to the server the player
-    // left.
+    // Partir pour un autre serveur depuis la galaxie passe par le menu principal,
+    // comme avec le navigateur de serveurs du jeu. La plupart des refus sont attrapés avant
+    // le départ (pas de réponse, plein, mot de passe, autre version) ; quand l'autre
+    // serveur refuse malgré tout ensuite, le jeu reste au menu principal. Le
+    // chemin du retour s'en aperçoit et propose de revenir au serveur que le joueur
+    // a quitté.
     public sealed class WayBack
     {
-        // The game needs a moment between unloading the world and showing
-        // its join screens: no conclusion before that.
+        // Le jeu a besoin d'un moment entre le déchargement du monde et l'affichage
+        // de ses écrans de connexion : aucune conclusion avant.
         public static readonly TimeSpan Settle = TimeSpan.FromSeconds(10);
 
-        // Idle at the menu this long, with nothing being joined or loaded:
-        // the join failed.
+        // Inactif au menu aussi longtemps, sans rien rejoindre ni charger :
+        // la connexion a échoué.
         public static readonly TimeSpan Idle = TimeSpan.FromSeconds(4);
 
-        // After this, whatever happens is the player's own doing.
+        // Après cela, tout ce qui arrive est le fait du joueur.
         public static readonly TimeSpan GiveUp = TimeSpan.FromMinutes(15);
 
         public string BackConnection { get; private set; }
@@ -46,10 +46,10 @@ namespace SirHolomap
             m_idleSince = null;
         }
 
-        // Called often. inWorld: a world is loaded (the join worked, or the
-        // player went elsewhere). busy: the game shows a join or loading
-        // screen; null when that cannot be told, and then nothing is offered.
-        // True once, when the way back should be offered.
+        // Appelé souvent. inWorld : un monde est chargé (la connexion a marché, ou le
+        // joueur est allé ailleurs). busy : le jeu montre un écran de connexion ou de
+        // chargement ; null quand on ne peut pas le dire, et rien n'est alors proposé.
+        // Vrai une seule fois, quand le chemin du retour doit être proposé.
         public bool Update(DateTime now, bool inWorld, bool? busy)
         {
             if (!Armed)
@@ -59,8 +59,8 @@ namespace SirHolomap
                 Disarm();
                 return false;
             }
-            // A world right after leaving may still be the one being left:
-            // only once settled does a world mean the join worked.
+            // Un monde juste après le départ peut encore être celui qu'on quitte :
+            // ce n'est qu'une fois stabilisé qu'un monde veut dire que la connexion a marché.
             if (inWorld)
             {
                 m_idleSince = null;

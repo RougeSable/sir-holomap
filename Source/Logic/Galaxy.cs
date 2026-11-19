@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 
 namespace SirHolomap
 {
-    // Server addresses as the game writes them ("steam://1.2.3.4:27016",
-    // "1.2.3.4:27016"): one normal form, so that the same server is always
-    // recognised.
+    // Les adresses de serveur telles que le jeu les écrit (« steam://1.2.3.4:27016 »,
+    // « 1.2.3.4:27016 ») : une seule forme normale, pour que le même serveur soit toujours
+    // reconnu.
     public static class ServerAddress
     {
         public const int DefaultPort = 27016;
@@ -67,18 +67,18 @@ namespace SirHolomap
         }
     }
 
-    // The galaxy every server is placed in: a central bulge and spiral arms,
-    // the same picture for every player. Coordinates are in [-1, 1].
+    // La galaxie où chaque serveur est placé : un renflement central et des bras en spirale,
+    // la même image pour tous les joueurs. Les coordonnées sont dans [-1, 1].
     public static class GalaxyShape
     {
         public const int Arms = 4;
         public const double InnerRadius = 0.14;
         public const double OuterRadius = 0.92;
 
-        // How much the arms wind: the angle grows with the log of the radius.
+        // De combien les bras s'enroulent : l'angle croît avec le logarithme du rayon.
         public const double Winding = 2.6;
 
-        // Angular width of an arm, as a share of the gap between two arms.
+        // Largeur angulaire d'un bras, en part de l'écart entre deux bras.
         public const double ArmWidthShare = 0.55;
 
         public static double ArmCentre(int arm, double radius)
@@ -86,7 +86,7 @@ namespace SirHolomap
             return arm * (2 * Math.PI / Arms) + Winding * Math.Log(Math.Max(radius, 1e-6) / InnerRadius);
         }
 
-        // 1 on the axis of an arm, 0 midway between two arms.
+        // 1 sur l'axe d'un bras, 0 à mi-chemin entre deux bras.
         public static double ArmStrength(double x, double y)
         {
             var radius = Math.Sqrt(x * x + y * y);
@@ -112,13 +112,13 @@ namespace SirHolomap
         }
     }
 
-    // Every server gets a fixed place in the galaxy, computed from its address
-    // alone: every player sees it at the same spot ("it is near the left
-    // arm"). The address is first turned into a 48-bit number (IPv4 and port
-    // exactly, a hash otherwise), shuffled by a reversible mix, then cut into
-    // an arm, a radius and an offset across the arm. Distinct numbers give
-    // distinct radii, or distinct angles within non-overlapping bands: two
-    // different addresses never get exactly the same place.
+    // Chaque serveur a une place fixe dans la galaxie, calculée à partir de son adresse
+    // seule : chaque joueur la voit au même endroit (« il est près du bras
+    // gauche »). L'adresse devient d'abord un nombre de 48 bits (IPv4 et port
+    // exactement, un hachage sinon), brassé par un mélange réversible, puis découpé en
+    // un bras, un rayon et un décalage en travers du bras. Des nombres distincts donnent
+    // des rayons distincts, ou des angles distincts dans des bandes qui ne se chevauchent pas : deux
+    // adresses différentes n'obtiennent jamais exactement la même place.
     public static class GalaxyPlacement
     {
         private const ulong Mask48 = (1UL << 48) - 1;
@@ -138,8 +138,8 @@ namespace SirHolomap
             return new GalaxyPoint(radius * Math.Cos(angle), radius * Math.Sin(angle));
         }
 
-        // IPv4 and port packed exactly when the address has them; a hash of the
-        // normal form otherwise (lobbies, host names).
+        // IPv4 et port empaquetés exactement quand l'adresse les a ; un hachage de la
+        // forme normale sinon (salons, noms d'hôte).
         public static ulong KeyOf(string address)
         {
             var normal = ServerAddress.Normalize(address);
@@ -150,8 +150,8 @@ namespace SirHolomap
             return Hashing.Fnv1a64(normal) & Mask48;
         }
 
-        // A bijection of the 48-bit numbers: xor-shifts and odd multipliers
-        // are all reversible modulo 2^48. Nearby addresses land far apart.
+        // Une bijection des nombres de 48 bits : les décalages avec ou exclusif et les multiplicateurs impairs
+        // sont tous réversibles modulo 2^48. Des adresses voisines tombent loin l'une de l'autre.
         public static ulong Mix48(ulong value)
         {
             var x = value & Mask48;
@@ -164,9 +164,9 @@ namespace SirHolomap
         }
     }
 
-    // An icon of the galaxy on screen: where its server truly lies, and, for
-    // a server that carries its name, the room its row takes (from the left
-    // edge of the icon to the end of the name, and the height of the row).
+    // Une icône de la galaxie à l'écran : où son serveur se trouve vraiment, et, pour
+    // un serveur qui porte son nom, la place que prend sa ligne (du bord gauche
+    // de l'icône à la fin du nom, et la hauteur de la ligne).
     public struct ScreenIcon
     {
         public int Index;
@@ -192,9 +192,9 @@ namespace SirHolomap
         }
     }
 
-    // Where an icon is drawn. An icon that stands alone is drawn at its true
-    // place; in a group it is moved aside, and a thin line joins it to its
-    // true place.
+    // Où une icône est dessinée. Une icône seule est dessinée à sa vraie
+    // place ; dans un groupe, elle est écartée, et un trait fin la relie à sa
+    // vraie place.
     public struct PlacedIcon
     {
         public int Index;
@@ -210,18 +210,18 @@ namespace SirHolomap
         }
     }
 
-    // Icons too close to be told apart gather into a group, and the group
-    // spreads its icons so that none covers another: every icon stays in
-    // sight and can be clicked on its own. The layout depends only on the
-    // true places, the sizes and the keys of the icons: never on their order
-    // in the list, nor on which server is the current one, so a server is
-    // always drawn at the same spot for the same view of the galaxy.
+    // Les icônes trop proches pour se distinguer se rassemblent en groupe, et le groupe
+    // écarte ses icônes pour qu'aucune n'en couvre une autre : chaque icône reste en
+    // vue et peut être cliquée seule. La disposition ne dépend que des
+    // vraies places, des tailles et des clés des icônes : jamais de leur ordre
+    // dans la liste, ni de quel serveur est le serveur actuel, si bien qu'un serveur est
+    // toujours dessiné au même endroit pour la même vue de la galaxie.
     public static class GalaxyLayout
     {
-        // Servers shown with their name: a group stacks its rows in a column
-        // centred on the middle of its members, from the highest to the
-        // lowest, so that no name ever covers another. Groups whose columns
-        // would touch become one group.
+        // Les serveurs montrés avec leur nom : un groupe empile ses lignes dans une colonne
+        // centrée sur le milieu de ses membres, du plus haut au
+        // plus bas, pour qu'aucun nom n'en couvre un autre. Les groupes dont les colonnes
+        // se toucheraient n'en font plus qu'un.
         public static PlacedIcon[] Rows(IList<ScreenIcon> icons, double iconHalf, double margin)
         {
             var columns = new List<Column>();
@@ -285,8 +285,8 @@ namespace SirHolomap
             public double Top;
             public double Bottom;
 
-            // Members from top to bottom; the centre is the mean of the
-            // members, summed in the order of their keys.
+            // Les membres de haut en bas ; le centre est la moyenne des
+            // membres, sommée dans l'ordre de leurs clés.
             public static Column Build(IList<ScreenIcon> icons, List<int> members, double iconHalf)
             {
                 members.Sort((a, b) => CompareByKey(icons[a], icons[b], a, b));
@@ -320,9 +320,9 @@ namespace SirHolomap
             }
         }
 
-        // Servers shown as a plain dot: a group sets its dots on rings around
-        // the middle of its members, each dot at least "spacing" from every
-        // other. Groups whose rings would come too close become one group.
+        // Les serveurs montrés comme un simple point : un groupe pose ses points sur des anneaux autour
+        // du milieu de ses membres, chaque point à au moins « spacing » de tous les
+        // autres. Les groupes dont les anneaux se rapprocheraient trop n'en font plus qu'un.
         public static PlacedIcon[] Dots(IList<ScreenIcon> icons, double spacing)
         {
             var count = icons.Count;
@@ -332,8 +332,8 @@ namespace SirHolomap
             spacing = Math.Max(spacing, 1e-6);
             var sets = new Sets(count);
 
-            // Neighbours closer than the spacing, through a grid of cells of
-            // that size.
+            // Les voisins plus proches que l'espacement, par une grille de cellules de
+            // cette taille.
             var grid = new Dictionary<long, List<int>>();
             foreach (var index in ByKey(icons))
             {
@@ -365,8 +365,8 @@ namespace SirHolomap
                 cell.Add(index);
             }
 
-            // Spread groups may reach their neighbours: those become one
-            // group, until no group comes too close to another.
+            // Les groupes étalés peuvent atteindre leurs voisins : ceux-ci n'en font plus qu'un
+            // groupe, jusqu'à ce qu'aucun groupe ne soit trop près d'un autre.
             var groups = Groups(icons, sets);
             for (var round = 0; round < 16; round++)
             {
@@ -424,9 +424,9 @@ namespace SirHolomap
             return placed;
         }
 
-        // How many dots a ring of this rank holds, the ring's radius being
-        // rank times the spacing: a little less than its perimeter allows, so
-        // that two neighbours on the ring are never closer than the spacing.
+        // Combien de points un anneau de ce rang porte, le rayon de l'anneau étant
+        // le rang fois l'espacement : un peu moins que son périmètre ne le permet, pour
+        // que deux voisins de l'anneau ne soient jamais plus proches que l'espacement.
         public static int RingCapacity(int rank)
         {
             return Math.Max(1, (int)Math.Floor(2 * Math.PI * rank * 0.95));
@@ -457,7 +457,7 @@ namespace SirHolomap
                 return disc;
             }
 
-            // Closest to the middle first: they take the inner rings.
+            // Les plus proches du milieu d'abord : ils prennent les anneaux intérieurs.
             var order = new List<int>(members);
             order.Sort((a, b) =>
             {
@@ -491,8 +491,8 @@ namespace SirHolomap
             return disc;
         }
 
-        // The dots of one ring, evenly spaced, in the order of the angle of
-        // their true places around the middle of the group.
+        // Les points d'un anneau, régulièrement espacés, dans l'ordre de l'angle de
+        // leurs vraies places autour du milieu du groupe.
         private static void Ring(IList<ScreenIcon> icons, List<int> order, int start, int take, Disc disc, double radius,
             PlacedIcon[] placed, int groupSize)
         {
@@ -531,8 +531,8 @@ namespace SirHolomap
             return value * value;
         }
 
-        // The groups of the sets, each listing its members in the order of
-        // their keys, the groups in the order of their first key.
+        // Les groupes des ensembles, chacun listant ses membres dans l'ordre de
+        // leurs clés, les groupes dans l'ordre de leur première clé.
         private static List<List<int>> Groups(IList<ScreenIcon> icons, Sets sets)
         {
             var byRoot = new Dictionary<int, List<int>>();
@@ -573,7 +573,7 @@ namespace SirHolomap
             return byY != 0 ? byY : ia.CompareTo(ib);
         }
 
-        // Cells of a grid over the screen; far beyond any screen, cells merge.
+        // Des cellules d'une grille sur l'écran ; bien au-delà de tout écran, les cellules fusionnent.
         private const long CellLimit = 1000000;
 
         private static long Cell(double value, double size)
@@ -589,7 +589,7 @@ namespace SirHolomap
             return ((x + (1L << 21)) << 22) | (y + (1L << 21));
         }
 
-        // Disjoint sets of icons.
+        // Des ensembles disjoints d'icônes.
         private sealed class Sets
         {
             private readonly int[] m_parent;
@@ -611,7 +611,7 @@ namespace SirHolomap
                 return i;
             }
 
-            // True when the two were apart.
+            // Vrai quand les deux étaient séparés.
             public bool Join(int a, int b)
             {
                 var ra = Find(a);

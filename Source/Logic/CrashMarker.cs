@@ -1,20 +1,20 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
 
 namespace SirHolomap
 {
-    // How a crash is told at the next start: a mark is laid in the plugin's
-    // folder when a session begins and taken away when it ends cleanly. A mark
-    // found at the next start is a session that did not end.
+    // Comment un plantage se reconnaît au démarrage suivant : une marque est posée dans le
+    // dossier du greffon quand une session commence et retirée quand elle se termine
+    // proprement. Une marque trouvée au démarrage suivant, c'est une session qui n'a pas fini.
     public static class CrashMarker
     {
         public const string FileName = "session.mark";
 
-        // Lays the mark of this session. Returns when the session that left
-        // its mark behind began, or null when the last session ended cleanly
-        // (or there was none).
+        // Pose la marque de cette session. Rend l'heure de début de la session qui a laissé
+        // sa marque, ou null quand la dernière session s'est terminée proprement
+        // (ou qu'il n'y en avait pas).
         public static DateTime? Begin(string folder, DateTime nowUtc)
         {
             var path = Path.Combine(folder, FileName);
@@ -40,7 +40,7 @@ namespace SirHolomap
             return previous;
         }
 
-        // The session ended cleanly: no mark is left.
+        // La session s'est terminée proprement : aucune marque ne reste.
         public static void End(string folder)
         {
             var path = Path.Combine(folder, FileName);

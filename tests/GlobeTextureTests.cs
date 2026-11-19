@@ -1,17 +1,17 @@
-using System;
+﻿using System;
 using Xunit;
 
 namespace SirHolomap.Tests
 {
-    // The pictures handed to the game's renderer: the renderer reads exactly
-    // what the size announces (every mipmap level included), from the array
-    // it was given, later and on its own thread.
+    // Les images remises au moteur de rendu du jeu : le moteur lit exactement
+    // ce que la taille annonce (chaque niveau de mipmap compris), depuis le tableau
+    // qu'on lui a donné, plus tard et sur son propre fil.
     public class GlobeTextureTests
     {
-        // What the renderer reads (MyGeneratedTextureManager.Reset): from the
-        // start of the array, level after level, width x height x 4 bytes,
-        // each level half the one before, as many levels as it gives the
-        // texture.
+        // Ce que le moteur lit (MyGeneratedTextureManager.Reset) : depuis le
+        // début du tableau, niveau après niveau, largeur x hauteur x 4 octets,
+        // chaque niveau moitié du précédent, autant de niveaux que la
+        // texture en donne.
         private static int RendererReads(int width, int height, bool mipmaps)
         {
             var levels = 1;
@@ -44,9 +44,9 @@ namespace SirHolomap.Tests
         [Fact]
         public void UploadedImageMatchesDeclaredSize()
         {
-            // Every size the map uses: the white square, the marker shapes,
-            // the sun, the globes, the galaxy, the globe seen through the map's
-            // camera.
+            // Chaque taille que la carte utilise : le carré blanc, les formes de repères,
+            // le soleil, les globes, la galaxie, le globe vu par la caméra
+            // de la carte.
             var sizes = new[]
             {
                 new[] { 8, 8 }, new[] { Images.ShapeSize, Images.ShapeSize }, new[] { 256, 256 }, new[] { 1024, 1024 },
@@ -64,20 +64,20 @@ namespace SirHolomap.Tests
                 Assert.Equal(h, upload.Height);
             }
 
-            // Mipmaps only where their levels are exact halves.
+            // Des mipmaps seulement là où leurs niveaux sont des moitiés exactes.
             Assert.True(TexturePixels.UsesMipmaps(256, 256));
             Assert.False(TexturePixels.UsesMipmaps(512, 288));
             Assert.False(TexturePixels.UsesMipmaps(768, 768));
             Assert.Equal(9, TexturePixels.MipLevels(256, 256));
 
-            // A picture whose bytes do not match its size is refused, never
-            // sent.
+            // Une image dont les octets ne correspondent pas à sa taille est refusée, jamais
+            // envoyée.
             Assert.Throws<ArgumentException>(() => TexturePixels.Prepare(64, 64, new byte[64 * 64 * 4 - 1]));
             Assert.Throws<ArgumentException>(() => ledger.Plan("bad", 64, 64, new byte[32 * 32 * 4]));
             Assert.Throws<ArgumentException>(() => TexturePixels.Prepare(0, 64, new byte[0]));
             Assert.False(ledger.Contains("bad"));
 
-            // The real pictures of the map fit their sizes.
+            // Les vraies images de la carte tiennent leurs tailles.
             Assert.Equal(TexturePixels.DeclaredLength(Images.ShapeSize, Images.ShapeSize),
                 TexturePixels.Prepare(Images.ShapeSize, Images.ShapeSize, Images.ShapeImage(Images.Shape.Disc)).Length);
             Assert.Equal(TexturePixels.DeclaredLength(128, 128), TexturePixels.Prepare(128, 128, Images.SunImage(128)).Length);
@@ -93,14 +93,14 @@ namespace SirHolomap.Tests
             var first = ledger.Plan("disc", size, size, straight);
             var second = ledger.Plan("disc", size, size, straight);
 
-            // Never the caller's array, never the array of an earlier send.
+            // Jamais le tableau de l'appelant, jamais le tableau d'un envoi précédent.
             Assert.NotSame(straight, first.Pixels);
             Assert.NotSame(first.Pixels, second.Pixels);
             Assert.Equal(TextureAction.Create, first.Action);
             Assert.Equal(TextureAction.Reset, second.Action);
 
-            // What was sent does not change when the picture it came from is
-            // painted again, nor when another picture is sent.
+            // Ce qui a été envoyé ne change pas quand l'image dont il vient est
+            // repeinte, ni quand une autre image est envoyée.
             var copy = (byte[])first.Pixels.Clone();
             for (var i = 0; i < straight.Length; i++)
                 straight[i] = 7;
@@ -108,14 +108,14 @@ namespace SirHolomap.Tests
             ledger.Plan("other", size, size, straight);
             Assert.Equal(copy, first.Pixels);
 
-            // Another size under a name already used: created again, as the
-            // renderer ignores a second creation under the same name.
+            // Une autre taille sous un nom déjà utilisé : créée de nouveau, car le
+            // moteur ignore une seconde création sous le même nom.
             Assert.Equal(TextureAction.Recreate, ledger.Plan("disc", 8, 8, new byte[8 * 8 * 4]).Action);
         }
 
-        // The game draws its sprites with premultiplied alpha: a transparent
-        // pixel must also be black, or the corners of a round picture show as
-        // a coloured square around it.
+        // Le jeu dessine ses sprites avec un alpha prémultiplié : un pixel
+        // transparent doit aussi être noir, sinon les coins d'une image ronde se montrent comme
+        // un carré coloré autour d'elle.
         [Fact]
         public void TransparentCornersStayTransparent()
         {
@@ -131,15 +131,15 @@ namespace SirHolomap.Tests
             var sent = TexturePixels.Prepare(256, 256, globe);
             AssertNoSquare(sent);
 
-            // The centre of the globe keeps its colour.
+            // Le centre du globe garde sa couleur.
             var centre = (128 * 256 + 128) * 4;
             Assert.Equal(255, sent[centre + 3]);
             Assert.True(sent[centre] > 100);
         }
 
-        // The galaxy lies on the star field of the map: the picture is
-        // transparent wherever the galaxy is dark, all along its edges, so
-        // that no square shows around it when it is zoomed out.
+        // La galaxie repose sur le champ d'étoiles de la carte : l'image est
+        // transparente partout où la galaxie est sombre, tout le long de ses bords, pour
+        // qu'aucun carré ne se montre autour d'elle quand elle est dézoomée.
         [Fact]
         public void GalaxyHasNoSquareAroundIt()
         {
@@ -153,12 +153,12 @@ namespace SirHolomap.Tests
                 Assert.Equal(0, sent[(i * size + 0) * 4 + 3]);
                 Assert.Equal(0, sent[(i * size + size - 1) * 4 + 3]);
             }
-            // The bright bulge stays bright.
+            // Le renflement brillant reste brillant.
             var centre = (size / 2 * size + size / 2) * 4;
             Assert.True(sent[centre + 3] > 200);
 
-            // The star of the sky: a round core, a light halo, nothing in
-            // the corners.
+            // L'étoile du ciel : un cœur rond, un halo léger, rien dans
+            // les coins.
             var star = TexturePixels.Prepare(Images.ShapeSize, Images.ShapeSize, Images.ShapeImage(Images.Shape.Star));
             AssertNoSquare(star);
             var middle = (Images.ShapeSize / 2 * Images.ShapeSize + Images.ShapeSize / 2) * 4;
@@ -169,17 +169,17 @@ namespace SirHolomap.Tests
 
         private static void AssertNoSquare(byte[] pixels)
         {
-            // The texture is sRGB: the colour is compared to the alpha in
-            // linear light, as the renderer reads it.
+            // La texture est en sRGB : la couleur est comparée à l'alpha en
+            // lumière linéaire, comme le moteur la lit.
             for (var i = 0; i < pixels.Length; i += 4)
             {
                 var alpha = pixels[i + 3] / 255.0;
                 for (var c = 0; c < 3; c++)
-                    Assert.True(Linear(pixels[i + c]) <= alpha + 0.01, "pixel " + (i / 4) + " brighter than its alpha");
+                    Assert.True(Linear(pixels[i + c]) <= alpha + 0.01, "pixel " + (i / 4) + " plus clair que son alpha");
                 if (pixels[i + 3] == 0)
-                    Assert.True(pixels[i] == 0 && pixels[i + 1] == 0 && pixels[i + 2] == 0, "transparent pixel " + (i / 4) + " not black");
+                    Assert.True(pixels[i] == 0 && pixels[i + 1] == 0 && pixels[i + 2] == 0, "pixel transparent " + (i / 4) + " pas noir");
             }
-            // The corner of the first level is fully transparent.
+            // Le coin du premier niveau est entièrement transparent.
             Assert.Equal(0, pixels[3]);
             Assert.Equal(0, pixels[0]);
         }

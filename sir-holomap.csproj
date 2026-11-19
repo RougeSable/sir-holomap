@@ -1,13 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Sir Holomap, a Space Engineers plugin that runs on the player's machine
-    (Pulsar). Pulsar compiles the Source folder itself; this project is for
-    local builds.
+    Sir Holomap, un greffon de Space Engineers qui tourne sur la machine du
+    joueur (Pulsar). Pulsar compile le dossier Source par ses propres moyens ;
+    ce projet sert aux compilations locales.
 
-    Game path: the Bin64 value, otherwise the SE_BIN64 variable, otherwise the
-    most common Steam locations. For another location, copy
-    Directory.Build.props.example to Directory.Build.props.
+    Chemin du jeu : la valeur de Bin64, sinon la variable SE_BIN64, sinon les
+    emplacements Steam les plus courants. Pour un autre emplacement, copier
+    Directory.Build.props.example en Directory.Build.props.
   -->
 
   <PropertyGroup>
@@ -40,7 +40,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
-    <!-- Pulsar provides it to the game: it does not ship with the plugin. -->
+    <!-- Pulsar le fournit au jeu : il ne part pas avec le greffon. -->
     <PackageReference Include="Lib.Harmony" Version="2.3.3" ExcludeAssets="runtime" PrivateAssets="all" />
   </ItemGroup>
 
@@ -59,7 +59,7 @@
 
   <Target Name="CheckTheGame" BeforeTargets="ResolveAssemblyReferences">
     <Error Condition="!Exists('$(Bin64)\Sandbox.Game.dll')"
-           Text="Space Engineers not found (Bin64 = '$(Bin64)'). Give the path of Bin64: dotnet build -p:Bin64=..., the SE_BIN64 variable, or Directory.Build.props (see Directory.Build.props.example)." />
+           Text="Space Engineers est introuvable (Bin64 = '$(Bin64)'). Donner le chemin de Bin64 : dotnet build -p:Bin64=..., la variable SE_BIN64, ou Directory.Build.props (voir Directory.Build.props.example)." />
   </Target>
 
 </Project>

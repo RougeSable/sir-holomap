@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -6,7 +6,7 @@ using System.Text;
 
 namespace SirHolomap
 {
-    // A server the player has played on.
+    // Un serveur sur lequel le joueur a joué.
     public sealed class VisitedServer
     {
         public string Key = "";
@@ -16,9 +16,9 @@ namespace SirHolomap
         public int Visits;
     }
 
-    // The servers the player has visited, kept on the player's machine across
-    // game launches. It feeds the galaxy tab ("last visit 12 days ago") and its
-    // "Visited" filter.
+    // Les serveurs que le joueur a visités, gardés sur sa machine d'un
+    // lancement du jeu à l'autre. Il alimente l'onglet Galaxie (« dernière visite il y a 12 jours ») et son
+    // filtre « Visités ».
     public sealed class ServerHistory
     {
         public const string FileName = "servers.txt";

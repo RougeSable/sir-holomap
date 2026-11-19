@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 
 namespace SirHolomap
 {
-    // Pictures the map paints itself, as RGBA bytes (straight alpha, sRGB):
-    // marker shapes, the galaxy, the globes of the system view. Nothing is
-    // shipped with the plugin; everything is computed on the player's machine.
+    // Les images que la carte peint elle-même, en octets RGBA (alpha droit, sRGB) :
+    // formes des repères, galaxie, globes de la vue Système. Rien n'est
+    // livré avec le greffon ; tout est calculé sur la machine du joueur.
     public static class Images
     {
         public const int ShapeSize = 64;
 
-        // Slopes of the relief are steepened this much on the small globes,
-        // so that mountain ranges read at a glance.
+        // Les pentes du relief sont accentuées de cette valeur sur les petits globes,
+        // pour que les chaînes de montagnes se lisent d'un coup d'œil.
         public const double ReliefExaggeration = 1.6;
 
         public enum Shape
@@ -25,11 +25,11 @@ namespace SirHolomap
             Hexagon,
             Brackets,
             Arrow,
-            // A star of the sky: a soft round core in a light halo.
+            // Une étoile du ciel : un cœur rond et doux dans un halo léger.
             Star,
         }
 
-        // White shapes, tinted when drawn.
+        // Des formes blanches, teintées au dessin.
         public static byte[] ShapeImage(Shape shape)
         {
             var size = ShapeSize;
@@ -39,7 +39,7 @@ namespace SirHolomap
             {
                 for (var px = 0; px < size; px++)
                 {
-                    // Pixel centre, in units where the shape spans [-1, 1].
+                    // Centre du pixel, en unités où la forme s'étend sur [-1, 1].
                     var x = (px + 0.5 - half) / half;
                     var y = (py + 0.5 - half) / half;
                     var a = Coverage(shape, x, y, 1.0 / half);
@@ -91,7 +91,7 @@ namespace SirHolomap
             return Clamp01(0.5 - distance / (pixel * 1.5));
         }
 
-        // An upward pointing triangle (pointing to -y on screen).
+        // Un triangle pointant vers le haut (pointant vers -y à l'écran).
         private static double TriangleDistance(double x, double y, double size)
         {
             const double k = 1.7320508;
@@ -122,18 +122,18 @@ namespace SirHolomap
             var outer = Math.Max(ax, ay) - 0.9;
             var inner = 0.72 - Math.Max(ax, ay);
             var frame = Math.Max(outer, inner);
-            // Only the corners of the frame are kept.
+            // Seuls les coins du cadre sont gardés.
             var corner = Math.Min(ax, ay) - 0.42;
             return Math.Max(frame, corner);
         }
 
-        // The galaxy behind the servers: a warm bulge, a blue disc, spiral
-        // arms with dust lanes and scattered stars, after the same shape the
-        // servers are placed on. Its light is its only substance: where the
-        // galaxy is dark the picture is transparent, fading out well before
-        // its edges, so that it lies on the star field of the map without a
-        // square around it. Over black it looks exactly as an opaque picture
-        // would: the colour is kept in linear light once premultiplied.
+        // La galaxie derrière les serveurs : un renflement chaud, un disque bleu, des bras
+        // en spirale avec des bandes de poussière et des étoiles éparses, sur la même forme
+        // que celle où les serveurs sont placés. Sa lumière est sa seule substance : là où la
+        // galaxie est sombre l'image est transparente, s'effaçant bien avant
+        // ses bords, pour qu'elle repose sur le champ d'étoiles de la carte sans
+        // carré autour d'elle. Sur du noir elle ressemble exactement à une image
+        // opaque : la couleur est gardée en lumière linéaire une fois prémultipliée.
         public static byte[] GalaxyImage(int size)
         {
             var data = new byte[size * size * 4];
@@ -160,9 +160,9 @@ namespace SirHolomap
                     var green = (0.14 * disc + 0.55 * armLight) * dust + 0.86 * bulge;
                     var blue = (0.24 * disc + 0.95 * armLight) * dust + 0.55 * bulge;
 
-                    // Stars: a few soft pixels, denser in the arms, in the
-                    // gentle colours of the sky; the rest of the sky is the
-                    // map's own. Few enough that the arms read clearly.
+                    // Des étoiles : quelques pixels doux, plus denses dans les bras, aux
+                    // couleurs douces du ciel ; le reste du ciel est
+                    // celui de la carte. Assez peu nombreuses pour que les bras se lisent clairement.
                     var h = Hash(px * 7349 + py * 1931);
                     var starChance = (0.0008 + 0.006 * arm) * disc * 3;
                     if (h < starChance)
@@ -179,9 +179,9 @@ namespace SirHolomap
                     var lg = SrgbToLinear(ToneMap(green));
                     var lb = SrgbToLinear(ToneMap(blue));
                     var edge = Smooth(Clamp01((0.98 - r) / 0.12));
-                    // Opaque where the galaxy is bright, so that the sky
-                    // behind does not show through its bulge; never less than
-                    // its light, so that the colour is exact.
+                    // Opaque là où la galaxie est brillante, pour que le ciel
+                    // derrière ne transparaisse pas dans son renflement ; jamais moins que
+                    // sa lumière, pour que la couleur soit exacte.
                     var light = Math.Max(lr, Math.Max(lg, lb));
                     var alpha = Math.Min(1, 2.5 * Math.Sqrt(light)) * edge;
                     var i = (py * size + px) * 4;
@@ -221,11 +221,11 @@ namespace SirHolomap
             return 1 - Math.Exp(-value * 1.4);
         }
 
-        // A globe seen from far: a sphere painted with the colours and the
-        // relief sampled on the real planet, lit from the upper left.
-        // colors: width x height x 3 floats (0..1), equirectangular, row 0 at
-        // the north pole. heights: width x height, metres above the mean
-        // radius. viewLongitude: the longitude facing the viewer, radians.
+        // Un globe vu de loin : une sphère peinte avec les couleurs et le
+        // relief échantillonnés sur la vraie planète, éclairée depuis le haut à gauche.
+        // colors : largeur x hauteur x 3 flottants (0..1), équirectangulaire, ligne 0 au
+        // pôle nord. heights : largeur x hauteur, mètres au-dessus du rayon
+        // moyen. viewLongitude : la longitude qui fait face au spectateur, en radians.
         public static byte[] GlobeImage(int size, int width, int height, float[] colors, float[] heights,
             double radius, double viewLongitude, float[] atmosphere)
         {
@@ -248,7 +248,7 @@ namespace SirHolomap
 
                     if (r2 > 1)
                     {
-                        // Thin glow of the atmosphere, when there is one.
+                        // Fine lueur de l'atmosphère, quand il y en a une.
                         if (atmosphere != null)
                         {
                             var glow = Clamp01(1 - (Math.Sqrt(r2) - 1) / 0.04) * 0.6;
@@ -261,7 +261,7 @@ namespace SirHolomap
                     }
 
                     var z = Math.Sqrt(1 - r2);
-                    // Into the planet's frame: turn around the vertical axis.
+                    // Dans le repère de la planète : tourner autour de l'axe vertical.
                     var cosL = Math.Cos(viewLongitude);
                     var sinL = Math.Sin(viewLongitude);
                     var wx = x * cosL + z * sinL;
@@ -277,7 +277,7 @@ namespace SirHolomap
                     dhu = SampleHeight(heights, width, height, u + 0.5, v) - SampleHeight(heights, width, height, u - 0.5, v);
                     dhv = SampleHeight(heights, width, height, u, v + 0.5) - SampleHeight(heights, width, height, u, v - 0.5);
 
-                    // Normal of the sphere, bent by the relief.
+                    // Normale de la sphère, infléchie par le relief.
                     var cosLat = Math.Max(Math.Cos(lat), 0.05);
                     var east = new[] { -Math.Sin(lon), 0.0, Math.Cos(lon) };
                     var north = new[] { -Math.Sin(lat) * Math.Cos(lon), Math.Cos(lat), -Math.Sin(lat) * Math.Sin(lon) };
@@ -288,7 +288,7 @@ namespace SirHolomap
                     var nwx = wx - gx * east[0] - gy * north[0];
                     var nwy = y - gx * east[1] - gy * north[1];
                     var nwz = wz - gx * east[2] - gy * north[2];
-                    // Back to the view frame.
+                    // Retour au repère de la vue.
                     var nx = nwx * cosL - nwz * sinL;
                     var nz = nwx * sinL + nwz * cosL;
                     var ny = nwy;
@@ -319,14 +319,14 @@ namespace SirHolomap
             return data;
         }
 
-        // A globe seen through the map's own camera, for when the game cannot
-        // draw it: every pixel of a picture of the whole screen casts its ray
-        // at the planet, so that the globe turns, comes closer and stays under
-        // the markers exactly as the camera moves. All vectors are in the
-        // planet's frame (y towards its north pole, as for the samples); the
-        // eye is from the centre, in units of the mean radius. tanX and tanY:
-        // half the field of view, across and up. Pixels off the planet stay
-        // transparent, the atmosphere aside.
+        // Un globe vu par la caméra propre de la carte, pour quand le jeu ne peut pas
+        // le dessiner : chaque pixel d'une image de tout l'écran lance son rayon
+        // vers la planète, si bien que le globe tourne, se rapproche et reste sous
+        // les repères exactement comme la caméra bouge. Tous les vecteurs sont dans le
+        // repère de la planète (y vers son pôle nord, comme pour les échantillons) ; l'œil
+        // est compté depuis le centre, en unités du rayon moyen. tanX et tanY :
+        // la moitié du champ de vision, en travers et vers le haut. Les pixels hors de la planète restent
+        // transparents, l'atmosphère mise à part.
         public static byte[] GlobeViewImage(int width, int height, int columns, int rows, float[] colors, float[] heights,
             double radius, Vec3 eye, Vec3 forward, Vec3 right, Vec3 up, double tanX, double tanY, Vec3 toLight,
             float[] atmosphere)
@@ -348,9 +348,9 @@ namespace SirHolomap
                     ray = ray * (1 / ray.Length);
                     var i = (py * width + px) * 4;
 
-                    // First on the mean sphere, then once more on the sphere
-                    // of the ground found there, so that mountains sit where
-                    // they are seen from low altitudes.
+                    // D'abord sur la sphère moyenne, puis une seconde fois sur la sphère
+                    // du sol trouvé là, pour que les montagnes soient où
+                    // on les voit depuis les basses altitudes.
                     var sphere = Math.Min(1.0, eyeLength * 0.999);
                     double t;
                     if (!RaySphere(eye, ray, eyeLength2, sphere, out t))
@@ -391,7 +391,7 @@ namespace SirHolomap
                     var dhu = SampleHeight(heights, columns, rows, u + 0.5, v) - SampleHeight(heights, columns, rows, u - 0.5, v);
                     var dhv = SampleHeight(heights, columns, rows, u, v + 0.5) - SampleHeight(heights, columns, rows, u, v - 0.5);
 
-                    // Normal of the sphere, bent by the relief.
+                    // Normale de la sphère, infléchie par le relief.
                     var cosLat = Math.Max(Math.Cos(lat), 0.05);
                     var east = new Vec3(-Math.Sin(lon), 0, Math.Cos(lon));
                     var north = new Vec3(-Math.Sin(lat) * Math.Cos(lon), Math.Cos(lat), -Math.Sin(lat) * Math.Sin(lon));
@@ -402,7 +402,7 @@ namespace SirHolomap
                     var normal = normal0 - east * gx - north * gy;
                     normal = normal * (1 / normal.Length);
 
-                    // Lit by the sun, with a soft edge to the night.
+                    // Éclairé par le soleil, avec un bord doux vers la nuit.
                     var light = Math.Max(0, Dot(normal, toLight));
                     var day = Smooth(Clamp01((Dot(normal0, toLight) + 0.08) / 0.16));
                     var shade = 0.16 + 1.0 * light * day;
@@ -432,7 +432,7 @@ namespace SirHolomap
             return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
         }
 
-        // The nearest hit of a ray from the eye on a sphere around the centre.
+        // Le premier point touché par un rayon de l'œil sur une sphère autour du centre.
         private static bool RaySphere(Vec3 eye, Vec3 ray, double eyeLength2, double sphere, out double t)
         {
             var b = Dot(eye, ray);
@@ -445,8 +445,8 @@ namespace SirHolomap
             return t > 0;
         }
 
-        // Latitude and longitude of a point, and where it falls among the
-        // samples (cell centres at whole numbers).
+        // Latitude et longitude d'un point, et où il tombe parmi les
+        // échantillons (centres de cellules aux nombres entiers).
         private static void LatLon(Vec3 point, int columns, int rows, out double lat, out double lon, out double u, out double v)
         {
             var length = Math.Max(point.Length, 1e-12);
@@ -501,7 +501,7 @@ namespace SirHolomap
             return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy;
         }
 
-        // A star seen from a planet: a white-yellow disc with a wide halo.
+        // Une étoile vue depuis une planète : un disque blanc-jaune avec un large halo.
         public static byte[] SunImage(int size)
         {
             var data = new byte[size * size * 4];

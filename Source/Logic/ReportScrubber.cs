@@ -1,49 +1,49 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace SirHolomap
 {
-    // Nothing about the player leaves the machine in a report: no Steam
-    // identifier, no nickname, no grid name, no server address. A line that
-    // carries one is dropped; the Windows user's folder becomes
+    // Rien sur le joueur ne quitte la machine dans un rapport : ni identifiant Steam,
+    // ni pseudo, ni nom de grille, ni adresse de serveur. Une ligne qui
+    // en porte une est retirée ; le dossier de l'utilisateur Windows devient
     // %USERPROFILE%.
     public sealed class ReportScrubber
     {
         public const string UserProfile = "%USERPROFILE%";
 
-        // What stands in for a message that had to be dropped.
-        public const string Removed = "(line removed: it carried data about the player)";
+        // Ce qui remplace un message qu'il a fallu retirer.
+        public const string Removed = "(ligne retirée : elle portait des données sur le joueur)";
 
         private const RegexOptions Options = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
 
-        // C:\Users\Someone, whatever the drive or the slashes.
+        // Un dossier d'utilisateur Windows, quels que soient le disque ou les barres obliques.
         private static readonly Regex UserFolder = new Regex(@"[A-Za-z]:[\\/]+Users[\\/]+[^\\/""'<>|:*?\r\n]+", Options);
 
-        // SteamID64 and the other shapes of a Steam identifier.
+        // SteamID64 et les autres formes d'un identifiant Steam.
         private static readonly Regex SteamIdentifier = new Regex(
             @"\b7656119\d{10}\b|\b\d{17}\b|\bSTEAM_\d:\d:\d+\b|\[U:\d:\d+\]|steam://|\bsteam\s*_?id\b", Options);
 
-        // host:port, whatever the host: a server.
+        // hôte:port, quel que soit l'hôte : un serveur.
         private static readonly Regex HostAndPort = new Regex(
             @"\b(?:\d{1,3}\.){3}\d{1,3}:\d{2,5}\b|\b[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)+:\d{2,5}\b", Options);
 
-        // A bare IPv4 address only counts where the line talks about a
-        // connection: version numbers have four parts too.
+        // Une adresse IPv4 nue ne compte que là où la ligne parle d'une
+        // connexion : les numéros de version ont aussi quatre parties.
         private static readonly Regex BareAddress = new Regex(@"(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])", Options);
         private static readonly Regex ConnectionWords = new Regex(
             @"\b(?:ip|address|addr|server|host|connect(?:ion|ed|ing)?|endpoint|remote|lobby|socket|udp|tcp|join(?:ed|ing)?)\b|connection\s*string", Options);
 
-        // "Player name: ...", "Grid = ...", "Owner: ...": what follows is
-        // somebody's.
+        // « Player name: ... », « Grid = ... », « Owner: ... » : ce qui suit est
+        // à quelqu'un.
         private static readonly Regex NamedThing = new Regex(
             @"\b(?:player|user|username|display|nick|nickname|persona|gamertag|owner|author|character|pilot|identity|faction|grid|cubegrid|ship|station|entity|block|world|session|server|host)\w*\s*(?:name|id)?\s*[:=]\s*\S", Options);
 
-        // "Player Someone joined": the name sits between a role and what it did.
+        // « Player Untel joined » : le nom est entre un rôle et ce qu'il a fait.
         private static readonly Regex PlayerEvent = new Regex(
             @"\b(?:player|user|client|pilot)\s+\S+\s+(?:joined|left|connected|disconnected|died|killed|respawned|logged|spawned)", Options);
 
-        // A name between quotes after a word that says whose it is.
+        // Un nom entre guillemets après un mot qui dit à qui il est.
         private static readonly Regex QuotedName = new Regex(
             "\\b(?:player|user|grid|cubegrid|ship|station|entity|identity|character|faction|owner|pilot)\\b[^'\"\u2018\u2019\u201C\u201D\\r\\n]{0,40}['\"\u2018\u201C][^'\"\u2019\u201D\\r\\n]+['\"\u2019\u201D]", Options);
 
@@ -56,8 +56,8 @@ namespace SirHolomap
         {
         }
 
-        // A word that must not survive in a report: a nickname, a grid, a
-        // server, the Windows user. Whole words, whatever the case.
+        // Un mot qui ne doit pas survivre dans un rapport : un pseudo, une grille, un
+        // serveur, l'utilisateur Windows. Mots entiers, quelle que soit la casse.
         public void AddPrivate(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -73,8 +73,8 @@ namespace SirHolomap
             }
         }
 
-        // The folder of the Windows user as the machine spells it
-        // (C:\Users\Someone), replaced wherever it appears.
+        // Le dossier de l'utilisateur Windows tel que la machine l'écrit,
+        // remplacé partout où il apparaît.
         public void AddUserFolder(string folder)
         {
             if (string.IsNullOrWhiteSpace(folder))
@@ -85,8 +85,8 @@ namespace SirHolomap
             }
         }
 
-        // The line cleaned, or null when it carries data about the player
-        // and has to go.
+        // La ligne nettoyée, ou null quand elle porte des données sur le joueur
+        // et doit partir.
         public string Clean(string line)
         {
             if (line == null)
@@ -116,7 +116,7 @@ namespace SirHolomap
             }
         }
 
-        // The lines that stay, in order.
+        // Les lignes qui restent, dans l'ordre.
         public List<string> CleanLines(IEnumerable<string> lines)
         {
             var kept = new List<string>();
@@ -131,8 +131,8 @@ namespace SirHolomap
             return kept;
         }
 
-        // A single text (a message) cleaned: the placeholder when it had to
-        // go.
+        // Un texte seul (un message) nettoyé : le texte de remplacement quand il a fallu
+        // le retirer.
         public string CleanMessage(string text)
         {
             return Clean(text) ?? Removed;

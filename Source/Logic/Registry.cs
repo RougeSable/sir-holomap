@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace SirHolomap
 {
-    // Things the map reads again and again from the game (the planets, every
-    // few seconds), each kept as one object for as long as it exists. What
-    // the player selected, hovered or dived into is that very object: a
-    // refresh updates it in place, so its highlight never drops.
+    // Ce que la carte relit sans cesse au jeu (les planètes, toutes les
+    // quelques secondes), chacun gardé comme un seul objet aussi longtemps qu'il existe. Ce que
+    // le joueur a sélectionné, survolé ou plongé est cet objet même : un
+    // rafraîchissement le met à jour sur place, si bien que sa surbrillance ne tombe jamais.
     public sealed class Registry<T> where T : class
     {
         private readonly Dictionary<long, T> m_items = new Dictionary<long, T>();
@@ -31,7 +31,7 @@ namespace SirHolomap
             m_seen.Clear();
         }
 
-        // The object of this id: the one already known, or a new one.
+        // L'objet de cet identifiant : celui déjà connu, ou un nouveau.
         public T Keep(long id)
         {
             T item;
@@ -44,7 +44,7 @@ namespace SirHolomap
             return item;
         }
 
-        // What was not kept during this refresh is gone from the world.
+        // Ce qui n'a pas été gardé pendant ce rafraîchissement a disparu du monde.
         public void EndRefresh()
         {
             m_gone.Clear();
@@ -63,8 +63,8 @@ namespace SirHolomap
             return m_items.TryGetValue(id, out item);
         }
 
-        // A selection kept across refreshes: the current object of the same
-        // id, or nothing when it is gone.
+        // Une sélection gardée d'un rafraîchissement à l'autre : l'objet courant du même
+        // identifiant, ou rien quand il a disparu.
         public T Follow(T selected, Func<T, long> idOf)
         {
             if (selected == null)

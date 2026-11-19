@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using HarmonyLib;
@@ -11,22 +11,23 @@ using VRage.Utils;
 
 namespace SirHolomap
 {
-    // Sir Holomap, a client-side plugin loaded by Pulsar: an in-game map on M.
-    // Nothing goes through the server; a player without the plugin plays as
-    // usual. Everything the map remembers, the player saw: it is kept on the
-    // player's machine, one memory per server.
+    // Sir Holomap, un greffon côté joueur chargé par Pulsar : une carte en jeu sur M.
+    // Rien ne part vers le serveur, sauf vers nos serveurs (PU, PTU) : les rapports d'erreurs
+    // et un point par fonctionnalité utilisée et par jour ; un joueur sans le greffon joue
+    // comme d'habitude. Tout ce que la carte retient, le joueur l'a vu : c'est gardé sur la
+    // machine du joueur, une mémoire par serveur.
     public class HolomapPlugin : IPlugin
     {
         public const string Id = "sir-holomap";
 
-        // M opens and closes the map, except with a block in hand: then M
-        // keeps the game's symmetry.
+        // M ouvre et ferme la carte, sauf avec un bloc en main : M
+        // garde alors la symétrie du jeu.
         public const MyKeys MapKey = MyKeys.M;
 
-        // Updates between two scans of what the game sends (60 per second).
+        // Mises à jour entre deux balayages de ce que le jeu envoie (60 par seconde).
         private const int ScanInterval = 20;
 
-        // Updates between two looks at who else is hooked on our steps.
+        // Mises à jour entre deux regards sur qui d'autre est accroché à nos étapes.
         private const int CoexistenceInterval = 600;
 
         private Harmony m_harmony;
@@ -40,8 +41,8 @@ namespace SirHolomap
         private int m_scanCounter;
         private int m_coexistenceCounter;
         private bool m_stopped;
-        // Notices waiting for a world to be shown in, oldest first. Written
-        // when shown, in the language the game is set to by then.
+        // Notifications qui attendent un monde où s'afficher, la plus ancienne en premier. Écrites
+        // à l'affichage, dans la langue réglée dans le jeu à ce moment-là.
         private readonly List<Func<string>> m_pendingNotices = new List<Func<string>>();
         private DateTime m_lastFault = DateTime.MinValue;
 
@@ -54,22 +55,22 @@ namespace SirHolomap
             ErrorReporting.Note(line);
         }
 
-        // A line that tells something went wrong: written to the game's log
-        // like the others, and reported to our servers once per session.
+        // Une ligne qui dit que quelque chose a mal tourné : écrite au journal du jeu
+        // comme les autres, et rapportée à nos serveurs une fois par session.
         public static void LogError(string text)
         {
             Log(text);
             ErrorReporting.Error(text);
         }
 
-        // An exception the plugin caught and handled: it is reported too.
+        // Une exception que le greffon a rattrapée et traitée : elle est rapportée aussi.
         public static void Caught(string where, Exception e)
         {
             ErrorReporting.Caught(where, e);
         }
 
-        // An exception caught, with the line the plugin writes to the game's
-        // log about it: the report carries that line and the stack.
+        // Une exception rattrapée, avec la ligne que le greffon écrit à son sujet dans le
+        // journal du jeu : le rapport porte cette ligne et la pile.
         public static void LogCaught(string text, Exception e)
         {
             Log(text);
@@ -80,7 +81,7 @@ namespace SirHolomap
         {
             Instance = this;
 
-            // The player's folder: %AppData%\SpaceEngineers\Storage\sir-holomap
+            // Le dossier du joueur : %AppData%\SpaceEngineers\Storage\sir-holomap
             m_folder = Path.Combine(MyFileSystem.UserDataPath, "Storage", Id);
             string problem;
             m_settings = MapSettingsFile.Load(m_folder, out problem);
@@ -88,7 +89,7 @@ namespace SirHolomap
             m_world = new MapWorld(m_folder);
             ErrorReporting.Start(m_folder, m_world.History);
             if (problem != null)
-                LogError(problem + "; using the defaults");
+                LogError(problem + " ; valeurs par défaut utilisées");
             m_globes = new PlanetGlobes();
             m_servers = new ServerDirectory();
 
@@ -100,16 +101,16 @@ namespace SirHolomap
             {
                 RenderHooks.CameraAvailable = false;
                 RenderHooks.LightAvailable = false;
-                Log("could not hook the render camera: " + e);
-                Caught("render camera hook", e);
+                Log("impossible d'accrocher la caméra de rendu : " + e);
+                Caught("accroche de la caméra de rendu", e);
                 m_pendingNotices.Add(() => Texts.CameraHookFailed);
             }
-            Log("loaded; camera " + (RenderHooks.CameraAvailable ? "hooked" : "not hooked") + ", " + m_world.History.Count + " servers in history");
+            Log("Sir Holomap chargé ; caméra " + (RenderHooks.CameraAvailable ? "accrochée" : "non accrochée") + ", " + m_world.History.Count + " serveurs dans l'historique");
         }
 
-        // Two plugins never fight over the same step of the game: if another
-        // one already holds the camera or the light, the map leaves it alone
-        // and says so.
+        // Deux greffons ne se disputent jamais la même étape du jeu : si un autre
+        // tient déjà la caméra ou la lumière, la carte n'y touche pas
+        // et le dit.
         private void Hook()
         {
             m_harmony = new Harmony(Id);
@@ -118,7 +119,7 @@ namespace SirHolomap
             if (camera == null)
             {
                 m_pendingNotices.Add(() => Texts.CameraHookFailed);
-                LogError(RenderHooks.CameraStep + " not found");
+                LogError(RenderHooks.CameraStep + " introuvable");
             }
             else
             {
@@ -127,7 +128,7 @@ namespace SirHolomap
                 {
                     var cameraOwners = string.Join(", ", others.ToArray());
                     m_pendingNotices.Add(() => string.Format(Texts.CameraStepTaken, cameraOwners));
-                    Log(RenderHooks.CameraStep + " is already patched by " + string.Join(", ", others.ToArray()) + ": stepping aside");
+                    Log(RenderHooks.CameraStep + " est déjà modifiée par " + string.Join(", ", others.ToArray()) + " : la carte s'efface");
                 }
                 else
                 {
@@ -139,7 +140,7 @@ namespace SirHolomap
             if (light == null)
             {
                 m_pendingNotices.Add(() => Texts.LightHookFailed);
-                LogError(RenderHooks.LightStep + " not found: the globe keeps the game's light");
+                LogError(RenderHooks.LightStep + " introuvable : le globe garde la lumière du jeu");
                 return;
             }
             var lightOthers = RenderHooks.OtherOwners(light, Id);
@@ -147,7 +148,7 @@ namespace SirHolomap
             {
                 var names = string.Join(", ", lightOthers.ToArray());
                 m_pendingNotices.Add(() => string.Format(Texts.LightStepTaken, names));
-                Log(RenderHooks.LightStep + " is already patched by " + names + ": stepping aside, the globe keeps the game's light");
+                Log(RenderHooks.LightStep + " est déjà modifiée par " + names + " : la carte s'efface, le globe garde la lumière du jeu");
                 return;
             }
             m_harmony.Patch(light, prefix: new HarmonyMethod(typeof(RenderHooks).GetMethod("LightPrefix")));
@@ -164,7 +165,7 @@ namespace SirHolomap
                     RenderHooks.CameraAvailable = false;
                     RenderHooks.Release();
                     var names = string.Join(", ", others.ToArray());
-                    Log(RenderHooks.CameraStep + " is now patched by " + names + ": stepping aside");
+                    Log(RenderHooks.CameraStep + " est maintenant modifiée par " + names + " : la carte s'efface");
                     Notify(string.Format(Texts.CameraStepTaken, names));
                 }
             }
@@ -176,7 +177,7 @@ namespace SirHolomap
                     RenderHooks.LightAvailable = false;
                     RenderHooks.Daylight = false;
                     var names = string.Join(", ", others.ToArray());
-                    Log(RenderHooks.LightStep + " is now patched by " + names + ": stepping aside");
+                    Log(RenderHooks.LightStep + " est maintenant modifiée par " + names + " : la carte s'efface");
                     Notify(string.Format(Texts.LightStepTaken, names));
                 }
             }
@@ -193,6 +194,7 @@ namespace SirHolomap
                 var wasInWorld = m_world.InWorld;
                 m_world.Track();
                 ErrorReporting.Tick(m_world);
+                PointsDeFonctionnalites.Tick(m_world);
                 if (wasInWorld != m_world.InWorld)
                     m_globes.Clear();
                 ServerJoiner.Update(m_world.InWorld);
@@ -218,8 +220,8 @@ namespace SirHolomap
                     m_globes.Prepare(m_world.Bodies);
                 }
 
-                // The globes are painted from the moment the world is joined,
-                // so that they are ready when the map opens.
+                // Les globes sont peints dès que le monde est rejoint,
+                // pour qu'ils soient prêts quand la carte s'ouvre.
                 m_globes.Work(MapScreen.Current != null);
 
                 if (++m_coexistenceCounter >= CoexistenceInterval)
@@ -228,8 +230,8 @@ namespace SirHolomap
                     CheckCoexistence();
                 }
 
-                // A map closed without passing through its own close: never
-                // leave the camera elsewhere.
+                // Une carte fermée sans passer par sa propre fermeture : ne jamais
+                // laisser la caméra ailleurs.
                 if (MapScreen.Current == null && RenderHooks.Active)
                     RenderHooks.Release();
 
@@ -241,7 +243,7 @@ namespace SirHolomap
             }
         }
 
-        // The plugin speaks the language set in the game's options.
+        // Le greffon parle la langue réglée dans les options du jeu.
         private static void FollowLanguage()
         {
             try
@@ -265,16 +267,16 @@ namespace SirHolomap
             var gui = MyAPIGateway.Gui;
             if (input == null || gui == null || !input.IsNewKeyPressed(MapKey))
                 return;
-            // Not while typing, nor over another screen.
+            // Pas pendant la saisie, ni par-dessus un autre écran.
             if (gui.ChatEntryVisible || gui.IsCursorVisible)
                 return;
-            // A block in hand: M is the game's symmetry.
+            // Un bloc en main : M est la symétrie du jeu.
             var builder = MyAPIGateway.CubeBuilder;
             if (builder != null && builder.IsActivated)
                 return;
             if (input.IsAnyCtrlKeyPressed() || input.IsAnyAltKeyPressed() || input.IsAnyShiftKeyPressed())
                 return;
-            // Dead, or waiting to be born again: the game's respawn first.
+            // Mort, ou en attente de renaître : la réapparition du jeu d'abord.
             if (!MapScreen.PlayerAlive(m_world.InWorld))
                 return;
             Open();
@@ -300,18 +302,18 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                LogCaught("settings not saved: " + e.Message, e);
+                LogCaught("réglages non enregistrés : " + e.Message, e);
             }
         }
 
-        // The server the player is on, null outside a world.
+        // Le serveur où le joueur se trouve, null hors d'un monde.
         internal ServerIdentity CurrentServer
         {
             get { return m_world != null ? m_world.Identity : null; }
         }
 
-        // Before leaving for another server from the galaxy: the memory of
-        // this one is kept.
+        // Avant de partir pour un autre serveur depuis la galaxie : la mémoire de
+        // celui-ci est gardée.
         internal void BeforeLeaving()
         {
             try
@@ -322,18 +324,18 @@ namespace SirHolomap
             }
             catch (Exception e)
             {
-                LogCaught("could not save before leaving: " + e.Message, e);
+                LogCaught("impossible d'enregistrer avant de partir : " + e.Message, e);
             }
         }
 
-        // A fault never brings the game down: the map closes, the camera goes
-        // back to the game, one line in the log, one notice to the player.
+        // Une faute ne fait jamais tomber le jeu : la carte se ferme, la caméra
+        // retourne au jeu, une ligne dans le journal, une notification au joueur.
         internal void Fault(string where, Exception e)
         {
             RenderHooks.Release();
-            // Every fault counts for the reports, which tell each one once.
-            Caught("fault in " + where, e);
-            // A fault that repeats is told once in a while, not every frame.
+            // Chaque faute compte pour les rapports, qui disent chacune une seule fois.
+            Caught("faute dans " + where, e);
+            // Une faute qui se répète est dite de temps en temps, pas à chaque image.
             var now = DateTime.UtcNow;
             var repeated = (now - m_lastFault).TotalSeconds < 30;
             m_lastFault = now;
@@ -350,7 +352,7 @@ namespace SirHolomap
                 }
                 return;
             }
-            Log("fault in " + where + ": " + e);
+            Log("faute dans " + where + " : " + e);
             try
             {
                 if (MapScreen.Current != null)
@@ -381,8 +383,9 @@ namespace SirHolomap
             try
             {
                 RenderHooks.Release();
-                // Before the world is left: what waits leaves if a server of
-                // ours is still there.
+                // Avant de quitter le monde : ce qui attend part si un serveur à
+                // nous est encore là.
+                PointsDeFonctionnalites.Arreter(m_world);
                 ErrorReporting.Stop(m_world);
                 if (m_world != null)
                     m_world.Leave();
@@ -390,13 +393,13 @@ namespace SirHolomap
                 if (m_servers != null)
                     m_servers.Stop();
                 GameTextures.DestroyAll();
-                // Only our patches, never anyone else's.
+                // Seulement nos correctifs, jamais ceux d'un autre.
                 if (m_harmony != null)
                     m_harmony.UnpatchAll(Id);
             }
             catch (Exception e)
             {
-                LogCaught("incomplete shutdown: " + e.Message, e);
+                LogCaught("arrêt incomplet : " + e.Message, e);
             }
             m_stopped = true;
             Instance = null;

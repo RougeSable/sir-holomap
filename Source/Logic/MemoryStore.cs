@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 
 namespace SirHolomap
 {
-    // Where the memories live: one file per server, in the player's own
-    // folder. A server never sees them, and one server's memory never shows
-    // on another.
+    // Où vivent les souvenirs : un fichier par serveur, dans le dossier du
+    // joueur. Un serveur ne les voit jamais, et la mémoire d'un serveur ne se montre jamais
+    // sur un autre.
     public sealed class MemoryStore
     {
         public const string Extension = ".map";
@@ -28,8 +28,8 @@ namespace SirHolomap
             return Path.Combine(m_directory, FileNameFor(serverKey) + Extension);
         }
 
-        // Readable, safe on every file system, and never shared by two keys:
-        // the cleaned name carries a hash of the exact key.
+        // Lisible, sûr sur tous les systèmes de fichiers, et jamais partagé par deux clés :
+        // le nom nettoyé porte un hachage de la clé exacte.
         public static string FileNameFor(string serverKey)
         {
             var key = serverKey ?? "";
@@ -62,8 +62,8 @@ namespace SirHolomap
             }
         }
 
-        // Written next to the file, then swapped in: a crash never leaves a
-        // half-written memory.
+        // Écrit à côté du fichier, puis mis à sa place : un plantage ne laisse jamais un
+        // souvenir à moitié écrit.
         public void Save(MapMemory memory)
         {
             System.IO.Directory.CreateDirectory(m_directory);

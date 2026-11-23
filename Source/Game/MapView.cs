@@ -118,6 +118,10 @@ namespace SirHolomap
             {
                 case ContactKind.Character:
                     return Settings.ShowPlayers;
+                case ContactKind.Antenna:
+                case ContactKind.Beacon:
+                case ContactKind.Suit:
+                    return Settings.ShowEmitters;
                 case ContactKind.Station:
                     return Settings.ShowStations && marker.Blocks >= threshold;
                 case ContactKind.LargeShip:
@@ -134,7 +138,8 @@ namespace SirHolomap
             panel.Checkbox(Texts.ShowSmallGrids, null, Settings.ShowSmallGrids, v => Settings.ShowSmallGrids = v, 0);
             panel.Checkbox(Texts.ShowPlayers, null, Settings.ShowPlayers, v => Settings.ShowPlayers = v, 1);
             panel.Checkbox(Texts.ShowGps, null, Settings.ShowGps, v => Settings.ShowGps = v, 0);
-            panel.Checkbox(Texts.ShowMemories, null, Settings.ShowMemories, v => Settings.ShowMemories = v, 1);
+            panel.Checkbox(Texts.ShowEmitters, null, Settings.ShowEmitters, v => Settings.ShowEmitters = v, 1);
+            panel.Checkbox(Texts.ShowMemories, null, Settings.ShowMemories, v => Settings.ShowMemories = v, 0);
             if (planet)
             {
                 // Un autre greffon tient la lumière du jeu : la case reste, et
@@ -176,6 +181,12 @@ namespace SirHolomap
                     return Texts.KindLargeShip;
                 case ContactKind.SmallShip:
                     return Texts.KindSmallShip;
+                case ContactKind.Antenna:
+                    return Texts.KindAntenna;
+                case ContactKind.Beacon:
+                    return Texts.KindBeacon;
+                case ContactKind.Suit:
+                    return Texts.KindSuit;
                 default:
                     return Texts.KindCharacter;
             }
@@ -206,14 +217,16 @@ namespace SirHolomap
         // Les infos d'un repère sélectionné : les mêmes lignes dans chaque vue.
         public void MarkerInfo(Panel panel, Marker marker)
         {
-            panel.Heading(marker.IsSelf ? Texts.You : marker.Name, KindText(marker));
+            // Un émetteur dit aussi jusqu'où il diffuse.
+            var kindText = marker.IsEmitter && marker.Range > 0 ? KindText(marker) + "  " + Distance(marker.Range) : KindText(marker);
+            panel.Heading(marker.IsSelf ? Texts.You : marker.Name, kindText);
             if (!marker.IsGps && !marker.IsSelf)
                 panel.Line(Texts.Owner, RelationText(marker.Relation), Style.RelationColor(marker.Relation));
             if (marker.IsGrid && !marker.IsSelf)
                 panel.Line(Texts.Blocks, marker.Blocks.ToString("N0"));
             if (!marker.IsSelf)
                 panel.Line(Texts.Distance, Distance(Vector3D.Distance(marker.Position, World.PlayerPosition)));
-            if (marker.Live && !marker.IsGps)
+            if (marker.Live && !marker.IsGps && !ContactKinds.IsBlockEmitter(marker.Kind))
                 panel.Line(Texts.Speed, ((int)Math.Round(marker.Velocity.Length())) + " m/s");
             var body = World.FindBody(marker.Body);
             if (body != null)
@@ -382,6 +395,12 @@ namespace SirHolomap
                     return GameTextures.Shape(Images.Shape.Triangle);
                 case ContactKind.SmallShip:
                     return GameTextures.Shape(Images.Shape.Triangle);
+                case ContactKind.Antenna:
+                    return GameTextures.Shape(Images.Shape.Cross);
+                case ContactKind.Beacon:
+                    return GameTextures.Shape(Images.Shape.Spark);
+                case ContactKind.Suit:
+                    return GameTextures.Shape(Images.Shape.Signal);
                 default:
                     return GameTextures.Shape(Images.Shape.Disc);
             }
@@ -399,6 +418,11 @@ namespace SirHolomap
                     return 14;
                 case ContactKind.SmallShip:
                     return 10;
+                case ContactKind.Antenna:
+                case ContactKind.Beacon:
+                    return 14;
+                case ContactKind.Suit:
+                    return 12;
                 default:
                     return 8;
             }

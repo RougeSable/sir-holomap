@@ -395,7 +395,8 @@ namespace SirHolomap
                             continue;
                         }
                     }
-                    var label = labelAll <= 20 && marker.IsGrid && marker.Live;
+                    // Les émetteurs portent toujours le nom qu'ils diffusent.
+                    var label = marker.Live && ((labelAll <= 20 && marker.IsGrid) || marker.IsEmitter);
                     MarkerPainter.Paint(Map, marker, m_visibleAt[i], label, null, m_visible.Count <= 80);
                     if (marker.IsSelf)
                         DrawHeading(m_visibleAt[i]);

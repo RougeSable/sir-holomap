@@ -28,6 +28,9 @@ namespace SirHolomap
         public bool ShowSmallGrids = true;
         public bool ShowPlayers = true;
         public bool ShowGps = true;
+
+        // Les antennes, les balises et les combinaisons qui diffusent.
+        public bool ShowEmitters = true;
         public bool ShowMemories = true;
 
         // Le globe éclairé depuis la caméra, pour que la face de nuit se lise aussi.

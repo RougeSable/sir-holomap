@@ -50,6 +50,7 @@ namespace SirHolomap
         public static string ShowPlayers { get { return Localization.Get("ShowPlayers"); } }
         public static string ShowGps { get { return Localization.Get("ShowGps"); } }
         public static string ShowMemories { get { return Localization.Get("ShowMemories"); } }
+        public static string ShowEmitters { get { return Localization.Get("ShowEmitters"); } }
         public static string Daylight { get { return Localization.Get("Daylight"); } }
         public static string DaylightHelp { get { return Localization.Get("DaylightHelp"); } }
         public static string DaylightUnavailableHelp { get { return Localization.Get("DaylightUnavailableHelp"); } }
@@ -118,6 +119,9 @@ namespace SirHolomap
         public static string KindLargeShip { get { return Localization.Get("KindLargeShip"); } }
         public static string KindSmallShip { get { return Localization.Get("KindSmallShip"); } }
         public static string KindCharacter { get { return Localization.Get("KindCharacter"); } }
+        public static string KindAntenna { get { return Localization.Get("KindAntenna"); } }
+        public static string KindBeacon { get { return Localization.Get("KindBeacon"); } }
+        public static string KindSuit { get { return Localization.Get("KindSuit"); } }
         public static string KindGps { get { return Localization.Get("KindGps"); } }
         public static string KindPlanet { get { return Localization.Get("KindPlanet"); } }
         public static string KindMoon { get { return Localization.Get("KindMoon"); } }
@@ -202,6 +206,7 @@ namespace SirHolomap
                 { "ShowPlayers", "Joueurs" },
                 { "ShowGps", "GPS" },
                 { "ShowMemories", "Souvenirs" },
+                { "ShowEmitters", "Émetteurs" },
                 { "Daylight", "Globe éclairé" },
                 { "DaylightHelp", "Éclaire le globe depuis la caméra tant que la carte est ouverte, pour lire aussi la face de nuit." },
                 { "DaylightUnavailableHelp", "Indisponible : un autre greffon règle la lumière du jeu, le globe garde la lumière du jeu." },
@@ -266,6 +271,9 @@ namespace SirHolomap
                 { "KindLargeShip", "Grand vaisseau" },
                 { "KindSmallShip", "Petite grille" },
                 { "KindCharacter", "Joueur" },
+                { "KindAntenna", "Antenne" },
+                { "KindBeacon", "Balise" },
+                { "KindSuit", "Combinaison" },
                 { "KindGps", "GPS" },
                 { "KindPlanet", "Planète" },
                 { "KindMoon", "Lune" },

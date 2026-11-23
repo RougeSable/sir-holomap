@@ -100,6 +100,31 @@ La mémoire est gardée sur votre machine, une par serveur, dans
 de la vue Planète et de l'espace, filtres de la galaxie, ce qu'il faut montrer) sont gardés dans
 `settings.xml` à côté, les mêmes pour tous les serveurs.
 
+## Les émetteurs
+
+La carte montre aussi tout ce qui émet et que la radio de votre personnage entend, comme le fait
+l'interface du jeu : les antennes et les balises des grilles (celles des grilles lointaines
+que le serveur annonce comprises) et les combinaisons des joueurs dont la diffusion est allumée.
+Chaque genre a son propre repère et porte le nom que l'émetteur diffuse (le texte de l'antenne
+ou de la balise, le nom du joueur) :
+
+| Émetteur | Repère |
+| --- | --- |
+| Antenne | une croix |
+| Balise | une étincelle à quatre pointes |
+| Combinaison d'un joueur | un disque dans un anneau |
+
+Les trois se montrent dans les vues Planète, Espace proche et Système (onglet Orbites), à la
+position de l'émetteur, et dans la liste de droite. Un double clic sur une antenne ou une balise
+centre la vue sur elle. La case **Émetteurs** du menu les montre ou les cache.
+
+Un émetteur coupé (antenne éteinte, balise sans courant, diffusion de la combinaison coupée)
+disparaît de la carte sans qu'il faille la fermer. Un émetteur que vous n'entendez plus parce que
+vous vous êtes éloigné de sa portée de diffusion reste, comme un souvenir (grisé, avec l'heure où
+il a été entendu), à sa dernière position connue ; si vous revenez bien à l'intérieur de sa portée
+et qu'il n'y diffuse plus, il est oublié au bout de quelques secondes. Un joueur proche dont la
+combinaison ne diffuse pas reste montré comme un joueur vu, avec le repère des joueurs.
+
 ## Suivi des fonctionnalités
 
 Le greffon déclare dans `fonctionnalites.json` ce que les joueurs peuvent utiliser à part, et le

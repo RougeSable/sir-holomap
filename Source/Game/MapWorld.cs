@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using Sandbox.Game.Entities;
+using Sandbox.Game.Entities.Character;
+using Sandbox.Game.Entities.Cube;
+using Sandbox.Game.GameSystems;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using VRage.Game;
+using VRage.Game.Entity;
+using VRage.Game.Gui;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
@@ -37,8 +42,8 @@ namespace SirHolomap
         }
     }
 
-    // Quelque chose de montré sur la carte : une grille, un joueur, un point GPS, vivant ou
-    // retenu.
+    // Quelque chose de montré sur la carte : une grille, un joueur, un émetteur (antenne,
+    // balise, combinaison), un point GPS, vivant ou retenu.
     internal sealed class Marker
     {
         public long Id;
@@ -48,6 +53,9 @@ namespace SirHolomap
         public Vector3D Position;
         public Vector3 Velocity;
         public double Radius;
+
+        // La portée de diffusion d'un émetteur, en mètres ; 0 pour tout le reste.
+        public double Range;
         public int Blocks;
         public bool Live;
         public DateTime LastSeenUtc;
@@ -58,7 +66,13 @@ namespace SirHolomap
 
         public bool IsGrid
         {
-            get { return !IsGps && Kind != ContactKind.Character; }
+            get { return !IsGps && (Kind == ContactKind.Station || Kind == ContactKind.LargeShip || Kind == ContactKind.SmallShip); }
+        }
+
+        // Une antenne, une balise ou une combinaison qui diffuse.
+        public bool IsEmitter
+        {
+            get { return !IsGps && ContactKinds.IsEmitter(Kind); }
         }
     }
 
@@ -73,6 +87,7 @@ namespace SirHolomap
         private readonly MemoryStore m_store;
         private readonly HashSet<IMyEntity> m_entities = new HashSet<IMyEntity>();
         private readonly List<IMyPlayer> m_players = new List<IMyPlayer>();
+        private readonly HashSet<MyDataBroadcaster> m_received = new HashSet<MyDataBroadcaster>();
         private readonly Dictionary<long, Marker> m_markerCache = new Dictionary<long, Marker>();
         private readonly List<IMyGps> m_gps = new List<IMyGps>();
         private readonly Registry<Body> m_bodyCache = new Registry<Body>(id => new Body { Id = id });
@@ -237,8 +252,129 @@ namespace SirHolomap
                 if (TryRead(entity, out sighting))
                     Memory.See(sighting, now);
             }
-            Memory.EndScan(ToVec(PlayerPosition), SyncRadius, now);
             m_entities.Clear();
+            ScanEmitters(now);
+            Memory.EndScan(ToVec(PlayerPosition), SyncRadius, now, IsSwitchedOff);
+            m_received.Clear();
+        }
+
+        // Les émetteurs que la radio du joueur entend : ce que le jeu montre lui-même sur
+        // son interface (antennes et balises des grilles à portée de diffusion, y compris
+        // celles que le serveur annonce au-delà de la portée de synchronisation, et
+        // combinaisons qui diffusent). Un joueur proche est déjà lu avec les personnages.
+        private void ScanEmitters(DateTime now)
+        {
+            m_received.Clear();
+            try
+            {
+                var system = MyAntennaSystem.Static;
+                var player = MyAPIGateway.Session.Player;
+                var character = player != null ? player.Character as MyEntity : null;
+                if (system == null || character == null || character.Closed || character.MarkedForClose)
+                    return;
+                system.GetAllRelayedBroadcasters(character, PlayerIdentityId, false, m_received);
+                foreach (var broadcaster in m_received)
+                {
+                    Sighting sighting;
+                    if (TryReadEmitter(broadcaster, out sighting))
+                        Memory.See(sighting, now);
+                }
+                Memory.EmittersRead();
+            }
+            catch (Exception ex)
+            {
+                HolomapPlugin.Caught("MapWorld.ScanEmitters", ex);
+            }
+        }
+
+        private bool TryReadEmitter(MyDataBroadcaster broadcaster, out Sighting sighting)
+        {
+            sighting = new Sighting();
+            var radio = broadcaster as MyRadioBroadcaster;
+            if (radio == null || radio.Closed || radio.Entity == null || !radio.ShowOnHud)
+                return false;
+            var entity = radio.Entity;
+
+            // Un joueur à portée de synchronisation est lu avec les personnages.
+            if (entity is MyCharacter)
+                return false;
+            var id = radio.AntennaEntityId;
+            if (id == 0 || id == PlayerCharacterId)
+                return false;
+
+            ContactKind kind;
+            if (entity is MyCubeBlock)
+                kind = radio.IsBeacon || entity is IMyBeacon ? ContactKind.Beacon : ContactKind.Antenna;
+            else if (radio.IsBeacon)
+                kind = ContactKind.Beacon;
+            else
+                kind = radio.ShowInTerminal ? ContactKind.Antenna : ContactKind.Suit;
+
+            var position = radio.BroadcastPosition;
+            sighting.Id = id;
+            sighting.Name = EmitterName(radio, id);
+            sighting.Kind = kind;
+            sighting.Relation = RelationOf(radio.Owner);
+            sighting.Blocks = 0;
+            sighting.Radius = 1;
+            sighting.Range = radio.BroadcastRadius;
+            sighting.Position = ToVec(position);
+            sighting.Body = BodyNameAt(position);
+            return true;
+        }
+
+        // Le nom que l'émetteur diffuse : celui de sa marque sur l'interface du jeu (le texte
+        // de l'antenne ou de la balise, sinon son nom de bloc ; le nom du joueur pour une combinaison).
+        private static string EmitterName(MyDataBroadcaster broadcaster, long id)
+        {
+            try
+            {
+                var found = false;
+                var text = "";
+                foreach (var hud in broadcaster.GetHudParams(false))
+                {
+                    if (hud.Text == null || hud.Text.Length == 0)
+                        continue;
+                    if (hud.EntityId == id)
+                        return hud.Text.ToString();
+                    if (!found)
+                    {
+                        found = true;
+                        text = hud.Text.ToString();
+                    }
+                }
+                if (found)
+                    return text;
+                return broadcaster.Info.Name ?? "";
+            }
+            catch (Exception ex)
+            {
+                HolomapPlugin.Caught("MapWorld.EmitterName", ex);
+                return "";
+            }
+        }
+
+        // Un émetteur que le jeu connaît encore et qui ne diffuse plus : la carte l'oublie
+        // tout de suite. Hors de la portée de synchronisation, le jeu n'en dit plus rien :
+        // il reste alors un souvenir.
+        private static bool IsSwitchedOff(long id)
+        {
+            try
+            {
+                IMyEntity entity;
+                if (!MyAPIGateway.Entities.TryGetEntityById(id, out entity) || entity == null)
+                    return false;
+                if (entity.MarkedForClose || entity.Closed)
+                    return false;
+                var full = entity as MyEntity;
+                var radio = full != null ? full.Components.Get<MyDataBroadcaster>() as MyRadioBroadcaster : null;
+                return radio != null && !radio.Enabled;
+            }
+            catch (Exception ex)
+            {
+                HolomapPlugin.Caught("MapWorld.IsSwitchedOff", ex);
+                return false;
+            }
         }
 
         private bool TryRead(IMyEntity entity, out Sighting sighting)
@@ -283,12 +419,17 @@ namespace SirHolomap
                 // Seulement les joueurs : les animaux et les robots ne valent pas d'être retenus.
                 if (owner == null || owner.IsBot)
                     return false;
+                // Sa combinaison diffuse : il se montre comme un émetteur.
+                var full = character as MyCharacter;
+                var radio = full != null ? full.RadioBroadcaster : null;
+                var emitting = radio != null && radio.Enabled;
                 sighting.Id = character.EntityId;
                 sighting.Name = owner.DisplayName ?? "";
                 sighting.Blocks = 0;
                 sighting.Radius = 1;
+                sighting.Range = emitting ? radio.BroadcastRadius : 0;
                 sighting.Position = ToVec(character.GetPosition());
-                sighting.Kind = ContactKind.Character;
+                sighting.Kind = emitting ? ContactKind.Suit : ContactKind.Character;
                 sighting.Relation = RelationOf(owner.IdentityId);
                 sighting.Body = BodyNameAt(character.GetPosition());
                 return true;
@@ -515,6 +656,7 @@ namespace SirHolomap
                 marker.Name = contact.Name;
                 marker.Blocks = contact.Blocks;
                 marker.Radius = contact.Radius;
+                marker.Range = contact.Range;
                 marker.LastSeenUtc = contact.LastSeenUtc;
                 marker.Body = contact.Body;
                 marker.Live = contact.IsLive;

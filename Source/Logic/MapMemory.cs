@@ -11,6 +11,27 @@ namespace SirHolomap
         LargeShip = 1,
         SmallShip = 2,
         Character = 3,
+
+        // Les émetteurs : ce que la carte montre parce que le jeu les fait entendre
+        // au joueur par sa radio (antenne ou balise d'une grille, combinaison d'un joueur).
+        Antenna = 4,
+        Beacon = 5,
+        Suit = 6,
+    }
+
+    public static class ContactKinds
+    {
+        // Antenne, balise ou combinaison qui diffuse.
+        public static bool IsEmitter(ContactKind kind)
+        {
+            return kind == ContactKind.Antenna || kind == ContactKind.Beacon || kind == ContactKind.Suit;
+        }
+
+        // Un bloc qui diffuse depuis une grille : antenne ou balise.
+        public static bool IsBlockEmitter(ContactKind kind)
+        {
+            return kind == ContactKind.Antenna || kind == ContactKind.Beacon;
+        }
     }
 
     public enum ContactRelation
@@ -33,6 +54,9 @@ namespace SirHolomap
         public double Radius;
         public Vec3 Position;
         public string Body;
+
+        // La portée de diffusion d'un émetteur, en mètres ; 0 pour tout le reste.
+        public double Range;
     }
 
     // Une chose retenue. Vivante tant que le jeu l'envoie au joueur, un
@@ -48,6 +72,9 @@ namespace SirHolomap
         public double Radius;
         public Vec3 Position;
         public DateTime LastSeenUtc;
+
+        // La portée de diffusion d'un émetteur, en mètres ; 0 pour tout le reste.
+        public double Range;
 
         // Vide quand le contact n'est pas près d'une planète.
         public string Body = "";
@@ -75,12 +102,17 @@ namespace SirHolomap
         // avant d'être oublié.
         public static readonly TimeSpan ForgetAfter = TimeSpan.FromSeconds(20);
 
+        // Un émetteur qui manque alors que le joueur est bien à l'intérieur de sa
+        // portée de diffusion ne diffuse plus : sa radio l'aurait fait entendre.
+        public const double EmitterConfirmFraction = 0.9;
+
         // Au-delà, les plus vieux souvenirs partent en premier.
         public const int MaximumContacts = 20000;
 
         private readonly Dictionary<long, MemoryContact> m_contacts = new Dictionary<long, MemoryContact>();
         private readonly HashSet<long> m_seen = new HashSet<long>();
         private readonly List<long> m_forget = new List<long>();
+        private bool m_emittersRead;
 
         public MapMemory(string serverKey)
         {
@@ -112,6 +144,15 @@ namespace SirHolomap
         public void BeginScan()
         {
             m_seen.Clear();
+            m_emittersRead = false;
+        }
+
+        // Dit que la liste des émetteurs entendus par le joueur a pu être lue dans
+        // ce balayage : sans elle, un émetteur qui manque ne prouve rien, et la
+        // mémoire n'y touche pas.
+        public void EmittersRead()
+        {
+            m_emittersRead = true;
         }
 
         public void See(Sighting sighting, DateTime nowUtc)
@@ -139,6 +180,7 @@ namespace SirHolomap
             contact.Relation = sighting.Relation;
             contact.Blocks = sighting.Blocks;
             contact.Radius = sighting.Radius;
+            contact.Range = sighting.Range;
             contact.Position = sighting.Position;
             contact.Body = Clean(sighting.Body);
             contact.LastSeenUtc = nowUtc;
@@ -150,7 +192,14 @@ namespace SirHolomap
         // position connue. Si sa dernière position connue est bien à l'intérieur de la
         // portée de l'observateur et qu'elle continue de manquer, elle n'y est plus,
         // et la carte l'oublie.
-        public void EndScan(Vec3 observer, double syncRadius, DateTime nowUtc)
+        //
+        // Un émetteur (antenne, balise) manque pour deux raisons que la carte ne confond
+        // pas. Le joueur est sorti de sa portée de diffusion : il reste alors où il a été
+        // entendu en dernier, comme un souvenir. Ou il est coupé : il disparaît.
+        // switchedOff dit, pour un émetteur que le jeu connaît encore, s'il est coupé ;
+        // il est alors oublié tout de suite. Sinon il l'est quand le joueur est bien à
+        // l'intérieur de sa portée de diffusion et qu'il manque encore.
+        public void EndScan(Vec3 observer, double syncRadius, DateTime nowUtc, Func<long, bool> switchedOff = null)
         {
             m_forget.Clear();
             var checkedRadius = syncRadius * ConfirmFraction;
@@ -160,7 +209,25 @@ namespace SirHolomap
                     continue;
 
                 contact.IsLive = false;
-                if (contact.Position.DistanceTo(observer) <= checkedRadius)
+                var distance = contact.Position.DistanceTo(observer);
+                var inside = distance <= checkedRadius;
+                if (ContactKinds.IsBlockEmitter(contact.Kind))
+                {
+                    if (!m_emittersRead)
+                        continue;
+                    if (switchedOff != null && switchedOff(contact.Id))
+                    {
+                        m_forget.Add(contact.Id);
+                        continue;
+                    }
+                    inside = contact.Range > 0 && distance <= contact.Range * EmitterConfirmFraction;
+                }
+                else if (contact.Kind == ContactKind.Suit && m_emittersRead)
+                {
+                    inside = inside || (contact.Range > 0 && distance <= contact.Range * EmitterConfirmFraction);
+                }
+
+                if (inside)
                 {
                     if (!contact.AbsentSinceUtc.HasValue)
                         contact.AbsentSinceUtc = nowUtc;
@@ -230,7 +297,8 @@ namespace SirHolomap
                     .Append(c.Position.Z.ToString("R", CultureInfo.InvariantCulture)).Append('\t')
                     .Append(c.LastSeenUtc.Ticks.ToString(CultureInfo.InvariantCulture)).Append('\t')
                     .Append(Clean(c.Body)).Append('\t')
-                    .Append(Clean(c.Name)).Append('\n');
+                    .Append(Clean(c.Name)).Append('\t')
+                    .Append(c.Range.ToString("R", CultureInfo.InvariantCulture)).Append('\n');
             }
             return text.ToString();
         }
@@ -270,6 +338,12 @@ namespace SirHolomap
                 if (!Enum.IsDefined(typeof(ContactKind), kind) || !Enum.IsDefined(typeof(ContactRelation), relation))
                     continue;
 
+                // La portée de diffusion est une colonne de plus : les anciens fichiers n'en ont pas.
+                double range;
+                if (parts.Length < 12 || !double.TryParse(parts[11], NumberStyles.Float, CultureInfo.InvariantCulture, out range)
+                    || double.IsNaN(range) || double.IsInfinity(range) || range < 0)
+                    range = 0;
+
                 memory.m_contacts[id] = new MemoryContact
                 {
                     Id = id,
@@ -281,6 +355,7 @@ namespace SirHolomap
                     LastSeenUtc = new DateTime(ticks, DateTimeKind.Utc),
                     Body = parts[9],
                     Name = parts[10],
+                    Range = range,
                 };
             }
             return memory;

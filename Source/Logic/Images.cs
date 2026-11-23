@@ -27,6 +27,11 @@ namespace SirHolomap
             Arrow,
             // Une étoile du ciel : un cœur rond et doux dans un halo léger.
             Star,
+            // Les repères des émetteurs : une croix pour l'antenne, une étincelle à
+            // quatre pointes pour la balise, un disque dans un anneau pour la combinaison.
+            Cross,
+            Spark,
+            Signal,
         }
 
         // Des formes blanches, teintées au dessin.
@@ -78,6 +83,12 @@ namespace SirHolomap
                     return Edge(BracketDistance(x, y), pixel);
                 case Shape.Arrow:
                     return Edge(TriangleDistance(y, -x, 0.9), pixel);
+                case Shape.Cross:
+                    return Edge(CrossDistance(x, y), pixel);
+                case Shape.Spark:
+                    return Math.Max(Edge(SparkDistance(x, y), pixel), Edge(r - 0.3, pixel));
+                case Shape.Signal:
+                    return Math.Max(Edge(r - 0.36, pixel), Edge(Math.Abs(r - 0.8) - 0.1, pixel));
                 case Shape.Star:
                     var core = Smooth(Clamp01((0.24 - r) / 0.1));
                     var halo = 0.5 * Math.Pow(Clamp01(1 - r), 2.6);
@@ -113,6 +124,32 @@ namespace SirHolomap
             x = Math.Abs(x);
             y = Math.Abs(y);
             return Math.Max(x * 0.8660254 + y * 0.5, y) - radius;
+        }
+
+        // Une croix aux bras épais, dont la distance au bord est signée (négative dedans).
+        private static double CrossDistance(double x, double y)
+        {
+            return Math.Min(BoxDistance(x, y, 0.88, 0.25), BoxDistance(x, y, 0.25, 0.88));
+        }
+
+        private static double BoxDistance(double x, double y, double halfWidth, double halfHeight)
+        {
+            var qx = Math.Abs(x) - halfWidth;
+            var qy = Math.Abs(y) - halfHeight;
+            var outside = Math.Sqrt(Math.Max(qx, 0) * Math.Max(qx, 0) + Math.Max(qy, 0) * Math.Max(qy, 0));
+            return outside + Math.Min(Math.Max(qx, qy), 0);
+        }
+
+        // Une étincelle à quatre pointes : le dedans est sqrt|x| + sqrt|y| < sqrt(0,9), la distance
+        // au bord est estimée par la valeur de cette courbe sur la longueur de son gradient.
+        private static double SparkDistance(double x, double y)
+        {
+            var a = Math.Sqrt(Math.Abs(x));
+            var b = Math.Sqrt(Math.Abs(y));
+            var sum = a + b;
+            var value = sum * sum - 0.9;
+            var gradient = sum * Math.Sqrt(1 / Math.Max(a * a, 0.0004) + 1 / Math.Max(b * b, 0.0004));
+            return value / Math.Max(gradient, 1e-6);
         }
 
         private static double BracketDistance(double x, double y)

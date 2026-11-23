@@ -227,9 +227,15 @@ namespace SirHolomap
             var marker = target as Marker;
             if (marker == null)
                 return;
-            if (marker.IsGrid || marker.Kind == ContactKind.Character)
+            if (marker.IsGrid || marker.Kind == ContactKind.Character || marker.Kind == ContactKind.Suit)
             {
                 Map.GoLocal(marker.Live ? LocalAnchor.Grid : LocalAnchor.Memory, null, marker, true, false);
+                Map.Selected = marker;
+            }
+            else if (marker.IsEmitter)
+            {
+                // Une antenne ou une balise n'est pas une grille à suivre : la carte s'y centre.
+                m_focus = marker.Position;
                 Map.Selected = marker;
             }
         }
@@ -319,7 +325,7 @@ namespace SirHolomap
                 if (at.X < -20 || at.Y < -20 || at.X > Gfx.Width + 20 || at.Y > Gfx.Height + 20)
                     continue;
                 markers++;
-                MarkerPainter.Paint(Map, marker, at, false, null, m_lastMarkers <= 60);
+                MarkerPainter.Paint(Map, marker, at, marker.IsEmitter && marker.Live && m_lastMarkers <= 30, null, m_lastMarkers <= 60);
                 m_items.Add(marker);
                 m_itemsAt.Add(at);
                 m_itemsRadius.Add(4 * s);
@@ -449,7 +455,7 @@ namespace SirHolomap
             var threshold = Settings.SpaceBlockThreshold;
             foreach (var marker in World.Markers)
             {
-                if (!marker.IsSelf && Passes(marker, threshold) && marker.IsGrid)
+                if (!marker.IsSelf && Passes(marker, threshold) && (marker.IsGrid || marker.IsEmitter))
                     m_list.Add(marker);
             }
             m_list.Sort((a, b) => Vector3D.DistanceSquared(a.Position, player).CompareTo(Vector3D.DistanceSquared(b.Position, player)));

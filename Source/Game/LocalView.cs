@@ -507,7 +507,7 @@ namespace SirHolomap
             var marker = target as Marker;
             if (marker != null)
             {
-                if (marker.IsGps || marker.IsSelf)
+                if (marker.IsGps || marker.IsSelf || ContactKinds.IsBlockEmitter(marker.Kind))
                 {
                     SetFree(marker.Position);
                     return;
@@ -776,7 +776,7 @@ namespace SirHolomap
                 AddCharacter(player.Character);
             foreach (var marker in World.Markers)
             {
-                if (marker.Kind != ContactKind.Character || !marker.Live || marker.IsSelf || marker.IsGps)
+                if ((marker.Kind != ContactKind.Character && marker.Kind != ContactKind.Suit) || !marker.Live || marker.IsSelf || marker.IsGps)
                     continue;
                 IMyEntity entity;
                 if (MyAPIGateway.Entities.TryGetEntityById(marker.Id, out entity))
